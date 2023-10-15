@@ -1,0 +1,21 @@
+<RCC>
+<qresource prefix="icons">
+    <file alias="exit.png">icons/icon_exit.png</file>
+    <file alias="info.png">icons/icon_info.png</file>
+    <file alias="open.png">icons/icon_open.png</file>
+    <file alias="play.png">icons/icon_play.png</file>
+    <file alias="prefs.png">icons/icon_prefs.png</file>
+    <file alias="sonify.png">icons/icon_sonify.png</file>
+    <file alias="stop.png">icons/icon_stop.png</file>
+    <file alias="overlay.png">icons/icon_overlay.png</file>
+    <file alias="selection.png">icons/icon_selection.png</file>
+    <file alias="download.png">icons/icon_download.png</file>
+    <file alias="save.png">icons/icon_save.png</file>
+    <file alias="left_to_right.png">icons/icon_left_to_right.png</file>
+    <file alias="right_to_left.png">icons/icon_right_to_left.png</file>
+    <file alias="bottom_to_top.png">icons/icon_bottom_to_top.png</file>
+    <file alias="top_to_bottom.png">icons/icon_top_to_bottom.png</file>
+    <file alias="radial.png">icons/icon_radial.png</file>
+    <file alias="circular.png">icons/icon_circular.png</file>
+</qresource>
+</RCC>
