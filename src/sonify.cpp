@@ -2,11 +2,13 @@
 #define __SONIFY_CPP
 
 #include "sonify.hpp"
+#include "preferences.hpp"
 #include "playaudio.hpp"
 
 sonify::sonify(QWidget *parent)
     : QMainWindow(parent)
 {
+    this->setWindowTitle("sonify");
     _InitGUI();
     _InitMenubar();
     _InitToolbar();
@@ -58,7 +60,7 @@ void sonify::_InitMenubar()
 
     // Exit
     QAction *action_file_exit = new QAction(QIcon(":icons/exit.png"), "Exit");
-    connect(action_file_exit, &QAction::triggered, this, [=]() { QApplication::quit(); });
+    connect(action_file_exit, &QAction::triggered, this, [&]() { QApplication::quit(); });
 
     menu_file->addAction(action_file_open);
     menu_file->addMenu(action_file_open_recent);
@@ -67,7 +69,7 @@ void sonify::_InitMenubar()
     /* Edit Menu */
 
     QAction *action_edit_pref = new QAction(QIcon(":icons/prefs.png"), "Preferences");
-
+    connect(action_edit_pref, &QAction::triggered, this, [&]() { this->_openPrefs(); });
     menu_edit->addAction(action_edit_pref);
 
     /* View Menu */
@@ -78,9 +80,15 @@ void sonify::_InitMenubar()
     menu_view->addMenu(action_view_overlay);
 
     QAction *action_view_overlay_line = new QAction(QIcon(":/icons/"), "Line");
+    action_view_overlay_line->setCheckable(true);
+    action_view_overlay_line->setChecked(true);
     
-    action_view_overlay->addAction(action_view_overlay_line);
+    QAction *action_view_overlay_wave = new QAction(QIcon(":/icons/"), "Wave");
+    action_view_overlay_wave->setCheckable(true);
+    action_view_overlay_wave->setChecked(true);
 
+    action_view_overlay->addAction(action_view_overlay_line);
+    action_view_overlay->addAction(action_view_overlay_wave);
     /* Help Menu */
 
     QAction *action_help_about_sonify = new QAction("About Sonify++");
@@ -135,6 +143,7 @@ void sonify::_openImage(QString path)
             this->_fileName = fd.selectedFiles()[0];
             canvas->SetImage(_fileName);
             statusbar->SetFile(_fileName);
+            drawer->btn_sonify->setEnabled(true);
         }
         else
         {
@@ -146,6 +155,12 @@ void sonify::_openImage(QString path)
     {
         
     }
+}
+
+void sonify::_openPrefs()
+{
+    // static Preferences prefs;
+    // prefs.show();
 }
 
 void sonify::Selection()

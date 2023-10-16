@@ -8,9 +8,7 @@
 #include <qt6/QtCore/QString>
 #include <qt6/QtCore/QCoreApplication>
 #include <qt6/QtCore/QFileInfo>
-
-#include <qt6/QtMultimedia/QAudioOutput>
-#include <qt6/QtMultimedia/QAudioFormat>
+#include <qt6/QtCore/QBuffer>
 
 #include <qt6/QtWidgets/QGraphicsLineItem>
 #include <qt6/QtWidgets/QVBoxLayout>
@@ -36,7 +34,12 @@
 #include <opencv4/opencv2/imgproc/imgproc.hpp>
 #include <opencv4/opencv2/imgproc/types_c.h>
 
-
 #include <boost/array.hpp>
 #include <boost/multi_array.hpp>
+#include <boost/math/constants/constants.hpp>
+#include <boost/math/special_functions/sin_pi.hpp>
+
+#include <SFML/Audio.hpp>
 #include <vector>
+
+

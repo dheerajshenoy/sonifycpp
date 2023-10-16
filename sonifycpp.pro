@@ -7,16 +7,26 @@ MOC_DIR = .moc
 TEMPLATE = app
 TARGET = target/sonifycpp
 INCLUDEPATH += /usr/include/opencv4/
-LIBS += -lSDL2 -lopencv_core -lopencv_imgproc -lopencv_imgcodecs
+LIBS += -lsfml-system -lsfml-audio -lsfml-graphics -lsfml-window -lopencv_core -lopencv_imgproc -lopencv_imgcodecs
 # PKGCONFIG += opencv4
 QT += gui core widgets multimedia
 PRECOMPILED_HEADER += src/my_pch.hpp
 CONFIG += precompile_header link_pkgconfig
-HEADERS += src/canvas.hpp src/drawer.hpp src/sonify.hpp src/statusbar.hpp src/playaudio.hpp
+HEADERS += src/canvas.hpp \
+           src/drawer.hpp \
+           src/sonify.hpp \
+           src/statusbar.hpp \
+           src/playaudio.hpp \
+           src/preferences.hpp \
+           src/utils.hpp
+
 SOURCES += src/canvas.cpp \
            src/drawer.cpp \
            src/main.cpp \
            src/sonify.cpp \
            src/statusbar.cpp \
-           src/playaudio.cpp
+           src/playaudio.cpp \
+           src/preferences.cpp \
+           src/utils.cpp
+
 RESOURCES += resources.qrc

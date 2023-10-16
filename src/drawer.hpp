@@ -37,6 +37,8 @@ class Drawer : public QWidget
         QPushButton *btn_play = new QPushButton(QIcon(":/icons/play.png"), " Play");
         void _DrawerInit();
         sonify *_sonify;
+
+        friend class sonify;
 };
 
 #endif

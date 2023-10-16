@@ -2,7 +2,8 @@
 #define __CANVAS_HPP
 
 #include "sonify.hpp"
-
+#include "canvas.hpp"
+#include "utils.hpp"
 class sonify;
 typedef std::vector<cv::Mat> cvMatVect;
 
@@ -24,6 +25,7 @@ class Canvas : public QWidget
 
         void UpdateLine();
 
+        float Hue2Freq(float, float*);
         cvMatVect ImgHSVData();
 
         QImage _img, _imghsv;
@@ -32,7 +34,10 @@ class Canvas : public QWidget
         uint _img_height, _img_width;
         uint _img_step;
         uchar *_img_data;
-        boost::multi_array<int, 2> hues;
+        boost::multi_array<int, 2> _hues;
+        boost::multi_array<float, 2> _notes;
+        std::vector<float> _song;
+        float _duration;
         sonify *_sonify;
 };
 

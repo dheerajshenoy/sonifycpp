@@ -91,7 +91,9 @@ void Drawer::_DrawerInit()
     // Buttons
     
     QHBoxLayout *btn_layout = new QHBoxLayout();
-
+    
+    btn_play->setEnabled(false);
+    btn_sonify->setEnabled(false);
     connect(btn_play, &QPushButton::clicked, this, [=]() { _sonify->Play(); });
 
     btn_layout->addWidget(btn_sonify);
@@ -128,6 +130,7 @@ void Drawer::StartSonify()
 {
     _sonify->canvas->Traverse_TB_LR();
     _sonify->canvas->Img2Music();
+    btn_play->setEnabled(true);
 }
 
 void Drawer::StopSonify()

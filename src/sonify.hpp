@@ -5,6 +5,7 @@
 class Canvas;
 class Drawer;
 class StatusBar;
+class Preferences;
 
 
 class sonify : public QMainWindow
@@ -27,6 +28,7 @@ class sonify : public QMainWindow
         void _InitMainWidget();
         void _InitStatusbar();
         void _openImage(QString path = "");
+        void _openPrefs();
         void Selection();
 
         QString _fileName;
@@ -35,6 +37,7 @@ class sonify : public QMainWindow
         friend class StatusBar;
         friend class Drawer;
         friend class Canvas;
+        friend class Preferences;
 };
 
 #include "statusbar.hpp"
