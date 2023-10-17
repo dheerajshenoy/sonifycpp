@@ -18,9 +18,11 @@ class sonify : public QMainWindow
         QWidget *mainWidget = new QWidget();
         QVBoxLayout *mainLayout = new QVBoxLayout();
         QMenuBar *menuBar = new QMenuBar();
+        QMenu *action_file_open_recent = new QMenu("Open Recent");
         Canvas *canvas;
         Drawer *drawer;
         StatusBar *statusbar;
+        std::ofstream _recentFiles;
 
         void _InitGUI();
         void _InitMenubar();
@@ -30,6 +32,8 @@ class sonify : public QMainWindow
         void _openImage(QString path = "");
         void _openPrefs();
         void Selection();
+        void ReadRecentFiles();
+        void addRecentFile(QString);
 
         QString _fileName;
         void Play();

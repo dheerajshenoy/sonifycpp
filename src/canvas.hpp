@@ -1,9 +1,10 @@
 #ifndef __CANVAS_HPP
 #define __CANVAS_HPP
 
+#include "playaudio.hpp"
 #include "sonify.hpp"
 #include "canvas.hpp"
-#include "utils.hpp"
+
 class sonify;
 typedef std::vector<cv::Mat> cvMatVect;
 
@@ -18,6 +19,7 @@ class Canvas : public QWidget
         void Traverse_LR_TB();
         void Traverse_TB_LR();
         void Img2Music();
+        void Play() const;
 
     private:
         QLabel *imglabel = new QLabel();
@@ -27,7 +29,8 @@ class Canvas : public QWidget
 
         float Hue2Freq(float, float*);
         cvMatVect ImgHSVData();
-
+        
+        uint _SR, _samples;
         QImage _img, _imghsv;
         cv::Mat _mat_img_hsv, _mat_img;
         QSize _imgsize;
@@ -37,7 +40,7 @@ class Canvas : public QWidget
         boost::multi_array<int, 2> _hues;
         boost::multi_array<float, 2> _notes;
         std::vector<float> _song;
-        float _duration;
+        float _duration, _song_duration;
         sonify *_sonify;
 };
 

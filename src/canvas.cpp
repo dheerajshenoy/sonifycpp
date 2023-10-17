@@ -2,8 +2,7 @@
 #define __CANVAS_CPP
 
 #include "canvas.hpp"
-
-auto PI = boost::math::constants::pi<double>();
+#include "utils.cpp"
 
 Canvas::Canvas(sonify *s, QWidget *parent)
     : QWidget(parent)
@@ -23,8 +22,8 @@ void Canvas::SetImage(QString path)
     _img = QImage(Utils::cvMatToQImage(_mat_img));
     _imghsv = QImage(Utils::cvMatToQImage(_mat_img_hsv));
 
-    // imglabel->setPixmap(QPixmap::fromImage(_img));
-    imglabel->setPixmap(QPixmap::fromImage(_imghsv));
+    imglabel->setPixmap(QPixmap::fromImage(_img));
+    // imglabel->setPixmap(QPixmap::fromImage(_imghsv));
     
     _img_width = _mat_img_hsv.cols;
     _img_height = _mat_img_hsv.rows;
@@ -85,6 +84,9 @@ void Canvas::Img2Music()
 
     if(traverseMethod == "Left to Right")
         Traverse_TB_LR();
+    // else if (traverseMethod == "Righ to Left")
+    //     Traverse_TB_LR();
+
     // Handle other traversal method
         
     float scale_freqs[] = { 220.00, 246.94 ,261.63, 293.66, 329.63, 349.23, 415.30 };
@@ -98,51 +100,44 @@ void Canvas::Img2Music()
             // _notes.push_back(Hue2Freq(_hues[i][j], scale_freqs));
         }
 
-    uint SR = _sonify->drawer->SampleRate().split("Hz")[0].toInt();
+    _SR = _sonify->drawer->SampleRate().split("Hz")[0].toInt();
     QString d = _sonify->drawer->NoteDuration();
     if (d.isEmpty())
         _duration = 0.1;
     else
         _duration = d.toFloat();
 
-    auto samples = int(_duration * SR);
-    auto _t = Utils::linspace(0, _duration, samples, false);
-
+    _samples = int(_duration * _SR);
+    auto _t = Utils::linspace(0, _duration, _samples, false);
     int amp = 100;
-    float val, n;
+    float val, n, c;
     std::vector<float> note;
+    std::vector<float> octaves = { 0.5, 1.0, 2.0 };
     note.resize(_t.size());
-    // for(size_t i = 0; i < _img_height; i++)
-    //     for(size_t j = 0; j < _img_width; j++)
-    for(size_t i = 0; i < 10; i++)
-        for(size_t j = 0; j < 10; j++)
+    for(size_t i = 0; i < _img_height; i++)
+    {
+        for(size_t j = 0; j < _img_width; j++)
         {
-            val = _notes[i][j];
-            for(size_t x = 0; x < _t.size(); x++)
+            c = Utils::randchoice<float>(octaves);
+            val = c * _notes[i][j];
+            for(size_t k = 0; k < _t.size(); k++)
             {
-                n = amp * sin(2 * PI * val * _t.at(x));
-                note[x] = n;
+                note[k] = amp * sin(2 * M_PI * val * _t.at(k));
             }
             _song.insert(_song.end(), note.begin(), note.end());
         }
-
-    std::vector<sf::Int16> Song;
-    for (double sample : _song) {
-        // Ensure the value is within the valid range for sf::Int16
-        if (sample > 1.0) sample = 1.0;
-        if (sample < -1.0) sample = -1.0;
-        Song.push_back(static_cast<sf::Int16>(sample * 32767)); // Scale to the full range
     }
-
-    sf::SoundBuffer soundBuffer;
-    soundBuffer.loadFromSamples(&Song[0], Song.size(), 1, 44100);
-    sf::Sound sound;
-    sound.setBuffer(soundBuffer);
-
-    // Play the sound
-    sound.play();
+    
+    _song_duration = _song.size() / _SR;
 }
 
+void Canvas::Play() const
+{
+    QThread *thread = new QThread();
+    // PlayAudio *p = new PlayAudio(_song, _SR, _samples, _song_duration);
+    // p->moveToThread(thread);
+    // QObject::connect(p, &PlayAudio::progress, this, [=](int v) { qDebug() << v;});
+}
 
 QSize Canvas::ImageShape()
 {

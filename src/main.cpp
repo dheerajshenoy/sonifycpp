@@ -1,3 +1,5 @@
+#ifndef __MAIN_CPP
+#define __MAIN_CPP
 
 class sonify;
 sonify *s;
@@ -11,3 +13,5 @@ int main(int argc, char *argv[])
     s->show();
     app.exec();
 }
+
+#endif

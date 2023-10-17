@@ -1,7 +1,6 @@
 #ifndef __STATUSBAR_HPP
 #define __STATUSBAR_HPP
 
-
 #include "sonify.hpp"
 
 class StatusBar : public QWidget

@@ -1,3 +1,6 @@
+#ifndef __UTILS_CPP
+#define __UTILS_CPP
+
 #include "utils.hpp"
 
 QImage Utils::cvMatToQImage( const cv::Mat &inMat )
@@ -86,3 +89,21 @@ std::vector<double> Utils::linspace(double start, double end, int num, bool endp
     return result;
 
 }
+
+template <typename T>
+T Utils::randchoice(std::vector<T> arr)
+{
+    // Create a random number generator engine
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    // Create a uniform distribution for floating-point choices
+    std::uniform_real_distribution<T> dist(0.0f, 1.0f);
+
+    // Generate a random value within [0.0, 1.0) and scale it to the range of choices
+    float randomValue = dist(gen);
+    int randomIndex = static_cast<T>(randomValue * arr.size());
+    return arr[randomIndex];
+}
+
+#endif

@@ -3,7 +3,6 @@
 
 #include "sonify.hpp"
 #include "preferences.hpp"
-#include "playaudio.hpp"
 
 sonify::sonify(QWidget *parent)
     : QMainWindow(parent)
@@ -18,8 +17,7 @@ sonify::sonify(QWidget *parent)
 
 void sonify::Play()
 {
-    PlayAudio *p = new PlayAudio();
-    p->start();
+    canvas->Play();
 }
 
 void sonify::_InitGUI()
@@ -53,10 +51,10 @@ void sonify::_InitMenubar()
     connect(action_file_open, &QAction::triggered, this, [=]() { this->_openImage(); });
 
     // Open Recent
-    QMenu *action_file_open_recent = new QMenu("Open Recent");
     action_file_open_recent->setIcon(QIcon(":/icons/open.png"));
 
-    // TODO: Handle open recent files
+    ReadRecentFiles();
+
 
     // Exit
     QAction *action_file_exit = new QAction(QIcon(":icons/exit.png"), "Exit");
@@ -144,6 +142,8 @@ void sonify::_openImage(QString path)
             canvas->SetImage(_fileName);
             statusbar->SetFile(_fileName);
             drawer->btn_sonify->setEnabled(true);
+            
+            addRecentFile(_fileName);
         }
         else
         {
@@ -153,8 +153,43 @@ void sonify::_openImage(QString path)
     }
     else
     {
-        
+        if(path != "" and QFile::exists(path))
+        {
+            statusbar->Msg("Image loaded", 5);
+            this->_fileName = path;
+            canvas->SetImage(_fileName);
+            statusbar->SetFile(_fileName);
+            drawer->btn_sonify->setEnabled(true);
+            
+            addRecentFile(_fileName);
+        }
+        else
+        {
+            statusbar->Msg("Could not open file!", 5);
+            // TODO: Handle file open error
+        }
     }
+}
+
+void sonify::ReadRecentFiles()
+{
+    std::ifstream file;
+    file.open("recentfiles.txt", std::ios_base::in);
+    std::string line;
+    QString name;
+    for(; getline(file, line); )
+    {
+        name = QString::fromStdString(line);
+        QAction *action = new QAction(name);
+        connect(action, &QAction::triggered, this, [=]() { this->_openImage(name); });
+        action_file_open_recent->addAction(action);
+    }
+}
+
+void sonify::addRecentFile(QString filePath)
+{
+    _recentFiles.open("recentfiles.txt", std::ios_base::app);
+    _recentFiles << filePath.toStdString() << "\n";
 }
 
 void sonify::_openPrefs()
