@@ -2,6 +2,7 @@
 #include <sndfile.h>
 #include <cmath>
 #include "traverse.hpp"
+#include "format.hpp"
 #include <SDL2/SDL.h>
 
 class Sonification
@@ -13,6 +14,7 @@ public:
     void play();
     void pause();
     void reset();
+    bool save(QString filename, Format format = Format::WAV);
     double getDuration();
     ~Sonification();
 
@@ -21,7 +23,7 @@ private:
     void m_SonifyNormal(QPixmap &pix);
     double m_MapIntensityToFrequence(int intensity);
     void m_GenerateSound();
-    void m_GenerateWavFile(QString filename);
+    bool m_GenerateWavFile(QString filename);
     QVector<double> m_GenerateSineWave(double amplitude, double frequency, double time);
 
     template <typename T>

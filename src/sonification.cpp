@@ -135,35 +135,51 @@ double Sonification::m_MapIntensityToFrequence(int intensity)
     return 200.0 + (intensity * 800.0 / 255.0);
 }
 
-void Sonification::m_GenerateWavFile(QString filename)
+bool Sonification::save(QString filename, Format f)
+{
+    switch(f)
+    {
+        case Format::WAV:
+            if(m_GenerateWavFile(filename))
+                return true;
+            break;
+
+        case Format::MP3:
+            break;
+    }
+
+    return false;
+}
+
+bool Sonification::m_GenerateWavFile(QString filename)
 {
     SF_INFO sfinfo;
     sfinfo.samplerate = m_SampleRate;
-    m_NumSamples = m_audioData.size();
-    sfinfo.frames = m_NumSamples;
+    sfinfo.frames = getDuration();
     sfinfo.format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
     sfinfo.channels = 1;
-    /*m_NumSamples = m_SampleRate * img.width();*/
 
     SNDFILE *sndfile = sf_open(filename.toStdString().c_str(), SFM_WRITE, &sfinfo);
 
     if (!sndfile) {
         fprintf(stderr, "Error writing to file: Error %d", sf_error(sndfile));
         m_audioData.clear();
+        return false;
     }
 
     sf_count_t count = sf_write_short(sndfile, m_audioData.data(), m_audioData.size());
 
-    if (count != m_NumSamples)
-    {
-        fprintf(stderr, "Error writing to file: Error %d", sf_error(sndfile));
-        sf_close(sndfile);
-        m_audioData.clear();
-    }
+    /*if (count != m_NumSamples)*/
+    /*{*/
+    /*    fprintf(stderr, "Error writing to file: Error %d", sf_error(sndfile));*/
+    /*    sf_close(sndfile);*/
+    /*    m_audioData.clear();*/
+    /*    return false;*/
+    /*}*/
 
     sf_close(sndfile);
 
-    m_audioData.clear();
+    return true;
 }
 
 double Sonification::getDuration()

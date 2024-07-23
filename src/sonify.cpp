@@ -38,9 +38,11 @@ void Sonify::initMenu()
     m_menu_bar = new QMenuBar();
 
     m_file_menu = new QMenu("File");
+    m_audio_menu = new QMenu("Audio");
     m_about_menu = new QMenu("About");
 
     m_menu_bar->addMenu(m_file_menu);
+    m_menu_bar->addMenu(m_audio_menu);
     m_menu_bar->addMenu(m_about_menu);
 
     this->setMenuBar(m_menu_bar);
@@ -48,10 +50,12 @@ void Sonify::initMenu()
     m_file__open = new QAction("Open");
     m_file__exit = new QAction("Exit");
 
+    m_audio__save = new QAction("Save");
 
     m_file_menu->addAction(m_file__open);
     m_file_menu->addAction(m_file__exit);
 
+    m_audio_menu->addAction(m_audio__save);
 }
 
 void Sonify::PlayAudio()
@@ -86,11 +90,29 @@ void Sonify::initConnections()
 
     connect(m_file__open, &QAction::triggered, this, [&]() { Sonify::Open(); });
 
+    connect(m_audio__save, &QAction::triggered, this, [&]() { Sonify::Save(); });
+
     connect(gv, &GV::animationFinished, this, [&]() {
         m_play_btn->setText("Play");
         m_isAudioPlaying = false;
         sonification->reset();
     });
+}
+
+bool Sonify::Save(QString filename)
+{
+    if (filename.isEmpty())
+    {
+        QFileDialog fd;
+        QString filename = fd.getSaveFileName(this, "Save Audio", nullptr, "Audio Files (*.wav)");
+
+        if (filename.isEmpty()) return false;
+
+        // Handle file format
+        return sonification->save(filename);
+    }
+
+    return false;
 }
 
 bool Sonify::Open(QString filename)

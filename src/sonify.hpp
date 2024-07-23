@@ -22,6 +22,7 @@ public:
     void Reset();
     void doSonify();
     bool Open(QString filename = "");
+    bool Save(QString filename = "");
     ~Sonify();
 
 private:
@@ -36,10 +37,13 @@ private:
 
     QMenuBar *m_menu_bar;
     QMenu *m_file_menu,
+          *m_audio_menu,
           *m_about_menu;
 
     QAction *m_file__open,
             *m_file__exit;
+
+    QAction *m_audio__save;
 
     QPixmap m_pix;
 };
