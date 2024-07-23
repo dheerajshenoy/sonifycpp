@@ -11,7 +11,6 @@ public:
     AnimatedLineItem()
     {
         this->setPen(QPen(Qt::red, 2));
-        this->setVisible(false);
         this->setZValue(1);
     }
 

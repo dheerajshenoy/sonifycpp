@@ -4,14 +4,15 @@
 
 Sonification::Sonification()
 {
-    m_val = 2 * M_PI / m_SampleRate;
 
+    m_NumSamples = 100;
     m_wavSpec.freq = 44100;
     m_wavSpec.format = AUDIO_S16LSB;
     m_wavSpec.channels = 1;
-    m_wavSpec.samples = 1024;
+    m_wavSpec.samples = m_NumSamples;
     m_wavSpec.callback = sdlAudioCallback;
     m_wavSpec.userdata = this;
+    m_val = 2 * M_PI * m_NumSamples / m_SampleRate;
 
     // Initialize SDL
     if (SDL_Init(SDL_INIT_AUDIO) < 0) {
@@ -54,25 +55,55 @@ void Sonification::Sonify(QPixmap &pix, Traverse mode)
     m_is_sonified = true;
 }
 
+QVector<double> Sonification::m_GenerateSineWave(double amplitude, double frequency, double time)
+{
+    QVector<double> fs;
+    fs.resize(m_NumSamples);
+    double val = m_val * frequency;
+    for(int i=0; i < m_NumSamples; i++)
+        fs[i] = amplitude * sin(val * i);
+    return fs;
+}
+
 // Normal mode sonification helper function
 // Vertical position to frequency, horizontal position to time
 // brightness into amplitude
 void Sonification::m_SonifyNormal(QPixmap &pix)
 {
     QImage img = pix.toImage();
-    double f = 0;
-    for(int x=0; x < img.width(); x ++)
+    QVector<double> temp;
+    for(int x=0; x < img.width(); x++)
     {
-        f = 0;
+        temp.clear();
+        temp.resize(m_NumSamples);
         for(int y=0; y < img.height(); y++)
         {
             QRgb pixel = img.pixel(x, y);
             double intensity = qGray(pixel);
-            /*f += m_MapIntensityToFrequence(intensity);*/
-            f += m_GenerateSineWave(intensity, y, x);
-            m_audioData.push_back(f);
+            auto sine = m_GenerateSineWave(intensity, y, x);
+            fprintf(stderr, "%d", sine.length());
+            fprintf(stderr, "%d", temp.length());
+            temp = addVectors<double>(temp, sine);
         }
+
+        for(int i=0; i < temp.size(); i++)
+            m_audioData.push_back(temp.at(i));
     }
+
+}
+
+template <typename T>
+QVector<T> Sonification::addVectors(QVector<T> &a, QVector<T> &b)
+{
+    if (a.length() != b.length()) return {};
+    QVector<T> res;
+    res.resize(a.length());
+
+    for(int i=0; i < a.length(); i++)
+    {
+        res[i] = a[i] + b[i];
+    }
+    return res;
 }
 
 void Sonification::pause()
@@ -90,13 +121,14 @@ void Sonification::reset()
     SDL_LockAudioDevice(m_audioDevice); // Lock the audio device to avoid race conditions
     m_audioOffset = 0; // Reset the audio offset
     SDL_UnlockAudioDevice(m_audioDevice); // Unlock the audio device
+    SDL_PauseAudioDevice(m_audioDevice, 1);
 }
 
 
-double Sonification::m_GenerateSineWave(double amplitude, double frequency, double time)
-{
-    return amplitude * std::sin(m_val * frequency * time);
-}
+/*double Sonification::m_GenerateSineWave(double amplitude, double frequency, double time)*/
+/*{*/
+/*    return amplitude * std::sin(m_val * frequency * time);*/
+/*}*/
 
 double Sonification::m_MapIntensityToFrequence(int intensity)
 {
@@ -136,7 +168,7 @@ void Sonification::m_GenerateWavFile(QString filename)
 
 double Sonification::getDuration()
 {
-    return static_cast<double>(static_cast<int>(m_audioData.size()) / m_SampleRate);
+    return m_audioData.size() / m_SampleRate;
 }
 
 void Sonification::sdlAudioCallback(void* userdata, Uint8* stream, int len)

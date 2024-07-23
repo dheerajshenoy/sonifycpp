@@ -22,11 +22,14 @@ private:
     double m_MapIntensityToFrequence(int intensity);
     void m_GenerateSound();
     void m_GenerateWavFile(QString filename);
-    double m_GenerateSineWave(double amplitude, double frequency, double time);
+    QVector<double> m_GenerateSineWave(double amplitude, double frequency, double time);
+
+    template <typename T>
+    QVector<T> addVectors(QVector<T> &, QVector<T> &);
 
     static void sdlAudioCallback(void* userdata, Uint8* stream, int len);
 
-    int m_SampleRate = 44100;
+    float m_SampleRate = 44100.0f;
     int m_ChannelCount = 2;
 
     int m_Duration, m_NumSamples;

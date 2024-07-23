@@ -3,11 +3,13 @@
 #include <qt6/QtWidgets/QGraphicsScene>
 #include <qt6/QtWidgets/QGraphicsLineItem>
 #include <qt6/QtCore/QPropertyAnimation>
+#include <qt6/QtCore/QObject>
 #include "traverse.hpp"
 #include "line.hpp"
 
 class GV : public QGraphicsView
 {
+    Q_OBJECT
 public:
     GV(QWidget *parent = nullptr);
 
@@ -17,6 +19,10 @@ public:
     void pause();
     void setDuration(double s);
     ~GV();
+
+signals:
+    void animationFinished();
+
 
 private:
 
@@ -29,5 +35,5 @@ private:
     QPropertyAnimation *m_anim;
 
     AnimatedLineItem *m_li;
-    int m_duration_s = 1;
+    double m_duration_s = 1.0f;
 };

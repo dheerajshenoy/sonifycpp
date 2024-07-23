@@ -5,6 +5,7 @@ GV::GV(QWidget *parent) : QGraphicsView(parent)
     m_li = new AnimatedLineItem();
     m_scene->addItem(m_li);
     this->show();
+
 }
 
 void GV::setDuration(double s)
@@ -16,11 +17,20 @@ void GV::setDuration(double s)
 
 void GV::setPixmap(QPixmap &pix)
 {
+    if (!pix) return;
+
+    if (m_anim)
+    {
+        disconnect(m_anim, &QPropertyAnimation::finished, this, nullptr);
+    }
     m_pi->setPixmap(pix);
     m_scene->addItem(m_pi);
     
     m_li->setImageHeight(pix.height());
     m_anim = new QPropertyAnimation(m_li, "x");
+    connect(m_anim, &QPropertyAnimation::finished, this, [&]() {
+        emit animationFinished();
+    });
     m_anim->setStartValue(0);
     m_anim->setEndValue(pix.width());
 
@@ -31,7 +41,7 @@ void GV::play()
     m_isPlaying = true;
     traverse(Traverse::NORMAL);
 
-    m_li->setVisible(true);
+    /*m_li->setVisible(true);*/
 
     if (m_anim->state() == QPropertyAnimation::State::Paused)
         m_anim->setPaused(false);
@@ -40,16 +50,15 @@ void GV::play()
 void GV::reset()
 {
     m_isPlaying = false;
-    /*m_li->setLine(0, 0, 0, m_pix.height());*/
+    m_li->setX(0);
     m_anim->stop();
-    m_li->setVisible(false);
-    m_anim->setPaused(true);
+    /*m_li->setVisible(false);*/
 }
 
 void GV::pause()
 {
     m_isPlaying = false;
-    m_li->setVisible(false);
+    /*m_li->setVisible(false);*/
 
     if (m_anim->state() == QPropertyAnimation::State::Running)
         m_anim->setPaused(true);
