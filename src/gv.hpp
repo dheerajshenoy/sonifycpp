@@ -18,16 +18,14 @@ public:
     void reset();
     void pause();
     void setDuration(double s);
+    void setTraverse(Traverse t);
     ~GV();
 
 signals:
     void animationFinished();
 
-
 private:
 
-    void traverse(Traverse);
-    void traverse_normal();
     QGraphicsScene *m_scene = new QGraphicsScene();
     QGraphicsPixmapItem *m_pi = new QGraphicsPixmapItem();
 
@@ -36,4 +34,6 @@ private:
 
     AnimatedLineItem *m_li;
     double m_duration_s = 1.0f;
+
+    Traverse m_traverse = Traverse::LEFT_TO_RIGHT;
 };

@@ -10,6 +10,10 @@ Sonify::Sonify(QWidget *parent)
     m_sonify_btn = new QPushButton("Sonify");
     m_play_btn = new QPushButton("Play");
     m_reset_btn = new QPushButton("Reset");
+    m_traverse_combo = new QComboBox();
+
+    m_traverse_combo->addItem("Left to Right");
+    m_traverse_combo->addItem("Right to Left");
 
     m_widget->setLayout(m_layout);
     m_layout->addWidget(gv);
@@ -19,6 +23,7 @@ Sonify::Sonify(QWidget *parent)
     m_layout->addWidget(m_sonify_btn);
     m_layout->addWidget(m_play_btn);
     m_layout->addWidget(m_reset_btn);
+    m_layout->addWidget(m_traverse_combo);
 
     /*m_sonify_btn->setEnabled(false);*/
     m_play_btn->setEnabled(false);
@@ -150,17 +155,39 @@ void Sonify::doSonify()
     {
         if (Open())
         {
-            sonification->Sonify(m_pix);
-            fprintf(stderr, "%lf", sonification->getDuration());
+
+            if (m_traverse_combo->currentText() == "Left to Right")
+            {
+                sonification->Sonify(m_pix, Traverse::LEFT_TO_RIGHT);
+                gv->setTraverse(Traverse::LEFT_TO_RIGHT);
+            }
+            else if (m_traverse_combo->currentText() == "Right to Left")
+            {
+                sonification->Sonify(m_pix, Traverse::RIGHT_TO_LEFT);
+                gv->setTraverse(Traverse::RIGHT_TO_LEFT);
+            }
             gv->setDuration(sonification->getDuration());
+            fprintf(stderr, "DURATION = %lf", sonification->getDuration());
+            m_play_btn->setEnabled(true);
+            m_reset_btn->setEnabled(true);
         }
         return;
     }
 
-    sonification->Sonify(m_pix);
-    fprintf(stderr, "%lf", sonification->getDuration());
-    gv->setDuration(sonification->getDuration());
+    if (m_traverse_combo->currentText() == "Left to Right")
+    {
+        sonification->Sonify(m_pix, Traverse::LEFT_TO_RIGHT);
+        gv->setTraverse(Traverse::LEFT_TO_RIGHT);
+        gv->setDuration(sonification->getDuration());
+    }
+    else if (m_traverse_combo->currentText() == "Right to Left")
+    {
+        sonification->Sonify(m_pix, Traverse::RIGHT_TO_LEFT);
+        gv->setTraverse(Traverse::RIGHT_TO_LEFT);
+        gv->setDuration(sonification->getDuration());
+    }
 
+    fprintf(stderr, "DURATION = %lf", sonification->getDuration());
     m_play_btn->setEnabled(true);
     m_reset_btn->setEnabled(true);
 }

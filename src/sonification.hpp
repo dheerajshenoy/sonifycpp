@@ -10,7 +10,7 @@ class Sonification
 
 public:
     Sonification();
-    void Sonify(QPixmap &pix, Traverse mode = Traverse::NORMAL);
+    void Sonify(QPixmap &pix, Traverse mode = Traverse::LEFT_TO_RIGHT);
     void play();
     void pause();
     void reset();
@@ -20,7 +20,8 @@ public:
 
 private:
 
-    void m_SonifyNormal(QPixmap &pix);
+    void m_Sonify_LeftToRight(QPixmap &pix);
+    void m_Sonify_RightToLeft(QPixmap &pix);
     double m_MapIntensityToFrequence(int intensity);
     void m_GenerateSound();
     bool m_GenerateWavFile(QString filename);
@@ -32,18 +33,19 @@ private:
     static void sdlAudioCallback(void* userdata, Uint8* stream, int len);
 
     float m_SampleRate = 44100.0f;
-    int m_ChannelCount = 2;
+    int m_ChannelCount = 1;
 
-    int m_Duration, m_NumSamples;
+    double m_Duration;
+
+    int m_NumSamples;
 
     QVector<short> m_audioData;
 
     double m_val;
-
-
     SDL_AudioSpec m_wavSpec;
     SDL_AudioDeviceID m_audioDevice;
     size_t m_audioOffset = 0;
 
-    bool m_is_sonified = false;
+    Traverse m_traverse = Traverse::LEFT_TO_RIGHT;
+
 };

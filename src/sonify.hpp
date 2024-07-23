@@ -7,6 +7,7 @@
 #include <qt6/QtWidgets/QHBoxLayout>
 #include <qt6/QtWidgets/QWidget>
 #include <qt6/QtWidgets/QPushButton>
+#include <qt6/QtWidgets/QComboBox>
 #include <qt6/QtWidgets/QLabel>
 #include "sonification.hpp"
 #include "gv.hpp"
@@ -44,6 +45,7 @@ private:
             *m_file__exit;
 
     QAction *m_audio__save;
+    QComboBox *m_traverse_combo;
 
     QPixmap m_pix;
 };
