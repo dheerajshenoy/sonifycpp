@@ -32,6 +32,7 @@ Credit: [Link](https://www.seeingwithsound.com/im2sound.htm)
 5. [ ] Waveform visualizer
 6. [ ] Export audio to various formats like MP4, AAC etc.
 7. [ ] Pixel audio visualiser (inpsecting each column or row of pixel from the image and producing the audio instantly).
+8. [ ] Video record the sonification image
 
 # Demo
 
