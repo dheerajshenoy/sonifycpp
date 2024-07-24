@@ -5,13 +5,18 @@
 #include <qt6/QtWidgets/QMenu>
 #include <qt6/QtWidgets/QMenuBar>
 #include <qt6/QtWidgets/QHBoxLayout>
+#include <qt6/QtWidgets/QGridLayout>
 #include <qt6/QtWidgets/QWidget>
 #include <qt6/QtWidgets/QPushButton>
+#include <qt6/QtWidgets/QSplitter>
 #include <qt6/QtWidgets/QComboBox>
 #include <qt6/QtWidgets/QLabel>
 #include <qt6/QtWidgets/QSpinBox>
+#include <qt6/QtCore/QTimer>
+#include <qt6/QtWidgets/QSizePolicy>
 #include "sonification.hpp"
 #include "gv.hpp"
+#include "qcustomplot.h"
 
 class Sonify : public QMainWindow
 {
@@ -25,10 +30,14 @@ public:
     void doSonify();
     bool Open(QString filename = "");
     bool Save(QString filename = "");
+    void setMsg(QString msg, int s = -1);
     ~Sonify();
 
 private:
     QWidget *m_widget;
+    QSplitter *m_splitter;
+    QWidget *m_side_panel;
+    QGridLayout *m_side_panel_layout = new QGridLayout();
     QVBoxLayout *m_layout;
     Sonification *sonification = new Sonification();
     QPushButton *m_play_btn,
@@ -40,16 +49,25 @@ private:
     QMenuBar *m_menu_bar;
     QMenu *m_file_menu,
           *m_audio_menu,
+          *m_view_menu,
           *m_about_menu;
 
     QAction *m_file__open,
             *m_file__exit;
 
     QAction *m_audio__save;
+    QAction *m_view__waveform;
     QComboBox *m_traverse_combo;
 
-    QLabel *m_duration_label;
+    QLabel *m_duration_label, *m_traverse_label, *m_num_samples_label, *m_statusbar_msg_label;
     QSpinBox *m_num_samples_spinbox;
 
+    QWidget *m_status_bar;
+    QHBoxLayout *m_status_bar_layout;
+
     QPixmap m_pix;
+
+    void viewWaveform(bool state = false);
+    QCustomPlot *waveformplot = new QCustomPlot();
+
 };

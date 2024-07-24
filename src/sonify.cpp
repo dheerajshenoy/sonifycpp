@@ -1,4 +1,5 @@
 #include "sonify.hpp"
+#include "qcustomplot.h"
 
 
 Sonify::Sonify(QWidget *parent)
@@ -6,16 +7,31 @@ Sonify::Sonify(QWidget *parent)
 {
 
     m_widget = new QWidget();
+    m_side_panel = new QWidget();
+    m_side_panel_layout = new QGridLayout();
     m_layout = new QVBoxLayout();
     m_sonify_btn = new QPushButton("Sonify");
     m_play_btn = new QPushButton("Play");
     m_reset_btn = new QPushButton("Reset");
     m_traverse_combo = new QComboBox();
     m_duration_label = new QLabel("Duration: ");
+    m_traverse_label = new QLabel("Traversal Mode: ");
+    m_num_samples_label = new QLabel("Samples: ");
     m_num_samples_spinbox = new QSpinBox();
     m_num_samples_spinbox->setMinimum(1);
     m_num_samples_spinbox->setMaximum(4000);
     m_num_samples_spinbox->setValue(1024);
+    m_splitter = new QSplitter();
+
+    m_status_bar = new QWidget();
+    m_status_bar->setMaximumHeight(30);
+    m_status_bar_layout = new QHBoxLayout();
+    m_statusbar_msg_label = new QLabel();
+
+    m_status_bar_layout->addWidget(m_statusbar_msg_label);
+    m_status_bar_layout->addWidget(m_duration_label);
+
+    m_status_bar->setLayout(m_status_bar_layout);
 
     m_traverse_combo->addItem("Left to Right");
     m_traverse_combo->addItem("Right to Left");
@@ -25,17 +41,33 @@ Sonify::Sonify(QWidget *parent)
     m_traverse_combo->addItem("Circle Inwards");
 
     m_widget->setLayout(m_layout);
-    m_layout->addWidget(gv);
+
+    waveformplot->addGraph();
+    m_layout->addWidget(m_splitter);
+
+    m_splitter->addWidget(m_side_panel);
+    m_splitter->addWidget(gv);
+
+
+    m_side_panel->setFixedWidth(300);
+    m_side_panel->setLayout(m_side_panel_layout);
 
     gv->setAlignment(Qt::AlignmentFlag::AlignCenter);
 
-    m_layout->addWidget(m_sonify_btn);
-    m_layout->addWidget(m_play_btn);
-    m_layout->addWidget(m_reset_btn);
-    m_layout->addWidget(m_traverse_combo);
-    m_layout->addWidget(m_duration_label);
-    m_layout->addWidget(m_num_samples_spinbox);
+    m_side_panel_layout->addWidget(m_sonify_btn, 0, 0, 1, 2);
+    m_side_panel_layout->addWidget(m_play_btn, 1, 0);
+    m_side_panel_layout->addWidget(m_reset_btn, 1, 1);
+    m_side_panel_layout->addWidget(m_traverse_label, 2, 0);
+    m_side_panel_layout->addWidget(m_traverse_combo, 2, 1);
+    m_side_panel_layout->addWidget(m_num_samples_label, 3, 0);
+    m_side_panel_layout->addWidget(m_num_samples_spinbox, 3, 1);
+    QLabel *m_separator = new QLabel();
+    m_side_panel_layout->addWidget(m_separator, 4, 0, 1, 1, Qt::AlignCenter);
 
+
+    m_layout->addWidget(waveformplot);
+    m_layout->addWidget(m_status_bar);
+    waveformplot->setVisible(false);
     /*m_sonify_btn->setEnabled(false);*/
     m_play_btn->setEnabled(false);
     m_reset_btn->setEnabled(false);
@@ -49,19 +81,40 @@ Sonify::Sonify(QWidget *parent)
     /*Open("/home/neo/Gits/sonifycpp/test2.png");*/
 }
 
+void Sonify::setMsg(QString msg, int s)
+{
+    if (!msg.isEmpty())
+    {
+        if (s > 0)
+        {
+            m_statusbar_msg_label->setText(msg);
+
+            QTimer::singleShot(s * 1000, [&]() {
+                m_statusbar_msg_label->clear();
+            });
+
+            return;
+        }
+        else {
+            m_statusbar_msg_label->setText(msg);
+        }
+    }
+}
+
 void Sonify::initMenu()
 {
     m_menu_bar = new QMenuBar();
 
     m_file_menu = new QMenu("File");
     m_audio_menu = new QMenu("Audio");
+    m_view_menu = new QMenu("View");
     m_about_menu = new QMenu("About");
 
     m_menu_bar->addMenu(m_file_menu);
+    m_menu_bar->addMenu(m_view_menu);
     m_menu_bar->addMenu(m_audio_menu);
     m_menu_bar->addMenu(m_about_menu);
 
-    this->setMenuBar(m_menu_bar);
 
     m_file__open = new QAction("Open");
     m_file__exit = new QAction("Exit");
@@ -72,6 +125,12 @@ void Sonify::initMenu()
     m_file_menu->addAction(m_file__exit);
 
     m_audio_menu->addAction(m_audio__save);
+
+    m_view__waveform = new QAction("Waveform");
+    m_view__waveform->setCheckable(true);
+
+    m_view_menu->addAction(m_view__waveform);
+    this->setMenuBar(m_menu_bar);
 }
 
 void Sonify::PlayAudio()
@@ -113,6 +172,44 @@ void Sonify::initConnections()
         m_isAudioPlaying = false;
         sonification->reset();
     });
+
+    connect(m_view__waveform, &QAction::triggered, this, &Sonify::viewWaveform);
+}
+
+QVector<double> convertToDouble(const QVector<short>& shortData) {
+    QVector<double> doubleData;
+    doubleData.reserve(shortData.size());
+    for (short value : shortData) {
+        doubleData.append(static_cast<double>(value / 255.0));
+    }
+    return doubleData;
+}
+
+void Sonify::viewWaveform(bool state)
+{
+    if (state)
+    {
+        /*QVector<double> y = convertToDouble(sonification->getAudioData());*/
+        /**/
+        /*QVector<double> x;*/
+        /*x.resize(y.size());*/
+        /**/
+        /*for(int i=0; i < y.size(); i++)*/
+        /*{*/
+        /*    x[i] = i;*/
+        /*}*/
+        /**/
+        /*waveformplot->graph(0)->setPen(QPen(QColor(Qt::red), 2));*/
+        /*waveformplot->graph(0)->setData(x, y);*/
+        /*waveformplot->xAxis->setRange(0, y.size());*/
+        waveformplot->yAxis->setRange(-1, 1);
+        waveformplot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables);
+        waveformplot->xAxis->setLabel("x");
+        waveformplot->yAxis->setLabel("y");
+        waveformplot->replot();
+    }
+
+    waveformplot->setVisible(state);
 }
 
 bool Sonify::Save(QString filename)
@@ -205,7 +302,6 @@ void Sonify::doSonify()
             }
 
             gv->setDuration(sonification->getDuration());
-            fprintf(stderr, "DURATION = %lf", sonification->getDuration());
             m_duration_label->setText("Duration: " + QString::number(sonification->getDuration()) + "s");
             m_play_btn->setEnabled(true);
             m_reset_btn->setEnabled(true);
@@ -252,7 +348,6 @@ void Sonify::doSonify()
     }
 
     gv->setDuration(sonification->getDuration());
-    fprintf(stderr, "DURATION = %lf", sonification->getDuration());
     m_duration_label->setText("Duration: " + QString::number(sonification->getDuration()) + "s");
     m_play_btn->setEnabled(true);
     m_reset_btn->setEnabled(true);

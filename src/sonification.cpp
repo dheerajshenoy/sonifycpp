@@ -8,7 +8,7 @@ Sonification::Sonification()
     m_val = 2 * M_PI * m_NumSamples / m_SampleRate;
     // Initialize SDL
     if (SDL_Init(SDL_INIT_AUDIO) < 0) {
-        fprintf(stderr, "SDL could not initialize! SDL_Error: %s", SDL_GetError());
+        qDebug() << "SDL could not initialize! SDL_Error: " << SDL_GetError();
         return;
     }
 
@@ -49,7 +49,7 @@ void Sonification::Sonify(QPixmap &pix, Traverse mode)
         SDL_CloseAudioDevice(m_audioDevice);
     m_audioDevice = SDL_OpenAudioDevice(nullptr, 0, &m_wavSpec, nullptr, 0);
     if (m_audioDevice == 0) {
-        fprintf(stderr, "Failed to open audio device: %s", SDL_GetError());
+        qDebug() << "Failed to open audio device: " << SDL_GetError();
         return;
     }
 
@@ -114,7 +114,6 @@ void Sonification::m_Sonify_LeftToRight(QPixmap &pix)
             QColor col = QColor(pixel);
             /*double intensity = qGray(pixel);*/
             double intensity = (col.red() + col.green() + col.blue())/3.0;
-            fprintf(stderr, "INTENSITY = %lf", intensity);
             auto sine = m_GenerateSineWave(intensity, y, x);
             temp = addVectors<double>(temp, sine);
         }
@@ -352,7 +351,7 @@ bool Sonification::m_GenerateWavFile(QString filename)
     SNDFILE *sndfile = sf_open(filename.toStdString().c_str(), SFM_WRITE, &sfinfo);
 
     if (!sndfile) {
-        fprintf(stderr, "Error writing to file: Error %d", sf_error(sndfile));
+        qDebug() << "Error writing to file: Error %d" << sf_error(sndfile);
         m_audioData.clear();
         return false;
     }
@@ -396,4 +395,9 @@ void Sonification::sdlAudioCallback(void* userdata, Uint8* stream, int len)
     /*    s->m_audioOffset = 0;*/
     /*    SDL_PauseAudioDevice(s->m_audioDevice, 1);*/
     /*}*/
+}
+
+QVector<short> Sonification::getAudioData()
+{
+    return m_audioData;
 }

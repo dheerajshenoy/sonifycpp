@@ -5,6 +5,7 @@
 #include "format.hpp"
 #include <SDL2/SDL.h>
 #include <qt6/QtCore/QtMath>
+#include <qt6/QtCore/QDebug>
 #include <qt6/QtGui/QRgb>
 
 class Sonification
@@ -20,6 +21,7 @@ public:
     bool save(QString filename, Format format = Format::WAV);
     double getDuration();
     ~Sonification();
+    QVector<short> getAudioData();
 
 private:
 
