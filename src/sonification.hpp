@@ -4,6 +4,7 @@
 #include "traverse.hpp"
 #include "format.hpp"
 #include <SDL2/SDL.h>
+#include <qt6/QtCore/QtMath>
 
 class Sonification
 {
@@ -11,6 +12,7 @@ class Sonification
 public:
     Sonification();
     void Sonify(QPixmap &pix, Traverse mode = Traverse::LEFT_TO_RIGHT);
+    void setNumSamples(int nsamples);
     void play();
     void pause();
     void reset();
@@ -22,6 +24,12 @@ private:
 
     void m_Sonify_LeftToRight(QPixmap &pix);
     void m_Sonify_RightToLeft(QPixmap &pix);
+    void m_Sonify_TopToBottom(QPixmap &pix);
+    void m_Sonify_BottomToTop(QPixmap &pix);
+    void m_Sonify_CircleInwards(QPixmap &pix);
+    void m_Sonify_CircleOutwards(QPixmap &pix);
+
+
     double m_MapIntensityToFrequence(int intensity);
     void m_GenerateSound();
     bool m_GenerateWavFile(QString filename);
@@ -37,7 +45,7 @@ private:
 
     double m_Duration;
 
-    int m_NumSamples;
+    int m_NumSamples = 1024;
 
     QVector<short> m_audioData;
 

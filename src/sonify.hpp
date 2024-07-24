@@ -9,6 +9,7 @@
 #include <qt6/QtWidgets/QPushButton>
 #include <qt6/QtWidgets/QComboBox>
 #include <qt6/QtWidgets/QLabel>
+#include <qt6/QtWidgets/QSpinBox>
 #include "sonification.hpp"
 #include "gv.hpp"
 
@@ -46,6 +47,9 @@ private:
 
     QAction *m_audio__save;
     QComboBox *m_traverse_combo;
+
+    QLabel *m_duration_label;
+    QSpinBox *m_num_samples_spinbox;
 
     QPixmap m_pix;
 };

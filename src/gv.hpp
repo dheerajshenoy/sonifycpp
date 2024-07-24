@@ -6,6 +6,7 @@
 #include <qt6/QtCore/QObject>
 #include "traverse.hpp"
 #include "line.hpp"
+#include "circle.hpp"
 
 class GV : public QGraphicsView
 {
@@ -33,6 +34,7 @@ private:
     QPropertyAnimation *m_anim;
 
     AnimatedLineItem *m_li;
+    AnimatedCircleItem *m_ci;
     double m_duration_s = 1.0f;
 
     Traverse m_traverse = Traverse::LEFT_TO_RIGHT;

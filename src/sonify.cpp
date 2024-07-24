@@ -11,9 +11,18 @@ Sonify::Sonify(QWidget *parent)
     m_play_btn = new QPushButton("Play");
     m_reset_btn = new QPushButton("Reset");
     m_traverse_combo = new QComboBox();
+    m_duration_label = new QLabel("Duration: ");
+    m_num_samples_spinbox = new QSpinBox();
+    m_num_samples_spinbox->setMinimum(1);
+    m_num_samples_spinbox->setMaximum(4000);
+    m_num_samples_spinbox->setValue(1024);
 
     m_traverse_combo->addItem("Left to Right");
     m_traverse_combo->addItem("Right to Left");
+    m_traverse_combo->addItem("Top to Bottom");
+    m_traverse_combo->addItem("Bottom to Top");
+    m_traverse_combo->addItem("Circle Outwards");
+    m_traverse_combo->addItem("Circle Inwards");
 
     m_widget->setLayout(m_layout);
     m_layout->addWidget(gv);
@@ -24,6 +33,8 @@ Sonify::Sonify(QWidget *parent)
     m_layout->addWidget(m_play_btn);
     m_layout->addWidget(m_reset_btn);
     m_layout->addWidget(m_traverse_combo);
+    m_layout->addWidget(m_duration_label);
+    m_layout->addWidget(m_num_samples_spinbox);
 
     /*m_sonify_btn->setEnabled(false);*/
     m_play_btn->setEnabled(false);
@@ -151,6 +162,7 @@ bool Sonify::Open(QString filename)
 
 void Sonify::doSonify()
 {
+    sonification->setNumSamples(m_num_samples_spinbox->value());
     if (!m_pix)
     {
         if (Open())
@@ -166,8 +178,35 @@ void Sonify::doSonify()
                 sonification->Sonify(m_pix, Traverse::RIGHT_TO_LEFT);
                 gv->setTraverse(Traverse::RIGHT_TO_LEFT);
             }
+
+            else if (m_traverse_combo->currentText() == "Top to Bottom")
+            {
+                sonification->Sonify(m_pix, Traverse::TOP_TO_BOTTOM);
+                gv->setTraverse(Traverse::TOP_TO_BOTTOM);
+            }
+
+            else if (m_traverse_combo->currentText() == "Bottom to Top")
+            {
+
+                sonification->Sonify(m_pix, Traverse::BOTTOM_TO_TOP);
+                gv->setTraverse(Traverse::BOTTOM_TO_TOP);
+            }
+
+            else if (m_traverse_combo->currentText() == "Circle Outwards")
+            {
+                sonification->Sonify(m_pix, Traverse::CIRCLE_OUTWARDS);
+                gv->setTraverse(Traverse::CIRCLE_OUTWARDS);
+            }
+
+            else if (m_traverse_combo->currentText() == "Circle Inwards")
+            {
+                sonification->Sonify(m_pix, Traverse::CIRCLE_INWARDS);
+                gv->setTraverse(Traverse::CIRCLE_INWARDS);
+            }
+
             gv->setDuration(sonification->getDuration());
             fprintf(stderr, "DURATION = %lf", sonification->getDuration());
+            m_duration_label->setText("Duration: " + QString::number(sonification->getDuration()) + "s");
             m_play_btn->setEnabled(true);
             m_reset_btn->setEnabled(true);
         }
@@ -178,16 +217,43 @@ void Sonify::doSonify()
     {
         sonification->Sonify(m_pix, Traverse::LEFT_TO_RIGHT);
         gv->setTraverse(Traverse::LEFT_TO_RIGHT);
-        gv->setDuration(sonification->getDuration());
     }
     else if (m_traverse_combo->currentText() == "Right to Left")
     {
         sonification->Sonify(m_pix, Traverse::RIGHT_TO_LEFT);
         gv->setTraverse(Traverse::RIGHT_TO_LEFT);
-        gv->setDuration(sonification->getDuration());
     }
 
+    else if (m_traverse_combo->currentText() == "Top to Bottom")
+    {
+        sonification->Sonify(m_pix, Traverse::TOP_TO_BOTTOM);
+        gv->setTraverse(Traverse::TOP_TO_BOTTOM);
+    }
+
+    else if (m_traverse_combo->currentText() == "Bottom to Top")
+    {
+
+        sonification->Sonify(m_pix, Traverse::BOTTOM_TO_TOP);
+        gv->setTraverse(Traverse::BOTTOM_TO_TOP);
+    }
+
+    else if (m_traverse_combo->currentText() == "Circle Outwards")
+    {
+
+        sonification->Sonify(m_pix, Traverse::CIRCLE_OUTWARDS);
+        gv->setTraverse(Traverse::CIRCLE_OUTWARDS);
+    }
+
+    else if (m_traverse_combo->currentText() == "Circle Inwards")
+    {
+
+        sonification->Sonify(m_pix, Traverse::CIRCLE_INWARDS);
+        gv->setTraverse(Traverse::CIRCLE_INWARDS);
+    }
+
+    gv->setDuration(sonification->getDuration());
     fprintf(stderr, "DURATION = %lf", sonification->getDuration());
+    m_duration_label->setText("Duration: " + QString::number(sonification->getDuration()) + "s");
     m_play_btn->setEnabled(true);
     m_reset_btn->setEnabled(true);
 }

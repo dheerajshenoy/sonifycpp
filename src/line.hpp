@@ -7,6 +7,7 @@
 class AnimatedLineItem : public QObject, public QGraphicsLineItem {
     Q_OBJECT
     Q_PROPERTY(qreal x READ x WRITE setX)
+    Q_PROPERTY(qreal y READ y WRITE setY)
 
 public:
     AnimatedLineItem()
@@ -16,10 +17,6 @@ public:
     }
 
     using QGraphicsLineItem::QGraphicsLineItem;
-
-    qreal x() {
-        return line().p1().x();
-    }
 
     void setImageWidth(qreal w)
     {
@@ -35,14 +32,28 @@ public:
         m_line = line();
     }
 
+    qreal x() {
+        return line().p1().x();
+    }
+
     void setX(qreal x) {
         QLineF F = line();
         F.setLine(x, 0, x, m_h);
         setLine(F);
     }
 
-    void reset() {
+    qreal y() {
+        return line().p1().y();
+    }
 
+
+    void setY(qreal y) {
+        QLineF F = line();
+        F.setLine(0, y, m_w, y);
+        setLine(F);
+    }
+
+    void reset() {
         this->setLine(m_line);
     }
 
