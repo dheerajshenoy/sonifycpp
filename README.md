@@ -6,19 +6,30 @@ Convert images to audio signals.
 
 Image sonification refers to the process of converting images to audio signals. This is done by mapping the pixels of the image to frequencies of sound. The way in which the image is traversed changes the resultant audio, and the way in which the pixels are mapped to frequencies also changes the audio. So, there can be an infinite possibilites of mapping things.
 
-### SonifyCPP is currently able to traverse images in the following manner:
-1. Left to Right (Linear)
-2. Right to Left (Linear)
-3. Top to Bottom (Linear)
-4. Bottom to Top (Linear)
-5. Circular Outwards
-6. Circular Inwards (In progress)
+## SonifyCPP is currently able to traverse images in the following manner:
+
+### 1. Left to Right (Linear)
 
 ![Left to Right](https://github.com/user-attachments/assets/5342b735-028f-429a-9c82-d8ac401a0769)
+
+### 2. Right to Left (Linear)
+
 ![Right to Left](https://github.com/user-attachments/assets/68a9f8da-1116-4a0c-8f82-4806da90ba18)
+
+### 3. Top to Bottom (Linear)
+
 ![Top to Bottom](https://github.com/user-attachments/assets/d0d54029-6cf5-43b9-a31d-cbf22b5f6ac2)
+ 
+### 4. Bottom to Top (Linear)
+
 ![Bottom to Top](https://github.com/user-attachments/assets/7f4b1aef-1ea1-4208-874f-487adb1eb0ea)
+   
+### 5. Circular Outwards
+
 ![Circular Outwards](https://github.com/user-attachments/assets/33dbc508-8a17-44b2-ac1c-2db59b249d1d)
+  
+### 6. Circular Inwards (In progress)
+
 ![Circular Inwards](https://github.com/user-attachments/assets/077c4ae8-e7e9-4e3c-931e-156799afd3a7)
 
 ### Pixel mapping
