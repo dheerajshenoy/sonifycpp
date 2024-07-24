@@ -10,7 +10,7 @@ OBJECTS_DIR = obj/
 MOC_DIR = moc/
 DESTDIR = bin/
 
-QT += gui core widgets
+QT += gui core widgets printsupport
 LIBS += -lsndfile -lSDL2
 # You can make your code fail to compile if you use deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -24,5 +24,7 @@ HEADERS += src/gv.hpp \
            src/line.hpp \
            src/sonification.hpp \
            src/sonify.hpp \
-           src/traverse.hpp
-SOURCES += src/gv.cpp src/main.cpp src/sonification.cpp src/sonify.cpp
+           src/traverse.hpp \
+           src/circle.hpp \
+           src/qcustomplot.h
+SOURCES += src/gv.cpp src/main.cpp src/sonification.cpp src/sonify.cpp src/qcustomplot.cpp
