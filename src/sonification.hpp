@@ -5,6 +5,7 @@
 #include "format.hpp"
 #include <SDL2/SDL.h>
 #include <qt6/QtCore/QtMath>
+#include <qt6/QtGui/QRgb>
 
 class Sonification
 {
