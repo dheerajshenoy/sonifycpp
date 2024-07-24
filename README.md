@@ -51,7 +51,7 @@ Credit: [Link](https://www.seeingwithsound.com/im2sound.htm)
 
 ## TODO
 
-1. [ ] Nice GUI
+1. [x] Nice GUI
 2. [x] Save resulting audio
 3. [ ] Option for mapping selection
 4. [ ] Support for custom mapping user functions (maybe add lua scripting support ?)
