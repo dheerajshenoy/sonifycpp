@@ -6,6 +6,8 @@ Convert images to audio signals.
 
 Image sonification refers to the process of converting images to audio signals. This is done by mapping the pixels of the image to frequencies of sound. The way in which the image is traversed changes the resultant audio, and the way in which the pixels are mapped to frequencies also changes the audio. So, there can be an infinite possibilites of mapping things.
 
+This project is a performant successor to [Sonify](https://github.com/dheerajshenoy/sonify/) which was written in Python.
+
 ## SonifyCPP is currently able to traverse images in the following manner:
 
 ### 1. Left to Right (Linear)
@@ -47,7 +49,6 @@ Currently, I am taking the **grayscale** of the input image, mapping the pixel p
 
 Credit: [Link](https://www.seeingwithsound.com/im2sound.htm)
 
-*NOTE*: This is a performant version of [Sonify](https://github.com/dheerajshenoy/sonify/) which is written in Python.
 
 ## TODO
 
