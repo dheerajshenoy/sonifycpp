@@ -108,6 +108,8 @@ void GV::setTraverse(Traverse t)
         break;
 
         case Traverse::CIRCLE_INWARDS:
+            if (m_li)
+                m_scene->removeItem(m_li);
             if (m_ci)
             {
                 m_scene->removeItem(m_ci);
@@ -124,6 +126,42 @@ void GV::setTraverse(Traverse t)
             });
             m_anim->setEndValue(0);
             m_anim->setStartValue(std::max(m_pi->pixmap().width(), m_pi->pixmap().height()) / 2);
+        break;
+
+        case Traverse::CLOCKWISE:
+            if (m_li)
+                m_scene->removeItem(m_li);
+            if (m_ci)
+                m_scene->removeItem(m_ci);
+            m_li = new AnimatedLineItem();
+            m_li->setImageHeight(m_pi->pixmap().height());
+            m_li->setImageWidth(m_pi->pixmap().width());
+            m_scene->addItem(m_li);
+            m_li->setLength();
+            m_anim = new QPropertyAnimation(m_li, "angle");
+            connect(m_anim, &QPropertyAnimation::finished, this, [&]() {
+                emit animationFinished();
+            });
+            m_anim->setStartValue(0);
+            m_anim->setEndValue(360);
+        break;
+
+        case Traverse::ANTICLOCKWISE:
+            if (m_li)
+                m_scene->removeItem(m_li);
+            if (m_ci)
+                m_scene->removeItem(m_ci);
+            m_li = new AnimatedLineItem();
+            m_li->setImageHeight(m_pi->pixmap().height());
+            m_li->setImageWidth(m_pi->pixmap().width());
+            m_scene->addItem(m_li);
+            m_li->setLength();
+            m_anim = new QPropertyAnimation(m_li, "angle");
+            connect(m_anim, &QPropertyAnimation::finished, this, [&]() {
+                emit animationFinished();
+            });
+            m_anim->setStartValue(360);
+            m_anim->setEndValue(0);
         break;
 
     }

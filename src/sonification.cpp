@@ -78,6 +78,14 @@ void Sonification::Sonify(QPixmap &pix, Traverse mode)
         case Traverse::CIRCLE_OUTWARDS:
             m_Sonify_CircleOutwards(pix);
             break;
+
+        case Traverse::CLOCKWISE:
+            m_Sonify_Clockwise(pix);
+            break;
+
+        case Traverse::ANTICLOCKWISE:
+            m_Sonify_AntiClockwise(pix);
+            break;
     }
 
 }
@@ -98,9 +106,8 @@ QVector<double> Sonification::m_GenerateSineWave(double amplitude, double freque
 void Sonification::m_Sonify_LeftToRight(QPixmap &pix)
 {
     if (!m_audioData.isEmpty())
-    {
         m_audioData.clear();
-    }
+
     QImage img = pix.toImage();
     QVector<double> temp;
     for(int x=0; x < img.width(); x++)
@@ -129,9 +136,7 @@ void Sonification::m_Sonify_LeftToRight(QPixmap &pix)
 void Sonification::m_Sonify_RightToLeft(QPixmap &pix)
 {
     if (!m_audioData.isEmpty())
-    {
         m_audioData.clear();
-    }
 
     QImage img = pix.toImage();
     QVector<double> temp;
@@ -158,9 +163,7 @@ void Sonification::m_Sonify_RightToLeft(QPixmap &pix)
 void Sonification::m_Sonify_TopToBottom(QPixmap &pix)
 {
     if (!m_audioData.isEmpty())
-    {
         m_audioData.clear();
-    }
 
     QImage img = pix.toImage();
     QVector<double> temp;
@@ -186,11 +189,9 @@ void Sonification::m_Sonify_TopToBottom(QPixmap &pix)
 // brightness into amplitude
 void Sonification::m_Sonify_BottomToTop(QPixmap &pix)
 {
-    if (!m_audioData.isEmpty())
-    {
-        m_audioData.clear();
-    }
 
+    if (!m_audioData.isEmpty())
+        m_audioData.clear();
     QImage img = pix.toImage();
     QVector<double> temp;
     for(int y = 0; y < img.height(); y++)
@@ -212,6 +213,8 @@ void Sonification::m_Sonify_BottomToTop(QPixmap &pix)
 
 void Sonification::m_Sonify_CircleOutwards(QPixmap &pix)
 {
+    if (!m_audioData.isEmpty())
+        m_audioData.clear();
     int width = pix.width();
     int height = pix.height();
     double centerX = pix.width() / 2.0;
@@ -247,6 +250,8 @@ void Sonification::m_Sonify_CircleOutwards(QPixmap &pix)
 
 void Sonification::m_Sonify_CircleInwards(QPixmap &pix)
 {
+    if (!m_audioData.isEmpty())
+        m_audioData.clear();
     int width = pix.width();
     int height = pix.height();
     double centerX = pix.width() / 2.0;
@@ -262,6 +267,80 @@ void Sonification::m_Sonify_CircleInwards(QPixmap &pix)
         temp.clear();
         temp.resize(m_NumSamples);
         for (int angle = 0; angle < 360; angle++)
+        {
+            qreal rad = qDegreesToRadians(static_cast<qreal>(angle));
+            int x = centerX + r * qCos(rad);
+            int y = centerY + r * qSin(rad);
+
+            if (x >= 0 && x < width && y >= 0 && y < height) {
+                QRgb pixel = img.pixel(x, y);
+                double intensity = qGray(pixel);
+                auto sine = m_GenerateSineWave(intensity, y, x);
+                temp = addVectors<double>(temp, sine);
+            }
+        }
+
+        for(int i=0; i < temp.size(); i++)
+            m_audioData.push_back(temp.at(i));
+    }
+}
+
+void Sonification::m_Sonify_Clockwise(QPixmap &pix)
+{
+    if (!m_audioData.isEmpty())
+        m_audioData.clear();
+    int width = pix.width();
+    int height = pix.height();
+    double centerX = width / 2.0;
+    double centerY = height / 2.0;
+
+    QImage img = pix.toImage();
+    QVector<double> temp;
+
+    auto length = static_cast<int>(sqrt(centerX * centerX + centerY * centerY));
+
+    for (int angle = 0; angle < 360; angle++)
+    {
+        temp.clear();
+        temp.resize(m_NumSamples);
+        for (int r = 0; r < length; r++)
+        {
+            qreal rad = qDegreesToRadians(static_cast<qreal>(angle));
+            int x = centerX + r * qCos(rad);
+            int y = centerY + r * qSin(rad);
+
+            if (x >= 0 && x < width && y >= 0 && y < height) {
+                QRgb pixel = img.pixel(x, y);
+                double intensity = qGray(pixel);
+                auto sine = m_GenerateSineWave(intensity, y, x);
+                temp = addVectors<double>(temp, sine);
+            }
+        }
+
+        for(int i=0; i < temp.size(); i++)
+            m_audioData.push_back(temp.at(i));
+    }
+}
+
+void Sonification::m_Sonify_AntiClockwise(QPixmap &pix)
+{
+    if (!m_audioData.isEmpty())
+        m_audioData.clear();
+    int width = pix.width();
+    int height = pix.height();
+    double centerX = width / 2.0;
+    double centerY = height / 2.0;
+
+    QImage img = pix.toImage();
+    QVector<double> temp;
+
+    auto length = static_cast<int>(sqrt(centerX * centerX + centerY * centerY));
+
+    for (int angle = 359; angle >= 0; angle--)
+    {
+        temp.clear();
+        temp.resize(m_NumSamples);
+        for (int r = 0; r < length; r++)
         {
             qreal rad = qDegreesToRadians(static_cast<qreal>(angle));
             int x = centerX + r * qCos(rad);

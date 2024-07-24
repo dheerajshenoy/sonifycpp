@@ -33,6 +33,8 @@ private:
     void m_Sonify_BottomToTop(QPixmap &pix);
     void m_Sonify_CircleInwards(QPixmap &pix);
     void m_Sonify_CircleOutwards(QPixmap &pix);
+    void m_Sonify_Clockwise(QPixmap &pix);
+    void m_Sonify_AntiClockwise(QPixmap &pix);
 
 
     double m_MapIntensityToFrequence(int intensity);

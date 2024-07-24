@@ -9,6 +9,8 @@ enum Traverse
     BOTTOM_TO_TOP,
     CIRCLE_OUTWARDS,
     CIRCLE_INWARDS,
+    CLOCKWISE,
+    ANTICLOCKWISE
 };
 
 #endif

@@ -40,6 +40,8 @@ Sonify::Sonify(QWidget *parent)
     m_traverse_combo->addItem("Bottom to Top");
     m_traverse_combo->addItem("Circle Outwards");
     m_traverse_combo->addItem("Circle Inwards");
+    m_traverse_combo->addItem("Clockwise");
+    m_traverse_combo->addItem("Anti-Clockwise");
 
     m_widget->setLayout(m_layout);
 
@@ -142,6 +144,7 @@ void Sonify::PlayAudio()
         gv->pause();
         sonification->pause();
         m_reset_btn->setEnabled(true);
+        m_num_samples_spinbox->setEnabled(true);
     }
     else  
     {
@@ -149,6 +152,7 @@ void Sonify::PlayAudio()
         gv->play();
         sonification->play();
         m_reset_btn->setEnabled(false);
+        m_num_samples_spinbox->setEnabled(false);
     }
     m_isAudioPlaying = !m_isAudioPlaying;
 }
@@ -309,6 +313,18 @@ void Sonify::doSonify()
                 gv->setTraverse(Traverse::CIRCLE_INWARDS);
             }
 
+            else if (m_traverse_combo->currentText() == "Clockwise")
+            {
+                sonification->Sonify(m_pix, Traverse::CLOCKWISE);
+                gv->setTraverse(Traverse::CLOCKWISE);
+            }
+
+            else if (m_traverse_combo->currentText() == "Anti-Clockwise")
+            {
+                sonification->Sonify(m_pix, Traverse::ANTICLOCKWISE);
+                gv->setTraverse(Traverse::ANTICLOCKWISE);
+            }
+
             gv->setDuration(sonification->getDuration());
             m_duration_label->setText("Duration: " + QString::number(sonification->getDuration()) + "s");
             m_play_btn->setEnabled(true);
@@ -353,6 +369,18 @@ void Sonify::doSonify()
 
         sonification->Sonify(m_pix, Traverse::CIRCLE_INWARDS);
         gv->setTraverse(Traverse::CIRCLE_INWARDS);
+    }
+
+    else if (m_traverse_combo->currentText() == "Clockwise")
+    {
+        sonification->Sonify(m_pix, Traverse::CLOCKWISE);
+        gv->setTraverse(Traverse::CLOCKWISE);
+    }
+
+    else if (m_traverse_combo->currentText() == "Anticlockwise")
+    {
+        sonification->Sonify(m_pix, Traverse::ANTICLOCKWISE);
+        gv->setTraverse(Traverse::ANTICLOCKWISE);
     }
 
     gv->setDuration(sonification->getDuration());
