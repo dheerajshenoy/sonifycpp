@@ -20,8 +20,10 @@ public:
     void reset();
     bool save(QString filename, Format format = Format::WAV);
     double getDuration();
+    int getNumSamples();
     ~Sonification();
     QVector<short> getAudioData();
+    float getSampleRate();
 
 private:
 
@@ -58,5 +60,7 @@ private:
     size_t m_audioOffset = 0;
 
     Traverse m_traverse = Traverse::LEFT_TO_RIGHT;
+
+    const double M_PI2 = 6.28318530718;
 
 };

@@ -1,5 +1,6 @@
 #include "sonify.hpp"
 #include "qcustomplot.h"
+#include <sndfile.h>
 
 
 Sonify::Sonify(QWidget *parent)
@@ -176,33 +177,40 @@ void Sonify::initConnections()
     connect(m_view__waveform, &QAction::triggered, this, &Sonify::viewWaveform);
 }
 
-QVector<double> convertToDouble(const QVector<short>& shortData) {
-    QVector<double> doubleData;
-    doubleData.reserve(shortData.size());
-    for (short value : shortData) {
-        doubleData.append(static_cast<double>(value / 255.0));
+QVector<double> linspace(double start, double stop, int num) {
+    QVector<double> result;
+    result.reserve(num);
+    double step = (stop - start) / (num - 1);
+    for (int i = 0; i < num; ++i) {
+        result.append(start + i * step);
     }
-    return doubleData;
+    return result;
 }
 
 void Sonify::viewWaveform(bool state)
 {
     if (state)
     {
-        /*QVector<double> y = convertToDouble(sonification->getAudioData());*/
+        QVector<short> data = sonification->getAudioData();
+
+        /*SF_INFO sfinfo;*/
+        /*SNDFILE *file = sf_open("test.wav", SFM_READ, &sfinfo);*/
         /**/
-        /*QVector<double> x;*/
-        /*x.resize(y.size());*/
+        /*auto sr = sfinfo.samplerate;*/
+        /*int ns = sfinfo.channels * sfinfo.frames;*/
         /**/
-        /*for(int i=0; i < y.size(); i++)*/
-        /*{*/
-        /*    x[i] = i;*/
-        /*}*/
+        /*QVector<double> y;*/
+        /*y.resize(ns);*/
+        /**/
+        /*sf_read_double(file, y.data(), ns);*/
+        /*sf_close(file);*/
+        /**/
+        /*QVector<double> x = linspace(0, static_cast<float>(y.length()) / sr, y.length());*/
         /**/
         /*waveformplot->graph(0)->setPen(QPen(QColor(Qt::red), 2));*/
         /*waveformplot->graph(0)->setData(x, y);*/
         /*waveformplot->xAxis->setRange(0, y.size());*/
-        waveformplot->yAxis->setRange(-1, 1);
+        /*waveformplot->yAxis->setRange(-1, 1);*/
         waveformplot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables);
         waveformplot->xAxis->setLabel("x");
         waveformplot->yAxis->setLabel("y");

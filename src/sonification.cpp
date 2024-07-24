@@ -1,11 +1,10 @@
 #include "sonification.hpp"
 #include <cmath>
-#define PI2 6.28318530718
 
 Sonification::Sonification()
 {
 
-    m_val = 2 * M_PI * m_NumSamples / m_SampleRate;
+    m_val = M_PI2 * m_NumSamples / m_SampleRate;
     // Initialize SDL
     if (SDL_Init(SDL_INIT_AUDIO) < 0) {
         qDebug() << "SDL could not initialize! SDL_Error: " << SDL_GetError();
@@ -25,7 +24,7 @@ Sonification::~Sonification()
 void Sonification::setNumSamples(int nsamples)
 {
     m_NumSamples = nsamples; 
-    m_val = 2 * M_PI * m_NumSamples / m_SampleRate;
+    m_val = M_PI2 * m_NumSamples / m_SampleRate;
 }
 
 // Function to sonify an `image` provided by QImage and in mode `mode`
@@ -396,6 +395,17 @@ void Sonification::sdlAudioCallback(void* userdata, Uint8* stream, int len)
     /*    SDL_PauseAudioDevice(s->m_audioDevice, 1);*/
     /*}*/
 }
+
+int Sonification::getNumSamples()
+{
+    return m_NumSamples;
+}
+
+float Sonification::getSampleRate()
+{
+    return m_SampleRate;
+}
+
 
 QVector<short> Sonification::getAudioData()
 {
