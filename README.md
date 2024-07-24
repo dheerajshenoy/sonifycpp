@@ -30,7 +30,7 @@ This project is a performant successor to [Sonify](https://github.com/dheerajshe
 
 ![Circular Outwards](https://github.com/user-attachments/assets/33dbc508-8a17-44b2-ac1c-2db59b249d1d)
   
-### 6. Circular Inwards (In progress)
+### 6. Circular Inwards
 
 ![Circular Inwards](https://github.com/user-attachments/assets/077c4ae8-e7e9-4e3c-931e-156799afd3a7)
 
