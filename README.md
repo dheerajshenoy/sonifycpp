@@ -32,6 +32,14 @@ Image sonification refers to the process of converting images to audio signals. 
 
 ![Circular Inwards](https://github.com/user-attachments/assets/077c4ae8-e7e9-4e3c-931e-156799afd3a7)
 
+### 7. Clockwise (Linear)
+
+![Clockwise](https://github.com/user-attachments/assets/3fb24eb7-847a-46f3-86f5-07962d3841bc)
+
+### 8. Anti-Clockwise (Linear)
+
+![Anti-Clockwise](https://github.com/user-attachments/assets/9c813886-d9b1-466d-ab91-4b40c0fde28c)
+
 ### Pixel mapping
 Currently, I am taking the **grayscale** of the input image, mapping the pixel position (x, y) to (t, frequency) and pixel intensity to amplitude. In future, I'll add many more mapping schemes.
 
