@@ -19,18 +19,37 @@ public:
 
     using QGraphicsLineItem::QGraphicsLineItem;
 
+    void setLeftToRight()
+    {
+        this->setLine(QLineF(0, 0, 0, m_h));
+        m_line = line();
+    }
+    void setRightToLeft()
+    {
+        this->setLine(QLineF(m_w, 0, m_w, m_h));
+        m_line = line();
+    }
+
+    void setTopToBottom()
+    {
+        this->setLine(QLineF(0, 0, m_w, 0));
+        m_line = line();
+    }
+
+    void setBottomToTop()
+    {
+        this->setLine(QLineF(0, m_h, m_w, m_h));
+        m_line = line();
+    }
+
     void setImageWidth(qreal w)
     {
         m_w = w;
-        this->setLine(QLineF(m_w, 0, m_w, m_h));
-        m_line = line();
     }
 
     void setImageHeight(qreal h)
     {
         m_h = h;
-        this->setLine(QLineF(0, 0, 0, m_h));
-        m_line = line();
     }
 
     qreal x() {

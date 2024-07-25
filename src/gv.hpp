@@ -1,3 +1,6 @@
+#ifndef GV_HPP
+#define GV_HPP
+
 #include "qgraphicsview.h"
 #include <qt6/QtWidgets/QGraphicsView>
 #include <qt6/QtWidgets/QGraphicsScene>
@@ -28,6 +31,7 @@ public:
     void setDuration(double s);
     void setTraverse(Traverse t);
     void setDrawPathMode(bool t);
+    void getOffset(size_t &offset);
     QVector<QPointF> getPathDrawnPos();
     ~GV();
 
@@ -64,3 +68,5 @@ private:
     QGraphicsItemAnimation *m_anim_item = nullptr;
     QTimeLine *m_timeline = nullptr;
 };
+
+#endif

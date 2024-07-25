@@ -6,14 +6,20 @@
 #include <SDL2/SDL.h>
 #include <qt6/QtCore/QtMath>
 #include <qt6/QtCore/QDebug>
+#include <qt6/QtCore/QThreadPool>
+#include <qt6/QtCore/QObject>
 #include <qt6/QtGui/QRgb>
+#include "gv.hpp"
+#include "mapping.hpp"
 
-class Sonification
+class Sonification : public QObject
 {
 
+    Q_OBJECT
 public:
     Sonification();
-    void Sonify(QPixmap &pix, Traverse mode = Traverse::LEFT_TO_RIGHT);
+    void Sonify(QPixmap &pix, GV *gv, Traverse mode = Traverse::LEFT_TO_RIGHT);
+    /*void Sonify(QPixmap &pix, Traverse mode = Traverse::LEFT_TO_RIGHT);*/
     void setNumSamples(int nsamples);
     void play();
     void pause();
@@ -24,10 +30,12 @@ public:
     ~Sonification();
     QVector<short> getAudioData();
     float getSampleRate();
-    void SonifyPath(QPixmap &pix, QVector<QPointF> pixelPos);
+    void SonifyPath(QPixmap &pix, QVector<QPointF> &pixelPos);
+
+signals:
+    void audioprogress(double);
 
 private:
-
     void m_Sonify_LeftToRight(QPixmap &pix);
     void m_Sonify_RightToLeft(QPixmap &pix);
     void m_Sonify_TopToBottom(QPixmap &pix);
@@ -36,7 +44,6 @@ private:
     void m_Sonify_CircleOutwards(QPixmap &pix);
     void m_Sonify_Clockwise(QPixmap &pix);
     void m_Sonify_AntiClockwise(QPixmap &pix);
-
 
     double m_MapIntensityToFrequence(int intensity);
     void m_GenerateSound();
@@ -65,5 +72,7 @@ private:
     Traverse m_traverse = Traverse::LEFT_TO_RIGHT;
 
     const double M_PI2 = 6.28318530718;
+    Mapping *mapping = new Mapping();
 
+    QThreadPool m_thread_pool;
 };

@@ -13,6 +13,8 @@
 #include <qt6/QtWidgets/QLabel>
 #include <qt6/QtWidgets/QSpinBox>
 #include <qt6/QtCore/QTimer>
+#include <qt6/QtCore/QThreadPool>
+#include <qt6/QtConcurrent/QtConcurrent>
 #include <qt6/QtWidgets/QSizePolicy>
 #include "sonification.hpp"
 #include "gv.hpp"
@@ -63,7 +65,7 @@ private:
 
     QComboBox *m_traverse_combo;
 
-    QLabel *m_duration_label, *m_traverse_label, *m_num_samples_label, *m_statusbar_msg_label;
+    QLabel *m_duration_label, *m_audio_progress_label, *m_traverse_label, *m_num_samples_label, *m_statusbar_msg_label;
     QSpinBox *m_num_samples_spinbox;
 
     QWidget *m_status_bar;
@@ -73,5 +75,4 @@ private:
 
     void viewWaveform(bool state = false);
     QCustomPlot *waveformplot = new QCustomPlot();
-
 };
