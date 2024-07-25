@@ -51,7 +51,6 @@ Sonify::Sonify(QWidget *parent)
     m_splitter->addWidget(m_side_panel);
     m_splitter->addWidget(gv);
 
-
     m_side_panel->setFixedWidth(300);
     m_side_panel->setLayout(m_side_panel_layout);
 
@@ -250,21 +249,14 @@ bool Sonify::Open(QString filename)
         if (files.empty())
             return false;
         m_pix = QPixmap(files[0]);
-        if (!m_pix.isNull())
-            m_pix = m_pix.scaled(720, 480, Qt::KeepAspectRatio);
+        /*m_pix = m_pix.scaled(720, 480, Qt::KeepAspectRatio);*/
         else
             return false;
     }
-
     else {
         m_pix = QPixmap(filename);
-        if (!m_pix.isNull())
-            m_pix = m_pix.scaled(720, 480, Qt::KeepAspectRatio);
-        else
-            return false;
     }
     gv->setPixmap(m_pix);
-
     return true;
 
 }
