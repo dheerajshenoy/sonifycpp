@@ -70,5 +70,9 @@ https://github.com/user-attachments/assets/8486dbb2-789e-456c-ac6e-8df99d13e622
 
 https://github.com/user-attachments/assets/5749613d-6004-4d84-90ae-adaa8904268f
 
+# NOTE: The new GUI looks cool and it's not the same as shown in the demo videos
+
+![2024-07-25_11-04](https://github.com/user-attachments/assets/ddd37fa0-c448-4d0a-992a-6850777874fb)
+
 
 
