@@ -1,6 +1,15 @@
 # SonifyCPP
-
 Convert images to audio signals.
+
+## Table of Contents
+
+1. [Introduction](#introduction)
+2. [Traversal Methods](#traversal)
+3. [Pixel Mapping](#pixel_mapping)
+4. [Things to do](#todo)
+5. [Demo](#demo)
+
+<a name="introduction"/>
 
 ## Introduction
 
@@ -8,7 +17,11 @@ Image sonification refers to the process of converting images to audio signals. 
 
 This project is a performant successor to [Sonify](https://github.com/dheerajshenoy/sonify/) which was written in Python.
 
-## SonifyCPP is currently able to traverse images in the following manner:
+<a name="traversal"/>
+
+## Traversal Methods
+
+SonifyCPP is currently able to traverse images in the following manner:
 
 ### 1. Left to Right (Linear)
 
@@ -42,6 +55,8 @@ This project is a performant successor to [Sonify](https://github.com/dheerajshe
 
 ![Anti-Clockwise](https://github.com/user-attachments/assets/9c813886-d9b1-466d-ab91-4b40c0fde28c)
 
+<a name="pixel_mapping"/>
+ 
 ### Pixel mapping
 Currently, I am taking the **grayscale** of the input image, mapping the pixel position (x, y) to (t, frequency) and pixel intensity to amplitude. In future, I'll add many more mapping schemes.
 
@@ -49,6 +64,7 @@ Currently, I am taking the **grayscale** of the input image, mapping the pixel p
 
 Credit: [Link](https://www.seeingwithsound.com/im2sound.htm)
 
+<a name="todo"/>
 
 ## TODO
 
@@ -71,6 +87,8 @@ Credit: [Link](https://www.seeingwithsound.com/im2sound.htm)
 17. [ ] MIDI Support: Allow users to export sonification data as MIDI files for further musical manipulation.
 18. [ ] Spectrogram: Display a spectrogram that shows the frequency content of the sonified sound over time.
 19. [ ] 3D Visualization: Provide a 3D view of the image and its corresponding soundscape.
+
+<a name="demo"/>
 
 # Demo
 
