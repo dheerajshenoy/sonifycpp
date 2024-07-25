@@ -56,7 +56,7 @@ public:
     void reset() {
         this->setLine(m_line);
     }
-    
+
     void setLength()
     {
         auto centerX = m_w / 2.0;

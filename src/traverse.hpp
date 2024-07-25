@@ -10,7 +10,9 @@ enum Traverse
     CIRCLE_OUTWARDS,
     CIRCLE_INWARDS,
     CLOCKWISE,
-    ANTICLOCKWISE
+    ANTICLOCKWISE,
+    PATH,
+    REGION,
 };
 
 #endif

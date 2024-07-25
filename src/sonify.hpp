@@ -23,17 +23,20 @@ class Sonify : public QMainWindow
 
 public:
     Sonify(QWidget *parent = nullptr);
-    void initConnections();
-    void initMenu();
-    void PlayAudio();
-    void Reset();
-    void doSonify();
-    bool Open(QString filename = "");
-    bool Save(QString filename = "");
-    void setMsg(QString msg, int s = -1);
     ~Sonify();
 
 private:
+    void PlayAudio();
+    void Reset();
+    bool Open(QString filename = "");
+    bool Save(QString filename = "");
+    void setMsg(QString msg, int s = -1);
+    void doSonify();
+    void initConnections();
+    void initMenu();
+    void initWidgets();
+    void initStatusbar();
+    void initSidePanel();
     QWidget *m_widget;
     QSplitter *m_splitter;
     QWidget *m_side_panel;
@@ -49,14 +52,15 @@ private:
     QMenuBar *m_menu_bar;
     QMenu *m_file_menu,
           *m_audio_menu,
+          *m_tools_menu,
           *m_view_menu,
           *m_about_menu;
 
     QAction *m_file__open,
             *m_file__exit;
-
     QAction *m_audio__save;
     QAction *m_view__waveform;
+
     QComboBox *m_traverse_combo;
 
     QLabel *m_duration_label, *m_traverse_label, *m_num_samples_label, *m_statusbar_msg_label;

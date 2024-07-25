@@ -6,7 +6,45 @@
 Sonify::Sonify(QWidget *parent)
     : QMainWindow(parent)
 {
+    initWidgets();
+    initStatusbar();
+    initSidePanel();
+    initMenu();
+    initConnections();
 
+    waveformplot->addGraph();
+    waveformplot->setVisible(false);
+
+    this->show();
+    /*Open("/home/neo/Gits/sonifycpp/test2.png");*/
+}
+
+void Sonify::initSidePanel()
+{
+    m_side_panel->setFixedWidth(300);
+    m_side_panel->setLayout(m_side_panel_layout);
+    m_side_panel_layout->addWidget(m_sonify_btn, 0, 0, 1, 2);
+    m_side_panel_layout->addWidget(m_play_btn, 1, 0);
+    m_side_panel_layout->addWidget(m_reset_btn, 1, 1);
+    m_side_panel_layout->addWidget(m_traverse_label, 2, 0);
+    m_side_panel_layout->addWidget(m_traverse_combo, 2, 1);
+    m_side_panel_layout->addWidget(m_num_samples_label, 3, 0);
+    m_side_panel_layout->addWidget(m_num_samples_spinbox, 3, 1);
+    QLabel *m_separator = new QLabel();
+    m_side_panel_layout->addWidget(m_separator, 4, 0, 1, 1, Qt::AlignCenter);
+}
+
+
+void Sonify::initStatusbar()
+{
+
+    m_status_bar_layout->addWidget(m_statusbar_msg_label);
+    m_status_bar_layout->addWidget(m_duration_label);
+    m_status_bar->setLayout(m_status_bar_layout);
+}
+
+void Sonify::initWidgets()
+{
     m_widget = new QWidget();
     m_side_panel = new QWidget();
     m_side_panel_layout = new QGridLayout();
@@ -29,11 +67,6 @@ Sonify::Sonify(QWidget *parent)
     m_status_bar_layout = new QHBoxLayout();
     m_statusbar_msg_label = new QLabel();
 
-    m_status_bar_layout->addWidget(m_statusbar_msg_label);
-    m_status_bar_layout->addWidget(m_duration_label);
-
-    m_status_bar->setLayout(m_status_bar_layout);
-
     m_traverse_combo->addItem("Left to Right");
     m_traverse_combo->addItem("Right to Left");
     m_traverse_combo->addItem("Top to Bottom");
@@ -42,46 +75,25 @@ Sonify::Sonify(QWidget *parent)
     m_traverse_combo->addItem("Circle Inwards");
     m_traverse_combo->addItem("Clockwise");
     m_traverse_combo->addItem("Anti-Clockwise");
+    m_traverse_combo->addItem("Select Region");
+    m_traverse_combo->addItem("Draw Path");
+    m_traverse_combo->addItem("Random Paths");
 
     m_widget->setLayout(m_layout);
 
-    waveformplot->addGraph();
     m_layout->addWidget(m_splitter);
-
     m_splitter->addWidget(m_side_panel);
     m_splitter->addWidget(gv);
 
-    m_side_panel->setFixedWidth(300);
-    m_side_panel->setLayout(m_side_panel_layout);
-
-    gv->setAlignment(Qt::AlignmentFlag::AlignCenter);
-
-    m_side_panel_layout->addWidget(m_sonify_btn, 0, 0, 1, 2);
-    m_side_panel_layout->addWidget(m_play_btn, 1, 0);
-    m_side_panel_layout->addWidget(m_reset_btn, 1, 1);
-    m_side_panel_layout->addWidget(m_traverse_label, 2, 0);
-    m_side_panel_layout->addWidget(m_traverse_combo, 2, 1);
-    m_side_panel_layout->addWidget(m_num_samples_label, 3, 0);
-    m_side_panel_layout->addWidget(m_num_samples_spinbox, 3, 1);
-    QLabel *m_separator = new QLabel();
-    m_side_panel_layout->addWidget(m_separator, 4, 0, 1, 1, Qt::AlignCenter);
-
-
     m_layout->addWidget(waveformplot);
     m_layout->addWidget(m_status_bar);
-    waveformplot->setVisible(false);
-    /*m_sonify_btn->setEnabled(false);*/
     m_play_btn->setEnabled(false);
     m_reset_btn->setEnabled(false);
 
+    gv->setAlignment(Qt::AlignmentFlag::AlignCenter);
     this->setCentralWidget(m_widget);
-    this->show();
-
-    initMenu();
-    initConnections();
-
-    /*Open("/home/neo/Gits/sonifycpp/test2.png");*/
 }
+
 
 void Sonify::setMsg(QString msg, int s)
 {
@@ -109,14 +121,15 @@ void Sonify::initMenu()
 
     m_file_menu = new QMenu("File");
     m_audio_menu = new QMenu("Audio");
+    m_tools_menu = new QMenu("Tools");
     m_view_menu = new QMenu("View");
     m_about_menu = new QMenu("About");
 
     m_menu_bar->addMenu(m_file_menu);
+    m_menu_bar->addMenu(m_tools_menu);
     m_menu_bar->addMenu(m_view_menu);
     m_menu_bar->addMenu(m_audio_menu);
     m_menu_bar->addMenu(m_about_menu);
-
 
     m_file__open = new QAction("Open");
     m_file__exit = new QAction("Exit");
@@ -249,13 +262,11 @@ bool Sonify::Open(QString filename)
         if (files.empty())
             return false;
         m_pix = QPixmap(files[0]);
-        /*m_pix = m_pix.scaled(720, 480, Qt::KeepAspectRatio);*/
-        else
-            return false;
     }
     else {
         m_pix = QPixmap(filename);
     }
+    m_pix = m_pix.scaled(720, 480, Qt::KeepAspectRatio);
     gv->setPixmap(m_pix);
     return true;
 
@@ -317,7 +328,17 @@ void Sonify::doSonify()
                 gv->setTraverse(Traverse::ANTICLOCKWISE);
             }
 
-            gv->setDuration(sonification->getDuration());
+            else if (m_traverse_combo->currentText() == "Draw Path")
+            {
+                gv->setDrawPathMode(true);
+                connect(gv, &GV::drawPathFinished, this, [&]() {
+                    gv->setTraverse(Traverse::PATH);
+                    /*sonification->SonifyPath(m_pix, gv->getPathDrawnPos());*/
+                });
+            }
+
+            /*gv->setDuration(sonification->getDuration());*/
+            gv->setDuration(10);
             m_duration_label->setText("Duration: " + QString::number(sonification->getDuration()) + "s");
             m_play_btn->setEnabled(true);
             m_reset_btn->setEnabled(true);
@@ -373,6 +394,12 @@ void Sonify::doSonify()
     {
         sonification->Sonify(m_pix, Traverse::ANTICLOCKWISE);
         gv->setTraverse(Traverse::ANTICLOCKWISE);
+    }
+
+    else if (m_traverse_combo->currentText() == "Draw Path")
+    {
+        sonification->Sonify(m_pix, Traverse::PATH);
+        gv->setTraverse(Traverse::PATH);
     }
 
     gv->setDuration(sonification->getDuration());

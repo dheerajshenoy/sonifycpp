@@ -1,4 +1,6 @@
 #include "gv.hpp"
+#include "qcontainerfwd.h"
+#include "qtimeline.h"
 GV::GV(QWidget *parent) : QGraphicsView(parent)
 {
     this->setScene(m_scene);
@@ -6,9 +8,39 @@ GV::GV(QWidget *parent) : QGraphicsView(parent)
     this->show();
 }
 
+void GV::setDrawPathMode(bool t)
+{
+    m_draw_path_mode = t;
+
+    if (m_draw_path_mode)
+    {
+        m_pathDrawnPixelsPos.clear();
+        if (!m_path_item)
+        {
+            m_path_item = new QGraphicsPathItem();
+            m_path_item->setPen(QPen(Qt::red, 2));
+            m_scene->addItem(m_path_item);
+        }
+    }
+}
 void GV::setTraverse(Traverse t)
 {
     m_traverse = t;
+
+    // Clean the canvas
+    if (m_li && m_scene)
+    {
+        m_scene->removeItem(m_li);
+    }
+    if (m_ci && m_scene)
+    {
+        m_scene->removeItem(m_ci);
+    }
+
+    if (m_pathi && m_scene)
+    {
+        m_scene->removeItem(m_pathi);
+    }
 
     if (m_anim)
     {
@@ -17,13 +49,15 @@ void GV::setTraverse(Traverse t)
         m_anim = nullptr;
     }
 
+    if (m_anim_item)
+    {
+        delete m_anim_item;
+        m_anim_item = nullptr;
+    }
+
     switch(t)
     {
         case Traverse::LEFT_TO_RIGHT:
-            if (m_li)
-                m_scene->removeItem(m_li);
-            if (m_ci)
-                m_scene->removeItem(m_ci);
             m_li = new AnimatedLineItem();
             m_li->setImageHeight(m_pi->pixmap().height());
             m_li->setImageWidth(m_pi->pixmap().width());
@@ -37,10 +71,6 @@ void GV::setTraverse(Traverse t)
         break;
 
         case Traverse::RIGHT_TO_LEFT:
-            if(m_li)
-                m_scene->removeItem(m_li);
-            if (m_ci)
-                m_scene->removeItem(m_ci);
             m_li = new AnimatedLineItem();
             m_li->setImageHeight(m_pi->pixmap().height());
             m_li->setImageWidth(m_pi->pixmap().width());
@@ -54,10 +84,6 @@ void GV::setTraverse(Traverse t)
         break;
 
         case Traverse::TOP_TO_BOTTOM:
-            if (m_li)
-                m_scene->removeItem(m_li);
-            if (m_ci)
-                m_scene->removeItem(m_ci);
             m_li = new AnimatedLineItem();
             m_li->setImageHeight(m_pi->pixmap().height());
             m_li->setImageWidth(m_pi->pixmap().width());
@@ -71,10 +97,6 @@ void GV::setTraverse(Traverse t)
         break;
 
         case Traverse::BOTTOM_TO_TOP:
-            if (m_li)
-                m_scene->removeItem(m_li);
-            if (m_ci)
-                m_scene->removeItem(m_ci);
             m_li = new AnimatedLineItem();
             m_li->setImageHeight(m_pi->pixmap().height());
             m_li->setImageWidth(m_pi->pixmap().width());
@@ -88,11 +110,6 @@ void GV::setTraverse(Traverse t)
         break;
 
         case Traverse::CIRCLE_OUTWARDS:
-            if (m_li)
-                m_scene->removeItem(m_li);
-            if (m_ci)
-                m_scene->removeItem(m_ci);
-
             m_ci = new AnimatedCircleItem();
             m_ci->setImageHeight(m_pi->pixmap().height());
             m_ci->setImageWidth(m_pi->pixmap().width());
@@ -108,14 +125,7 @@ void GV::setTraverse(Traverse t)
         break;
 
         case Traverse::CIRCLE_INWARDS:
-            if (m_li)
-                m_scene->removeItem(m_li);
-            if (m_ci)
-            {
-                m_scene->removeItem(m_ci);
-            }
             m_ci = new AnimatedCircleItem();
-
             m_ci->setImageHeight(m_pi->pixmap().height());
             m_ci->setImageWidth(m_pi->pixmap().width());
             m_ci->setCenter();
@@ -129,10 +139,6 @@ void GV::setTraverse(Traverse t)
         break;
 
         case Traverse::CLOCKWISE:
-            if (m_li)
-                m_scene->removeItem(m_li);
-            if (m_ci)
-                m_scene->removeItem(m_ci);
             m_li = new AnimatedLineItem();
             m_li->setImageHeight(m_pi->pixmap().height());
             m_li->setImageWidth(m_pi->pixmap().width());
@@ -147,10 +153,6 @@ void GV::setTraverse(Traverse t)
         break;
 
         case Traverse::ANTICLOCKWISE:
-            if (m_li)
-                m_scene->removeItem(m_li);
-            if (m_ci)
-                m_scene->removeItem(m_ci);
             m_li = new AnimatedLineItem();
             m_li->setImageHeight(m_pi->pixmap().height());
             m_li->setImageWidth(m_pi->pixmap().width());
@@ -164,6 +166,19 @@ void GV::setTraverse(Traverse t)
             m_anim->setEndValue(0);
         break;
 
+        case Traverse::PATH:
+            m_pathi = new AnimatedPathItem();
+            m_scene->addItem(m_pathi);
+            /*m_anim = new QPropertyAnimation(m_pathi, "index");*/
+            m_anim_item = new QGraphicsItemAnimation();
+            m_anim_item->setItem(m_pathi);
+            m_timeline->setFrameRange(0, 100);
+            connect(m_timeline, &QTimeLine::finished, this, [&]() {
+                emit animationFinished();
+            });
+            m_anim_item->setTimeLine(m_timeline);
+            for (int i = 0; i < m_pathDrawnPixelsPos.size(); ++i)
+                m_anim_item->setPosAt(i / static_cast<double>(m_pathDrawnPixelsPos.size()), m_pathDrawnPixelsPos[i]);
     }
 }
 
@@ -172,7 +187,16 @@ void GV::setDuration(double s)
     m_duration_s = s;
 
     if (m_anim)
-        m_anim->setDuration(m_duration_s * 1000);
+        m_anim->setDuration(s * 1000);
+
+    if (!m_timeline)
+    {
+        m_timeline = new QTimeLine(s * 1000);
+    }
+    else {
+        m_timeline->setDuration(s * 1000);
+    }
+
 }
 
 void GV::setPixmap(QPixmap &pix)
@@ -186,11 +210,36 @@ void GV::play()
 {
     m_isPlaying = true;
 
-    m_anim->start();
+    if (m_anim)
+    {
+        switch(m_anim->state())
+        {
+            case QPropertyAnimation::State::Stopped:
+                m_anim->start();
+            break;
 
-    if (m_anim->state() == QPropertyAnimation::State::Paused)
-        m_anim->setPaused(false);
+            case QPropertyAnimation::State::Paused:
+                m_anim->setPaused(false);
+            break;
+        }
+    }
+
+    if (m_timeline)
+    {
+
+        switch(m_timeline->state())
+        {
+            case QTimeLine::State::NotRunning:
+                m_timeline->start();
+            break;
+
+            case QTimeLine::State::Paused:
+                m_timeline->setPaused(false);
+            break;
+        }
+    }
 }
+
 
 void GV::reset()
 {
@@ -199,16 +248,70 @@ void GV::reset()
         m_li->reset();
     if (m_ci)
         m_ci->reset();
-    m_anim->stop();
+    if (m_anim)
+        m_anim->stop();
+    if (m_timeline)
+        m_timeline->stop();
 }
 
 void GV::pause()
 {
     m_isPlaying = false;
 
-    if (m_anim->state() == QPropertyAnimation::State::Running)
+    if (m_anim && m_anim->state() == QPropertyAnimation::State::Running)
         m_anim->setPaused(true);
+
+    if (m_anim_item && m_timeline && m_timeline->state() == QTimeLine::State::Running)
+        m_timeline->setPaused(true);
+}
+
+void GV::mousePressEvent(QMouseEvent *e)
+{
+    if(e->button() == Qt::MouseButton::LeftButton)
+    {
+        if(m_draw_path_mode)
+        {
+            QPointF s = mapToScene(e->pos());
+            qDebug() << s << "\n";
+            m_painter_path.moveTo(s);
+            m_path_item->setPath(m_painter_path);
+            m_pathDrawnPixelsPos.push_back(s);
+        }
+    }
+    QGraphicsView::mousePressEvent(e);
+}
+
+void GV::mouseReleaseEvent(QMouseEvent *e)
+{
+    if(e->button() == Qt::MouseButton::LeftButton)
+    {
+        if(m_draw_path_mode)
+        {
+            setDrawPathMode(false);
+            emit drawPathFinished();
+        }
+    }
+    QGraphicsView::mouseReleaseEvent(e);
+}
+
+void GV::mouseMoveEvent(QMouseEvent *e)
+{
+    if(m_draw_path_mode)
+    {
+        QPointF s = mapToScene(e->pos());
+        qDebug() << s << "\n";
+        m_painter_path.lineTo(s);
+        m_path_item->setPath(m_painter_path);
+        m_pathDrawnPixelsPos.push_back(s);
+    }
+    QGraphicsView::mouseMoveEvent(e);
 }
 
 GV::~GV()
 {}
+
+
+QVector<QPointF> GV::getPathDrawnPos()
+{
+    return m_pathDrawnPixelsPos;
+}

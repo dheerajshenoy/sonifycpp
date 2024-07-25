@@ -2,11 +2,18 @@
 #include <qt6/QtWidgets/QGraphicsView>
 #include <qt6/QtWidgets/QGraphicsScene>
 #include <qt6/QtWidgets/QGraphicsLineItem>
+#include <qt6/QtWidgets/QGraphicsPathItem>
+#include <qt6/QtGui/QPainterPath>
+#include <qt6/QtGui/QMouseEvent>
 #include <qt6/QtCore/QPropertyAnimation>
+#include <qt6/QtCore/QTimeLine>
+#include <qt6/QtCore/QTimer>
+#include <qt6/QtWidgets/QGraphicsItemAnimation>
 #include <qt6/QtCore/QObject>
 #include "traverse.hpp"
 #include "line.hpp"
 #include "circle.hpp"
+#include "path.hpp"
 
 class GV : public QGraphicsView
 {
@@ -20,10 +27,18 @@ public:
     void pause();
     void setDuration(double s);
     void setTraverse(Traverse t);
+    void setDrawPathMode(bool t);
+    QVector<QPointF> getPathDrawnPos();
     ~GV();
 
 signals:
     void animationFinished();
+    void drawPathFinished();
+
+protected:
+    void mousePressEvent(QMouseEvent *) override; 
+    void mouseReleaseEvent(QMouseEvent *) override;
+    void mouseMoveEvent(QMouseEvent *) override;
 
 private:
 
@@ -31,11 +46,21 @@ private:
     QGraphicsPixmapItem *m_pi = new QGraphicsPixmapItem();
 
     bool m_isPlaying = false;
-    QPropertyAnimation *m_anim;
+    QPropertyAnimation *m_anim = nullptr;
 
-    AnimatedLineItem *m_li;
-    AnimatedCircleItem *m_ci;
+    AnimatedLineItem *m_li = nullptr;
+    AnimatedCircleItem *m_ci = nullptr;
+    AnimatedPathItem *m_pathi = nullptr;
     double m_duration_s = 1.0f;
 
     Traverse m_traverse = Traverse::LEFT_TO_RIGHT;
+
+    bool m_draw_path_mode = false;
+
+    QPainterPath m_painter_path = QPainterPath();
+    QGraphicsPathItem *m_path_item = nullptr;
+
+    QVector<QPointF> m_pathDrawnPixelsPos;
+    QGraphicsItemAnimation *m_anim_item = nullptr;
+    QTimeLine *m_timeline = nullptr;
 };

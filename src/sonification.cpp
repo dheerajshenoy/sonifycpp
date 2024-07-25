@@ -118,8 +118,8 @@ void Sonification::m_Sonify_LeftToRight(QPixmap &pix)
         {
             QRgb pixel = img.pixel(x, y);
             QColor col = QColor(pixel);
-            /*double intensity = qGray(pixel);*/
-            double intensity = (col.red() + col.green() + col.blue())/3.0;
+            double intensity = qGray(pixel);
+            /*double intensity = (col.red() + col.green() + col.blue())/3.0;*/
             auto sine = m_GenerateSineWave(intensity, y, x);
             temp = addVectors<double>(temp, sine);
         }
@@ -357,6 +357,29 @@ void Sonification::m_Sonify_AntiClockwise(QPixmap &pix)
         for(int i=0; i < temp.size(); i++)
             m_audioData.push_back(temp.at(i));
     }
+}
+
+void Sonification::SonifyPath(QPixmap &pix, QVector<QPointF> pixelPos)
+{
+    if (!m_audioData.isEmpty())
+        m_audioData.clear();
+
+    /*QVector<QColor> pixels;*/
+    /*pixels.resize(pixelPos.size());*/
+    QImage img = pix.toImage();
+    for(int i=0; i < pixelPos.size(); i++)
+    {
+        auto pixelpos = pixelPos[i];
+        auto x = pixelpos.x();
+        auto y = pixelpos.y();
+        /*auto pixel = QColor(img.pixel(coord.x(), coord.y()));*/
+        int intensity = qGray(img.pixel(x, y));
+        auto sine = m_GenerateSineWave(intensity, y, x);
+
+        for(int j=0; j < sine.size(); j++)
+            m_audioData.push_back(sine[j]);
+    }
+
 }
 
 template <typename T>

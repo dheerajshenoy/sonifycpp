@@ -24,6 +24,7 @@ public:
     ~Sonification();
     QVector<short> getAudioData();
     float getSampleRate();
+    void SonifyPath(QPixmap &pix, QVector<QPointF> pixelPos);
 
 private:
 
