@@ -1,6 +1,5 @@
 #include "sonify.hpp"
 #include "qcustomplot.h"
-#include <sndfile.h>
 
 
 Sonify::Sonify(QWidget *parent)
@@ -12,11 +11,11 @@ Sonify::Sonify(QWidget *parent)
     initSidePanel();
     initMenu();
     initConnections();
-
     waveformplot->addGraph();
     waveformplot->setVisible(false);
 
     this->show();
+
     /*Open("/home/neo/Gits/sonifycpp/test2.png");*/
 }
 
@@ -187,18 +186,27 @@ void Sonify::initConnections()
 
     connect(m_audio__save, &QAction::triggered, this, [&]() { Sonify::Save(); });
 
-    connect(gv, &GV::animationFinished, this, [&]() {
-        m_play_btn->setText("Play");
-        m_isAudioPlaying = false;
-        sonification->reset();
+    connect(sonification, &Sonification::audioindex, gv, [&](int index) {
+        qDebug() << index / 1024;
     });
-
-    connect(m_view__waveform, &QAction::triggered, this, &Sonify::viewWaveform);
 
     connect(sonification, &Sonification::audioprogress, gv, [&](double location) {
         m_audio_progress_label->setText(QString::number(location));
     });
 
+    connect(gv, &GV::animationFinished, this, [&]() {
+        m_play_btn->setText("Play");
+        m_isAudioPlaying = false;
+        sonification->reset();
+    });
+    connect(m_view__waveform, &QAction::triggered, this, &Sonify::viewWaveform);
+
+    connect(sonification, &Sonification::sonificationDone, this, [&]() {
+        gv->setDuration(sonification->getDuration());
+        m_duration_label->setText("Duration: " + QString::number(sonification->getDuration()) + "s");
+        m_play_btn->setEnabled(true);
+        m_reset_btn->setEnabled(true);
+    });
 }
 
 QVector<double> linspace(double start, double stop, int num) {
@@ -289,50 +297,28 @@ void Sonify::doSonify()
         {
 
             if (m_traverse_combo->currentText() == "Left to Right")
-            {
                 sonification->Sonify(m_pix, gv, Traverse::LEFT_TO_RIGHT);
-            }
+
             else if (m_traverse_combo->currentText() == "Right to Left")
-            {
                 sonification->Sonify(m_pix, gv, Traverse::RIGHT_TO_LEFT);
-                /*gv->setTraverse(Traverse::RIGHT_TO_LEFT);*/
-            }
 
             else if (m_traverse_combo->currentText() == "Top to Bottom")
-            {
                 sonification->Sonify(m_pix, gv, Traverse::TOP_TO_BOTTOM);
-                /*gv->setTraverse(Traverse::TOP_TO_BOTTOM);*/
-            }
 
             else if (m_traverse_combo->currentText() == "Bottom to Top")
-            {
-
                 sonification->Sonify(m_pix, gv, Traverse::BOTTOM_TO_TOP);
-                /*gv->setTraverse(Traverse::BOTTOM_TO_TOP);*/
-            }
 
             else if (m_traverse_combo->currentText() == "Circle Outwards")
-            {
                 sonification->Sonify(m_pix, gv, Traverse::CIRCLE_OUTWARDS);
-                /*gv->setTraverse(Traverse::CIRCLE_OUTWARDS);*/
-            }
 
             else if (m_traverse_combo->currentText() == "Circle Inwards")
-            {
                 sonification->Sonify(m_pix, gv, Traverse::CIRCLE_INWARDS);
-                /*gv->setTraverse(Traverse::CIRCLE_INWARDS);*/
-            }
 
             else if (m_traverse_combo->currentText() == "Clockwise")
-            {
                 sonification->Sonify(m_pix, gv, Traverse::CLOCKWISE);
-                /*gv->setTraverse(Traverse::CLOCKWISE);*/
-            }
 
             else if (m_traverse_combo->currentText() == "Anti-Clockwise")
-            {
                 sonification->Sonify(m_pix, gv, Traverse::ANTICLOCKWISE);
-            }
 
             else if (m_traverse_combo->currentText() == "Draw Path")
             {
@@ -349,62 +335,41 @@ void Sonify::doSonify()
                 /*});*/
             }
 
-            gv->setDuration(sonification->getDuration());
             qDebug() << "Duration " << sonification->getDuration();
-            m_duration_label->setText("Duration: " + QString::number(sonification->getDuration()) + "s");
-            m_play_btn->setEnabled(true);
-            m_reset_btn->setEnabled(true);
         }
         return;
     }
 
     if (m_traverse_combo->currentText() == "Left to Right")
-    {
         sonification->Sonify(m_pix, gv, Traverse::LEFT_TO_RIGHT);
-    }
+
     else if (m_traverse_combo->currentText() == "Right to Left")
-    {
         sonification->Sonify(m_pix, gv, Traverse::RIGHT_TO_LEFT);
-    }
 
     else if (m_traverse_combo->currentText() == "Top to Bottom")
-    {
         sonification->Sonify(m_pix, gv, Traverse::TOP_TO_BOTTOM);
-    }
 
     else if (m_traverse_combo->currentText() == "Bottom to Top")
-    {
-
         sonification->Sonify(m_pix, gv, Traverse::BOTTOM_TO_TOP);
-    }
 
     else if (m_traverse_combo->currentText() == "Circle Outwards")
-    {
-
         sonification->Sonify(m_pix, gv, Traverse::CIRCLE_OUTWARDS);
-    }
 
     else if (m_traverse_combo->currentText() == "Circle Inwards")
-    {
-
         sonification->Sonify(m_pix, gv, Traverse::CIRCLE_INWARDS);
-    }
 
     else if (m_traverse_combo->currentText() == "Clockwise")
-    {
         sonification->Sonify(m_pix, gv, Traverse::CLOCKWISE);
-    }
 
     else if (m_traverse_combo->currentText() == "Anticlockwise")
-    {
         sonification->Sonify(m_pix, gv, Traverse::ANTICLOCKWISE);
-    }
 
     else if (m_traverse_combo->currentText() == "Draw Path")
     {
+        /*auto pixelpos = gv->getPathDrawnPos();*/
+        /*sonification->SonifyPath(m_pix, pixelpos);*/
     }
 
-    gv->setDuration(sonification->getDuration());
     m_duration_label->setText("Duration: " + QString::number(sonification->getDuration()) + "s");
     m_play_btn->setEnabled(true);
     m_reset_btn->setEnabled(true);

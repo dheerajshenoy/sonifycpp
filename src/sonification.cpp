@@ -11,6 +11,8 @@ Sonification::Sonification()
         return;
     }
 
+    connect(sonifier, &Sonifier::sonificationDone, this, [&]() { emit sonificationDone(); });
+
 }
 
 Sonification::~Sonification()
@@ -44,8 +46,8 @@ void Sonification::Sonify(QPixmap &pix, GV *gv, Traverse mode)
     m_wavSpec.callback = sdlAudioCallback;
     m_wavSpec.userdata = this;
 
-    mapping->setSampleRate(m_SampleRate);
-    mapping->setSamples(m_NumSamples);
+    sonifier->setSampleRate(m_SampleRate);
+    sonifier->setSamples(m_NumSamples);
 
     if (m_audioDevice)
         SDL_CloseAudioDevice(m_audioDevice);
@@ -60,340 +62,79 @@ void Sonification::Sonify(QPixmap &pix, GV *gv, Traverse mode)
     {
     
         case Traverse::LEFT_TO_RIGHT:
-            m_Sonify_LeftToRight(pix);
+            sonifier->LeftToRight(pix, m_audioData);
             break;
 
         case Traverse::RIGHT_TO_LEFT:
-            m_Sonify_RightToLeft(pix);
+            sonifier->RightToLeft(pix, m_audioData);
             break;
 
         case Traverse::TOP_TO_BOTTOM:
-            m_Sonify_TopToBottom(pix);
+            sonifier->TopToBottom(pix, m_audioData);
             break;
 
         case Traverse::BOTTOM_TO_TOP:
-            m_Sonify_BottomToTop(pix);
+            sonifier->BottomToTop(pix, m_audioData);
             break;
 
         case Traverse::CIRCLE_INWARDS:
-            m_Sonify_CircleInwards(pix);
+            sonifier->CircleInwards(pix, m_audioData);
             break;
 
         case Traverse::CIRCLE_OUTWARDS:
-            m_Sonify_CircleOutwards(pix);
+            sonifier->CircleOutwards(pix, m_audioData);
             break;
 
         case Traverse::CLOCKWISE:
-            m_Sonify_Clockwise(pix);
+            sonifier->Clockwise(pix, m_audioData);
             break;
 
         case Traverse::ANTICLOCKWISE:
-            m_Sonify_AntiClockwise(pix);
+            sonifier->AntiClockwise(pix, m_audioData);
+            break;
+
+        case Traverse::PATH:
             break;
     }
 
 }
 
-QVector<double> Sonification::m_GenerateSineWave(double amplitude, double frequency, double time)
-{
-    QVector<double> fs;
-    fs.resize(m_NumSamples);
-    double val = m_val * frequency;
-    for(int i=0; i < m_NumSamples; i++)
-        fs[i] = amplitude * sin(val * i);
-    return fs;
-}
-
-// Left to right traversal
-// Vertical position to frequency, horizontal position to time
-// brightness into amplitude
-void Sonification::m_Sonify_LeftToRight(QPixmap &pix)
-{
-    if (!m_audioData.isEmpty())
-        m_audioData.clear();
-
-    QImage img = pix.toImage();
-    QVector<short> temp;
-    for(int x=0; x < img.width(); x++)
-    {
-        temp.clear();
-        temp.resize(m_NumSamples);
-        for(int y=0; y < img.height(); y++)
-        {
-            QRgb pixel = img.pixel(x, y);
-            auto sine = mapping->Map2(pixel, y, x);
-            temp = addVectors<short>(temp, sine);
-        }
-
-        for(int i=0; i < temp.size(); i++)
-            m_audioData.push_back(temp.at(i));
-    }
-
-}
-
-// Right to Left traversal
-// Vertical position to frequency, horizontal position to time
-// brightness into amplitude
-void Sonification::m_Sonify_RightToLeft(QPixmap &pix)
-{
-    if (!m_audioData.isEmpty())
-        m_audioData.clear();
-
-    QImage img = pix.toImage();
-    QVector<short> temp;
-    for(int x = img.width() - 1; x >= 0; x--)
-    {
-        temp.clear();
-        temp.resize(m_NumSamples);
-        for(int y=0; y < img.height(); y++)
-        {
-            QRgb pixel = img.pixel(x, y);
-            auto sine = mapping->Map1(pixel, y, x);
-            temp = addVectors<short>(temp, sine);
-        }
-
-        for(int i=0; i < temp.size(); i++)
-            m_audioData.push_back(temp.at(i));
-    }
-}
-
-// Top to Bottom
-// Vertical position to frequency, horizontal position to time
-// brightness into amplitude
-void Sonification::m_Sonify_TopToBottom(QPixmap &pix)
-{
-    if (!m_audioData.isEmpty())
-        m_audioData.clear();
-
-    QImage img = pix.toImage();
-    QVector<short> temp;
-    for(int y = img.height() - 1; y >= 0; y--)
-    {
-        temp.clear();
-        temp.resize(m_NumSamples);
-        for(int x = 0; x < img.width(); x++)
-        {
-            QRgb pixel = img.pixel(x, y);
-            auto sine = mapping->Map1(pixel, y, x);
-            temp = addVectors<short>(temp, sine);
-        }
-
-        for(int i=0; i < temp.size(); i++)
-            m_audioData.push_back(temp.at(i));
-    }
-}
-
-// Top to Bottom
-// Vertical position to frequency, horizontal position to time
-// brightness into amplitude
-void Sonification::m_Sonify_BottomToTop(QPixmap &pix)
-{
-
-    if (!m_audioData.isEmpty())
-        m_audioData.clear();
-    QImage img = pix.toImage();
-    QVector<short> temp;
-    for(int y = 0; y < img.height(); y++)
-    {
-        temp.clear();
-        temp.resize(m_NumSamples);
-        for(int x = 0; x < img.width(); x++)
-        {
-            QRgb pixel = img.pixel(x, y);
-            auto sine = mapping->Map1(pixel, y, x);
-            temp = addVectors<short>(temp, sine);
-        }
-
-        for(int i=0; i < temp.size(); i++)
-            m_audioData.push_back(temp.at(i));
-    }
-}
-
-void Sonification::m_Sonify_CircleOutwards(QPixmap &pix)
-{
-    if (!m_audioData.isEmpty())
-        m_audioData.clear();
-
-    int width = pix.width();
-    int height = pix.height();
-
-    double centerX = width / 2.0;
-    double centerY = height / 2.0;
-
-    QImage img = pix.toImage();
-    QVector<short> temp;
-
-    auto radius = static_cast<int>(sqrt(centerX * centerX + centerY * centerY));
-
-    for (int r = 0; r < radius; r++)
-    {
-        temp.clear();
-        temp.resize(m_NumSamples);
-        for (int angle = 0; angle < 360; angle++)
-        {
-            qreal rad = qDegreesToRadians(static_cast<qreal>(angle));
-            int x = centerX + r * qCos(rad);
-            int y = centerY + r * qSin(rad);
-
-            if (x >= 0 && x < width && y >= 0 && y < height) {
-                QRgb pixel = img.pixel(x, y);
-                auto sine = mapping->Map1(pixel, y, x);
-                temp = addVectors<short>(temp, sine);
-            }
-        }
-
-        for(int i=0; i < temp.size(); i++)
-            m_audioData.push_back(temp.at(i));
-    }
-}
-
-void Sonification::m_Sonify_CircleInwards(QPixmap &pix)
-{
-    if (!m_audioData.isEmpty())
-        m_audioData.clear();
-    int width = pix.width();
-    int height = pix.height();
-    double centerX = pix.width() / 2.0;
-    double centerY = pix.height() / 2.0;
-
-    QImage img = pix.toImage();
-    QVector<short> temp;
-
-    auto radius = std::max(width / 2.0, height / 2.0);
-
-    for (int r = radius - 1; r >= 0; r--)
-    {
-        temp.clear();
-        temp.resize(m_NumSamples);
-        for (int angle = 0; angle < 360; angle++)
-        {
-            qreal rad = qDegreesToRadians(static_cast<qreal>(angle));
-            int x = centerX + r * qCos(rad);
-            int y = centerY + r * qSin(rad);
-
-            if (x >= 0 && x < width && y >= 0 && y < height) {
-                QRgb pixel = img.pixel(x, y);
-                auto sine = mapping->Map1(pixel, y, x);
-                temp = addVectors<short>(temp, sine);
-            }
-        }
-
-        for(int i=0; i < temp.size(); i++)
-            m_audioData.push_back(temp.at(i));
-    }
-}
-
-void Sonification::m_Sonify_Clockwise(QPixmap &pix)
-{
-    if (!m_audioData.isEmpty())
-        m_audioData.clear();
-    int width = pix.width();
-    int height = pix.height();
-    double centerX = width / 2.0;
-    double centerY = height / 2.0;
-
-    QImage img = pix.toImage();
-    QVector<short> temp;
-
-    auto length = static_cast<int>(sqrt(centerX * centerX + centerY * centerY));
-
-    for (int angle = 0; angle < 360; angle++)
-    {
-        temp.clear();
-        temp.resize(m_NumSamples);
-        for (int r = 0; r < length; r++)
-        {
-            qreal rad = qDegreesToRadians(static_cast<qreal>(angle));
-            int x = centerX + r * qCos(rad);
-            int y = centerY + r * qSin(rad);
-
-            if (x >= 0 && x < width && y >= 0 && y < height) {
-                QRgb pixel = img.pixel(x, y);
-                auto sine = mapping->Map1(pixel, y, x);
-                temp = addVectors<short>(temp, sine);
-            }
-        }
-
-        for(int i=0; i < temp.size(); i++)
-            m_audioData.push_back(temp.at(i));
-    }
-}
-
-void Sonification::m_Sonify_AntiClockwise(QPixmap &pix)
-{
-    if (!m_audioData.isEmpty())
-        m_audioData.clear();
-    int width = pix.width();
-    int height = pix.height();
-    double centerX = width / 2.0;
-    double centerY = height / 2.0;
-
-    QImage img = pix.toImage();
-    QVector<short> temp;
-
-    auto length = static_cast<int>(sqrt(centerX * centerX + centerY * centerY));
-
-    for (int angle = 359; angle >= 0; angle--)
-    {
-        temp.clear();
-        temp.resize(m_NumSamples);
-        for (int r = 0; r < length; r++)
-        {
-            qreal rad = qDegreesToRadians(static_cast<qreal>(angle));
-            int x = centerX + r * qCos(rad);
-            int y = centerY + r * qSin(rad);
-
-            if (x >= 0 && x < width && y >= 0 && y < height) {
-                QRgb pixel = img.pixel(x, y);
-                auto sine = mapping->Map1(pixel, y, x);
-                temp = addVectors<short>(temp, sine);
-            }
-        }
-
-        for(int i=0; i < temp.size(); i++)
-            m_audioData.push_back(static_cast<short>(temp.at(i)));
-    }
-}
-
-void Sonification::SonifyPath(QPixmap &pix, QVector<QPointF> &pixelPos)
-{
-    if (!m_audioData.isEmpty())
-        m_audioData.clear();
-    /*QVector<QColor> pixels;*/
-    /*pixels.resize(pixelPos.size());*/
-    QImage img = pix.toImage();
-    for(int i=0; i < pixelPos.size(); i++)
-    {
-        auto pixelpos = pixelPos[i];
-        auto x = pixelpos.x();
-        auto y = pixelpos.y();
-        /*auto pixel = QColor(img.pixel(coord.x(), coord.y()));*/
-        int intensity = qGray(img.pixel(x, y));
-        auto sine = m_GenerateSineWave(intensity * 1000, y, x);
-        for(int j=0; j < sine.size(); j++)
-            m_audioData.push_back(sine[j]);
-    }
-
-    SDL_zero(m_wavSpec);
-    m_wavSpec.samples = m_NumSamples;
-    m_wavSpec.freq = m_SampleRate;
-    m_wavSpec.format = AUDIO_S16LSB;
-    m_wavSpec.channels = m_ChannelCount;
-    m_wavSpec.callback = sdlAudioCallback;
-    m_wavSpec.userdata = this;
-
-    mapping->setSampleRate(m_SampleRate);
-    mapping->setSamples(m_NumSamples);
-
-    if (m_audioDevice)
-        SDL_CloseAudioDevice(m_audioDevice);
-    m_audioDevice = SDL_OpenAudioDevice(nullptr, 0, &m_wavSpec, nullptr, 0);
-    if (m_audioDevice == 0) {
-        qDebug() << "Failed to open audio device: " << SDL_GetError();
-        return;
-    }
-
-}
+/**/
+/*void Sonification::SonifyPath(QPixmap &pix, QVector<QPointF> &pixelPos)*/
+/*{*/
+/*    if (!m_audioData.isEmpty())*/
+/*        m_audioData.clear();*/
+/*    QImage img = pix.toImage();*/
+/*    for(int i=0; i < pixelPos.size(); i++)*/
+/*    {*/
+/*        auto pixelpos = pixelPos[i];*/
+/*        auto x = pixelpos.x();*/
+/*        auto y = pixelpos.y();*/
+/*        int intensity = qGray(img.pixel(x, y));*/
+/*        auto sine = m_GenerateSineWave(intensity * 1000, y, x);*/
+/*        for(int j=0; j < sine.size(); j++)*/
+/*            m_audioData.push_back(sine[j]);*/
+/*    }*/
+/**/
+/*    SDL_zero(m_wavSpec);*/
+/*    m_wavSpec.samples = m_NumSamples;*/
+/*    m_wavSpec.freq = m_SampleRate;*/
+/*    m_wavSpec.format = AUDIO_S16LSB;*/
+/*    m_wavSpec.channels = m_ChannelCount;*/
+/*    m_wavSpec.callback = sdlAudioCallback;*/
+/*    m_wavSpec.userdata = this;*/
+/**/
+/*    sonifier->setSampleRate(m_SampleRate);*/
+/*    sonifier->setSamples(m_NumSamples);*/
+/**/
+/*    if (m_audioDevice)*/
+/*        SDL_CloseAudioDevice(m_audioDevice);*/
+/*    m_audioDevice = SDL_OpenAudioDevice(nullptr, 0, &m_wavSpec, nullptr, 0);*/
+/*    if (m_audioDevice == 0) {*/
+/*        qDebug() << "Failed to open audio device: " << SDL_GetError();*/
+/*        return;*/
+/*    }*/
+/*}*/
 
 template <typename T>
 QVector<T> Sonification::addVectors(QVector<T> &a, QVector<T> &b)
@@ -428,10 +169,6 @@ void Sonification::reset()
 }
 
 
-/*double Sonification::m_GenerateSineWave(double amplitude, double frequency, double time)*/
-/*{*/
-/*    return amplitude * std::sin(m_val * frequency * time);*/
-/*}*/
 
 double Sonification::m_MapIntensityToFrequence(int intensity)
 {
@@ -500,6 +237,7 @@ void Sonification::sdlAudioCallback(void* userdata, Uint8* stream, int len)
 
     s->m_audioOffset += bytesToCopy;
     emit s->audioprogress(static_cast<double>(s->m_audioOffset / (s->m_SampleRate * sizeof(short))));
+    emit s->audioindex(static_cast<int>(s->m_audioOffset / (sizeof(short))));
 
     if (bytesToCopy < len) {
         memset(stream + bytesToCopy, 0, len - bytesToCopy);

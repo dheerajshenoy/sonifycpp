@@ -1,3 +1,6 @@
+#ifndef SONIFY_HPP
+#define SONIFY_HPP
+
 #include <qt6/QtWidgets/QMainWindow>
 #include <qt6/QtWidgets/QApplication>
 #include <qt6/QtWidgets/QVBoxLayout>
@@ -13,7 +16,6 @@
 #include <qt6/QtWidgets/QLabel>
 #include <qt6/QtWidgets/QSpinBox>
 #include <qt6/QtCore/QTimer>
-#include <qt6/QtCore/QThreadPool>
 #include <qt6/QtConcurrent/QtConcurrent>
 #include <qt6/QtWidgets/QSizePolicy>
 #include "sonification.hpp"
@@ -76,3 +78,5 @@ private:
     void viewWaveform(bool state = false);
     QCustomPlot *waveformplot = new QCustomPlot();
 };
+
+#endif

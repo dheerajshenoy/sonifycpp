@@ -1,3 +1,6 @@
+#ifndef LINE_HPP
+#define LINE_HPP
+
 #include "traverse.hpp"
 #include <qt6/QtWidgets/QGraphicsLineItem>
 #include <qt6/QtGui/QPen>
@@ -104,3 +107,5 @@ private:
     qreal m_h, m_w, m_angle, m_l;
     QLineF m_line;
 };
+
+#endif

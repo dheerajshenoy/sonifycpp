@@ -1,3 +1,6 @@
+#ifndef SONIFICATION_HPP
+#define SONIFICATION_HPP
+
 #include <qt6/QtGui/QPixmap>
 #include <sndfile.h>
 #include <cmath>
@@ -6,11 +9,11 @@
 #include <SDL2/SDL.h>
 #include <qt6/QtCore/QtMath>
 #include <qt6/QtCore/QDebug>
-#include <qt6/QtCore/QThreadPool>
 #include <qt6/QtCore/QObject>
+#include <qt6/QtConcurrent/QtConcurrent>
 #include <qt6/QtGui/QRgb>
 #include "gv.hpp"
-#include "mapping.hpp"
+#include "sonifier.hpp"
 
 class Sonification : public QObject
 {
@@ -19,7 +22,6 @@ class Sonification : public QObject
 public:
     Sonification();
     void Sonify(QPixmap &pix, GV *gv, Traverse mode = Traverse::LEFT_TO_RIGHT);
-    /*void Sonify(QPixmap &pix, Traverse mode = Traverse::LEFT_TO_RIGHT);*/
     void setNumSamples(int nsamples);
     void play();
     void pause();
@@ -30,25 +32,18 @@ public:
     ~Sonification();
     QVector<short> getAudioData();
     float getSampleRate();
-    void SonifyPath(QPixmap &pix, QVector<QPointF> &pixelPos);
+    /*void SonifyPath(QPixmap &pix, QVector<QPointF> &pixelPos);*/
 
 signals:
     void audioprogress(double);
+    void audioindex(int);
+    void sonificationDone();
 
 private:
-    void m_Sonify_LeftToRight(QPixmap &pix);
-    void m_Sonify_RightToLeft(QPixmap &pix);
-    void m_Sonify_TopToBottom(QPixmap &pix);
-    void m_Sonify_BottomToTop(QPixmap &pix);
-    void m_Sonify_CircleInwards(QPixmap &pix);
-    void m_Sonify_CircleOutwards(QPixmap &pix);
-    void m_Sonify_Clockwise(QPixmap &pix);
-    void m_Sonify_AntiClockwise(QPixmap &pix);
 
     double m_MapIntensityToFrequence(int intensity);
     void m_GenerateSound();
     bool m_GenerateWavFile(QString filename);
-    QVector<double> m_GenerateSineWave(double amplitude, double frequency, double time);
 
     template <typename T>
     QVector<T> addVectors(QVector<T> &, QVector<T> &);
@@ -74,5 +69,7 @@ private:
     const double M_PI2 = 6.28318530718;
     Mapping *mapping = new Mapping();
 
-    QThreadPool m_thread_pool;
+    Sonifier *sonifier = new Sonifier();
 };
+
+#endif

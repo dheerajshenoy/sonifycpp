@@ -1,4 +1,6 @@
-#include "qtmetamacros.h"
+#ifndef PATH_HPP
+#define PATH_HPP
+
 #include <qt6/QtGui/QPainterPath>
 #include <qt6/QtGui/QPen>
 #include <qt6/QtGui/QColor>
@@ -16,3 +18,5 @@ public:
     using QGraphicsEllipseItem::QGraphicsEllipseItem;
 
 };
+
+#endif

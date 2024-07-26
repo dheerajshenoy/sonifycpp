@@ -1,3 +1,5 @@
+#ifndef CIRCLE_HPP
+#define CIRCLE_HPP
 #include "traverse.hpp"
 #include <qt6/QtWidgets/QGraphicsEllipseItem>
 #include <qt6/QtGui/QPen>
@@ -57,3 +59,5 @@ private:
     qreal m_x, m_y, m_h, m_w, m_imgh, m_imgw, centerX, centerY;
     QRectF m_rect;
 };
+
+#endif

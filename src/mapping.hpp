@@ -5,6 +5,7 @@
 #include <qt6/QtCore/QDebug>
 #include <qt6/QtGui/QRgb>
 #include <qt6/QtGui/QColor>
+#include "utils.hpp"
 
 /*
 * ####################################################################################################
@@ -39,22 +40,9 @@ private:
     QVector<short> generateSineWave(double amplitude, double frequency, double time);
 
 
-    template <typename T>
-    void addVectors(QVector<T> &res);
-
-    template <typename T>
-    void addVectors(QVector<T> &res, const QVector<T>& a);
-
-    template <typename T>
-    void addVectors(QVector<T> &res, QVector<T> &a, QVector<T> &b);
-
-    template <typename T, typename... Args>
-    void addVectors(QVector<T> &res, const Args&... vecs);
-    
     double m_samplerate;
-    int m_samples;
+    int m_nsamples;
 
-    QVector<short> fs;
 };
 
 #endif

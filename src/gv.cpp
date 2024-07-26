@@ -29,6 +29,7 @@ void GV::setTraverse(Traverse t)
 
     auto width = m_pi->pixmap().width();
     auto height = m_pi->pixmap().height();
+
     // Clean the canvas
     if (m_li && m_scene)
     {
@@ -205,6 +206,7 @@ void GV::setDuration(double s)
         m_timeline->setDuration(s * 1000);
     }
 
+    qDebug() << "DD";
 }
 
 void GV::setPixmap(QPixmap &pix)
