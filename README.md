@@ -13,7 +13,7 @@ Convert images to audio signals.
     6. [Circular Inwards](#circular_inwards)
     7. [Clockwise (Linear)](#clockwise)
     8. [Anti-Clockwise (Linear)](#anti_clockwise)
-    9. [Draw Path (In Progress)](#draw_path)
+    9. [Draw Path](#draw_path)
 3. [Pixel Mapping](#pixel_mapping)
 4. [Things to do](#todo)
 5. [Demo](#demo)
@@ -84,6 +84,8 @@ SonifyCPP is currently able to traverse images in the following manner:
 <a name="draw_path" />
 
 ### 9. Draw Path
+
+![]()
 
 <a name="pixel_mapping"/>
  
