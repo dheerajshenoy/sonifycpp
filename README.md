@@ -72,7 +72,6 @@ SonifyCPP is currently able to traverse images in the following manner:
 
 ### 7. Clockwise (Linear)
 
-
 ![Clockwise](https://github.com/user-attachments/assets/3fb24eb7-847a-46f3-86f5-07962d3841bc)
 
 <a name="anti_clockwise" />
@@ -85,7 +84,8 @@ SonifyCPP is currently able to traverse images in the following manner:
 
 ### 9. Draw Path
 
-![]()
+![Draw Path](https://github.com/user-attachments/assets/7825fb6d-7b3e-4763-9604-b6b46677bdd7)
+
 
 <a name="pixel_mapping"/>
  
