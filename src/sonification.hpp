@@ -38,6 +38,7 @@ signals:
     void audioprogress(double);
     void audioindex(int);
     void sonificationDone();
+    void audioFinishedPlaying();
 
 private:
 

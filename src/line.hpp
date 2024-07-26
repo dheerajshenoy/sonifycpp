@@ -9,10 +9,6 @@
 // A custom QGraphicsLineItem to allow for animation
 class AnimatedLineItem : public QObject, public QGraphicsLineItem {
     Q_OBJECT
-    Q_PROPERTY(qreal x READ x WRITE setX)
-    Q_PROPERTY(qreal y READ y WRITE setY)
-    Q_PROPERTY(qreal angle READ angle WRITE setAngle)
-
 public:
     AnimatedLineItem()
     {
@@ -53,26 +49,6 @@ public:
     void setImageHeight(qreal h)
     {
         m_h = h;
-    }
-
-    qreal x() {
-        return line().p1().x();
-    }
-
-    void setX(qreal x) {
-        QLineF F = line();
-        F.setLine(x, 0, x, m_h);
-        setLine(F);
-    }
-
-    qreal y() {
-        return line().p1().y();
-    }
-
-    void setY(qreal y) {
-        QLineF F = line();
-        F.setLine(0, y, m_w, y);
-        setLine(F);
     }
 
     void reset() {

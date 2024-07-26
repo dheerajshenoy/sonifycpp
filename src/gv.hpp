@@ -8,7 +8,6 @@
 #include <qt6/QtWidgets/QGraphicsPathItem>
 #include <qt6/QtGui/QPainterPath>
 #include <qt6/QtGui/QMouseEvent>
-#include <qt6/QtCore/QPropertyAnimation>
 #include <qt6/QtCore/QTimeLine>
 #include <qt6/QtCore/QTimer>
 #include <qt6/QtWidgets/QGraphicsItemAnimation>
@@ -25,19 +24,19 @@ public:
     GV(QWidget *parent = nullptr);
 
     void setPixmap(QPixmap &img);
-    void play();
     void reset();
-    void pause();
     void setDuration(double s);
     void setTraverse(Traverse t);
     void setDrawPathMode(bool t);
     void getOffset(size_t &offset);
+    void setAudioIndex(int index);
     QVector<QPointF> getPathDrawnPos();
     ~GV();
 
 signals:
     void animationFinished();
     void drawPathFinished();
+    void audioIndexSet();
 
 protected:
     void mousePressEvent(QMouseEvent *) override; 
@@ -48,9 +47,6 @@ private:
 
     QGraphicsScene *m_scene = new QGraphicsScene();
     QGraphicsPixmapItem *m_pi = new QGraphicsPixmapItem();
-
-    bool m_isPlaying = false;
-    QPropertyAnimation *m_anim = nullptr;
 
     AnimatedLineItem *m_li = nullptr;
     AnimatedCircleItem *m_ci = nullptr;
@@ -67,6 +63,10 @@ private:
     QVector<QPointF> m_pathDrawnPixelsPos;
     QGraphicsItemAnimation *m_anim_item = nullptr;
     QTimeLine *m_timeline = nullptr;
+
+    int m_width, m_height, m_audio_index;
+
+    double m_sqrt;
 };
 
 #endif

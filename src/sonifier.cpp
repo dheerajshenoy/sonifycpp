@@ -71,7 +71,7 @@ void Sonifier::TopToBottom(QPixmap &pix, QVector<short> &audioData)
         audioData.clear();
 
     QVector<short> temp;
-    for(int y = img.height() - 1; y >= 0; y--)
+    for(int y = 0; y < img.height(); y++)
     {
         temp.clear();
         temp.resize(m_nsamples);
@@ -99,7 +99,7 @@ void Sonifier::BottomToTop(QPixmap &pix, QVector<short> &audioData)
         audioData.clear();
     QImage img = pix.toImage();
     QVector<short> temp;
-    for(int y = 0; y < img.height(); y++)
+    for(int y = img.height() - 1; y >= 0; y--)
     {
         temp.clear();
         temp.resize(m_nsamples);
@@ -170,7 +170,7 @@ void Sonifier::CircleInwards(QPixmap &pix, QVector<short> &audioData)
     QImage img = pix.toImage();
     QVector<short> temp;
 
-    auto radius = std::max(width / 2.0, height / 2.0);
+    auto radius = static_cast<int>(sqrt(centerX * centerX + centerY * centerY));
 
     for (int r = radius - 1; r >= 0; r--)
     {

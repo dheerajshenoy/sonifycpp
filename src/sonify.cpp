@@ -155,7 +155,6 @@ void Sonify::PlayAudio()
     if (m_isAudioPlaying)
     {
         m_play_btn->setText("Play");
-        gv->pause();
         sonification->pause();
         m_reset_btn->setEnabled(true);
         m_num_samples_spinbox->setEnabled(true);
@@ -163,7 +162,6 @@ void Sonify::PlayAudio()
     else  
     {
         m_play_btn->setText("Pause");
-        gv->play();
         sonification->play();
         m_reset_btn->setEnabled(false);
         m_num_samples_spinbox->setEnabled(false);
@@ -187,7 +185,11 @@ void Sonify::initConnections()
     connect(m_audio__save, &QAction::triggered, this, [&]() { Sonify::Save(); });
 
     connect(sonification, &Sonification::audioindex, gv, [&](int index) {
-        qDebug() << index / 1024;
+        gv->setAudioIndex(index / 1024);
+    });
+
+    connect(sonification, &Sonification::audioFinishedPlaying, gv, [&]() {
+        emit gv->animationFinished();
     });
 
     connect(sonification, &Sonification::audioprogress, gv, [&](double location) {

@@ -242,6 +242,7 @@ void Sonification::sdlAudioCallback(void* userdata, Uint8* stream, int len)
     if (bytesToCopy < len) {
         memset(stream + bytesToCopy, 0, len - bytesToCopy);
         SDL_PauseAudioDevice(s->m_audioDevice, 1); // Stop audio playback
+        emit s->audioFinishedPlaying();
     }
 
     /*if (s->m_audioOffset >= s->m_audioData.size() * sizeof(short)) {*/
