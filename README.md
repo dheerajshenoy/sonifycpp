@@ -5,6 +5,15 @@ Convert images to audio signals.
 
 1. [Introduction](#introduction)
 2. [Traversal Methods](#traversal)
+    1. [Left to Right (Linear)](#left_to_right)
+    2. [Right to Left (Linear)](#right_to_left)
+    3. [Top to Bottom (Linear)](#top_to_bottom)
+    4. [Bottom to Top (Linear)](#bottom_to_top)
+    5. [Circular Outwards](#circular_outwards)
+    6. [Circular Inwards](#circular_inwards)
+    7. [Clockwise (Linear)](#clockwise)
+    8. [Anti-Clockwise (Linear)](#anti_clockwise)
+    9. [Draw Path](#draw_path)
 3. [Pixel Mapping](#pixel_mapping)
 4. [Things to do](#todo)
 5. [Demo](#demo)
@@ -23,37 +32,58 @@ This project is a performant successor to [Sonify](https://github.com/dheerajshe
 
 SonifyCPP is currently able to traverse images in the following manner:
 
+<a name="left_to_right" />
+
 ### 1. Left to Right (Linear)
 
 ![Left to Right](https://github.com/user-attachments/assets/5342b735-028f-429a-9c82-d8ac401a0769)
+
+<a name="right_to_left" />
 
 ### 2. Right to Left (Linear)
 
 ![Right to Left](https://github.com/user-attachments/assets/68a9f8da-1116-4a0c-8f82-4806da90ba18)
 
+<a name="top_to_bottom" />
+
 ### 3. Top to Bottom (Linear)
 
 ![Top to Bottom](https://github.com/user-attachments/assets/d0d54029-6cf5-43b9-a31d-cbf22b5f6ac2)
  
+<a name="bottom_to_top" />
+
 ### 4. Bottom to Top (Linear)
 
 ![Bottom to Top](https://github.com/user-attachments/assets/7f4b1aef-1ea1-4208-874f-487adb1eb0ea)
    
+<a name="circular_outwards" />
+
 ### 5. Circular Outwards
 
 ![Circular Outwards](https://github.com/user-attachments/assets/33dbc508-8a17-44b2-ac1c-2db59b249d1d)
   
+<a name="circular_inwards" />
+
 ### 6. Circular Inwards
 
 ![Circular Inwards](https://github.com/user-attachments/assets/077c4ae8-e7e9-4e3c-931e-156799afd3a7)
 
+<a name="clockwise" />
+
 ### 7. Clockwise (Linear)
 
+
 ![Clockwise](https://github.com/user-attachments/assets/3fb24eb7-847a-46f3-86f5-07962d3841bc)
+
+<a name="anti_clockwise" />
 
 ### 8. Anti-Clockwise (Linear)
 
 ![Anti-Clockwise](https://github.com/user-attachments/assets/9c813886-d9b1-466d-ab91-4b40c0fde28c)
+
+<a name="draw_path" />
+
+### 9. Draw Path
 
 <a name="pixel_mapping"/>
  
