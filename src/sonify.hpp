@@ -2,6 +2,7 @@
 #define SONIFY_HPP
 
 #include <qt6/QtWidgets/QMainWindow>
+#include <qt6/QtGui/QGuiApplication>
 #include <qt6/QtWidgets/QApplication>
 #include <qt6/QtWidgets/QVBoxLayout>
 #include <qt6/QtWidgets/QFileDialog>
@@ -17,6 +18,7 @@
 #include <qt6/QtWidgets/QSpinBox>
 #include <qt6/QtCore/QTimer>
 #include <qt6/QtConcurrent/QtConcurrent>
+#include <qt6/QtMultimedia/QWindowCapture>
 #include <qt6/QtWidgets/QSizePolicy>
 #include "sonification.hpp"
 #include "gv.hpp"
@@ -41,6 +43,7 @@ private:
     void initWidgets();
     void initStatusbar();
     void initSidePanel();
+    void CaptureWindow();
     QWidget *m_widget;
     QSplitter *m_splitter;
     QWidget *m_side_panel;

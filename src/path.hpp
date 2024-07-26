@@ -13,7 +13,8 @@ public:
     AnimatedPathItem()
     {
         this->setPen(QPen(Qt::yellow, 2));
-        this->setRect(0, 0, 1, 1);
+        this->setBrush(QBrush(Qt::yellow));
+        this->setRect(0, 0, 10, 10);
     }
     using QGraphicsEllipseItem::QGraphicsEllipseItem;
 

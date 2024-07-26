@@ -61,8 +61,6 @@ private:
     QGraphicsPathItem *m_path_item = nullptr;
 
     QVector<QPointF> m_pathDrawnPixelsPos;
-    QGraphicsItemAnimation *m_anim_item = nullptr;
-    QTimeLine *m_timeline = nullptr;
 
     int m_width, m_height, m_audio_index;
 

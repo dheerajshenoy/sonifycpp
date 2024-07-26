@@ -15,7 +15,6 @@ Sonify::Sonify(QWidget *parent)
     waveformplot->setVisible(false);
 
     this->show();
-
     /*Open("/home/neo/Gits/sonifycpp/test2.png");*/
 }
 
@@ -286,6 +285,7 @@ bool Sonify::Open(QString filename)
     }
     m_pix = m_pix.scaled(720, 480, Qt::KeepAspectRatio);
     gv->setPixmap(m_pix);
+    CaptureWindow();
     return true;
 
 }
@@ -324,20 +324,15 @@ void Sonify::doSonify()
 
             else if (m_traverse_combo->currentText() == "Draw Path")
             {
-                /*gv->setDrawPathMode(true);*/
-                /*connect(gv, &GV::drawPathFinished, this, [&]() {*/
-                /*    gv->setTraverse(Traverse::PATH);*/
-                /*    auto pixels = gv->getPathDrawnPos();*/
-                /*    sonification->SonifyPath(m_pix, pixels);*/
-                /*    gv->setDuration(sonification->getDuration());*/
-                /*    qDebug() << "Duration " << sonification->getDuration();*/
-                /*    m_duration_label->setText("Duration: " + QString::number(sonification->getDuration()) + "s");*/
-                /*    m_play_btn->setEnabled(true);*/
-                /*    m_reset_btn->setEnabled(true);*/
-                /*});*/
+                gv->setDrawPathMode(true);
+                connect(gv, &GV::drawPathFinished, this, [&]() {
+                    sonification->Sonify(m_pix, gv, Traverse::PATH);
+                    qDebug() << "Duration " << sonification->getDuration();
+                    /*m_duration_label->setText("Duration: " + QString::number(sonification->getDuration()) + "s");*/
+                    /*m_play_btn->setEnabled(true);*/
+                    /*m_reset_btn->setEnabled(true);*/
+                });
             }
-
-            qDebug() << "Duration " << sonification->getDuration();
         }
         return;
     }
@@ -388,3 +383,8 @@ void Sonify::Reset()
 
 Sonify::~Sonify()
 {}
+
+void Sonify::CaptureWindow()
+{
+    /*pix.save("screen.png");*/
+}

@@ -50,12 +50,6 @@ void GV::setTraverse(Traverse t)
         m_scene->removeItem(m_pathi);
     }
 
-    if (m_anim_item)
-    {
-        delete m_anim_item;
-        m_anim_item = nullptr;
-    }
-
     switch(t)
     {
         case Traverse::LEFT_TO_RIGHT:
@@ -65,12 +59,13 @@ void GV::setTraverse(Traverse t)
             if (!m_li)
             {
                 m_li = new AnimatedLineItem();
-                connect(this, &GV::audioIndexSet, m_li, [&]() {
-                    m_li->setLine(m_audio_index, 0, m_audio_index, m_height);
-                });
+                m_scene->addItem(m_li);
             }
-            m_scene->addItem(m_li);
-        break;
+
+            connect(this, &GV::audioIndexSet, m_li, [&]() {
+                m_li->setLine(m_audio_index, 0, m_audio_index, m_height);
+            });
+            break;
 
         case Traverse::RIGHT_TO_LEFT:
             if (m_li)
@@ -79,12 +74,12 @@ void GV::setTraverse(Traverse t)
             if (!m_li)
             {
                 m_li = new AnimatedLineItem();
-                connect(this, &GV::audioIndexSet, m_li, [&]() {
-                    m_li->setLine(m_width - m_audio_index, 0, m_width - m_audio_index, m_height);
-                });
+                m_scene->addItem(m_li);
             }
-            m_scene->addItem(m_li);
-        break;
+            connect(this, &GV::audioIndexSet, m_li, [&]() {
+                m_li->setLine(m_width - m_audio_index, 0, m_width - m_audio_index, m_height);
+            });
+            break;
 
         case Traverse::TOP_TO_BOTTOM:
             if (m_li)
@@ -93,12 +88,12 @@ void GV::setTraverse(Traverse t)
             if (!m_li)
             {
                 m_li = new AnimatedLineItem();
-                connect(this, &GV::audioIndexSet, m_li, [&]() {
-                    m_li->setLine(0, m_audio_index, m_width, m_audio_index);
-                });
+                m_scene->addItem(m_li);
             }
-            m_scene->addItem(m_li);
-        break;
+            connect(this, &GV::audioIndexSet, m_li, [&]() {
+                m_li->setLine(0, m_audio_index, m_width, m_audio_index);
+            });
+            break;
 
         case Traverse::BOTTOM_TO_TOP:
             if (m_li)
@@ -107,12 +102,12 @@ void GV::setTraverse(Traverse t)
             if (!m_li)
             {
                 m_li = new AnimatedLineItem();
-                connect(this, &GV::audioIndexSet, m_li, [&]() {
-                    m_li->setLine(0, m_height - m_audio_index, m_width, m_height - m_audio_index);
-                });
+                m_scene->addItem(m_li);
             }
-            m_scene->addItem(m_li);
-        break;
+            connect(this, &GV::audioIndexSet, m_li, [&]() {
+                m_li->setLine(0, m_height - m_audio_index, m_width, m_height - m_audio_index);
+            });
+            break;
 
         case Traverse::CIRCLE_OUTWARDS:
             if (m_ci)
@@ -124,12 +119,12 @@ void GV::setTraverse(Traverse t)
                 m_ci->setImageHeight(m_height);
                 m_ci->setImageWidth(m_width);
                 m_ci->setCenter();
-                connect(this, &GV::audioIndexSet, m_ci, [&]() {
-                    m_ci->setRadius(m_audio_index);
-                });
+                m_scene->addItem(m_ci);
             }
-            m_scene->addItem(m_ci);
-        break;
+            connect(this, &GV::audioIndexSet, m_ci, [&]() {
+                m_ci->setRadius(m_audio_index);
+            });
+            break;
 
         case Traverse::CIRCLE_INWARDS:
             if (m_ci)
@@ -141,12 +136,12 @@ void GV::setTraverse(Traverse t)
                 m_ci->setImageHeight(m_height);
                 m_ci->setImageWidth(m_width);
                 m_ci->setCenter();
-                connect(this, &GV::audioIndexSet, m_ci, [&]() {
-                    m_ci->setRadius(m_sqrt - m_audio_index);
-                });
+                m_scene->addItem(m_ci);
             }
-            m_scene->addItem(m_ci);
-        break;
+            connect(this, &GV::audioIndexSet, m_ci, [&]() {
+                m_ci->setRadius(m_sqrt - m_audio_index);
+            });
+            break;
 
         case Traverse::CLOCKWISE:
             if (m_li)
@@ -158,12 +153,12 @@ void GV::setTraverse(Traverse t)
                 m_li->setImageHeight(m_height);
                 m_li->setImageWidth(m_width);
                 m_li->setLength();
-                connect(this, &GV::audioIndexSet, m_li, [&]() {
-                    m_li->setAngle(m_audio_index);
-                });
+                m_scene->addItem(m_li);
             }
-            m_scene->addItem(m_li);
-        break;
+            connect(this, &GV::audioIndexSet, m_li, [&]() {
+                m_li->setAngle(m_audio_index);
+            });
+            break;
 
         case Traverse::ANTICLOCKWISE:
             if (m_li)
@@ -175,42 +170,31 @@ void GV::setTraverse(Traverse t)
                 m_li->setImageHeight(m_height);
                 m_li->setImageWidth(m_width);
                 m_li->setLength();
-                connect(this, &GV::audioIndexSet, m_li, [&]() {
-                    m_li->setAngle(360 - m_audio_index);
-                });
+                m_scene->addItem(m_li);
             }
-            m_scene->addItem(m_li);
+            connect(this, &GV::audioIndexSet, m_li, [&]() {
+                m_li->setAngle(360 - m_audio_index);
+            });
             break;
 
-        /*case Traverse::PATH:*/
-        /*    m_pathi = new AnimatedPathItem();*/
-        /*    m_scene->addItem(m_pathi);*/
-        /*    /*m_anim = new QPropertyAnimation(m_pathi, "index");*/
-        /*    m_anim_item = new QGraphicsItemAnimation();*/
-        /*    m_anim_item->setItem(m_pathi);*/
-        /*    /*m_timeline->setUpdateInterval(1 / m_duration_s);*/
-        /*    /*m_timeline->setFrameRange(0, m_pathDrawnPixelsPos.size() / 2048);*/
-        /**/
-        /*    connect(m_timeline, &QTimeLine::finished, this, [&]() {*/
-        /*        emit animationFinished();*/
-        /*    });*/
-        /*    m_anim_item->setTimeLine(m_timeline);*/
-        /*    for (int i = 0; i < m_pathDrawnPixelsPos.size(); ++i)*/
-        /*        m_anim_item->setPosAt(i / static_cast<double>(m_pathDrawnPixelsPos.size()), m_pathDrawnPixelsPos[i]);*/
+        case Traverse::PATH:
+            if (m_pathi)
+                disconnect(m_pathi, 0, 0, 0);
+
+            if (!m_pathi)
+            {
+                m_pathi = new AnimatedPathItem();
+                m_scene->addItem(m_pathi);
+            }
+            connect(this, &GV::audioIndexSet, m_pathi, [&]() {
+                m_pathi->setPos(m_pathDrawnPixelsPos.at(m_audio_index));
+            });
     }
 }
 
 void GV::setDuration(double s)
 {
     m_duration_s = s;
-
-    if (!m_timeline)
-    {
-        m_timeline = new QTimeLine(s * 1000);
-    }
-    else {
-        m_timeline->setDuration(s * 1000);
-    }
 
     qDebug() << "DD";
 }
@@ -233,10 +217,8 @@ void GV::reset()
         m_li->reset();
     if (m_ci)
         m_ci->reset();
-    if (m_timeline)
-        m_timeline->stop();
-}
 
+}
 void GV::mousePressEvent(QMouseEvent *e)
 {
     if(e->button() == Qt::MouseButton::LeftButton)

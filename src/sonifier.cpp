@@ -271,3 +271,24 @@ void Sonifier::AntiClockwise(QPixmap &pix, QVector<short> &audioData)
 
     emit sonificationDone();
 }
+
+void Sonifier::PathDrawn(QVector<QPointF> &pixelPos, QPixmap &pix, QVector<short> &audioData)
+{
+
+    if (!audioData.isEmpty())
+        audioData.clear();
+
+    QImage img = pix.toImage();
+    for(int i=0; i < pixelPos.size(); i++)
+    {
+        auto pixelpos = pixelPos[i];
+        auto x = pixelpos.x();
+        auto y = pixelpos.y();
+        int intensity = qGray(img.pixel(x, y));
+        auto sine = m_mapping->Map1(intensity * 200, y, x);
+        for(int j=0; j < sine.size(); j++)
+            audioData.push_back(sine[j]);
+    }
+
+    emit sonificationDone();
+}

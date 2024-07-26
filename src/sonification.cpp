@@ -94,6 +94,8 @@ void Sonification::Sonify(QPixmap &pix, GV *gv, Traverse mode)
             break;
 
         case Traverse::PATH:
+            auto pixelpos = gv->getPathDrawnPos();
+            sonifier->PathDrawn(pixelpos, pix, m_audioData);
             break;
     }
 
@@ -102,38 +104,6 @@ void Sonification::Sonify(QPixmap &pix, GV *gv, Traverse mode)
 /**/
 /*void Sonification::SonifyPath(QPixmap &pix, QVector<QPointF> &pixelPos)*/
 /*{*/
-/*    if (!m_audioData.isEmpty())*/
-/*        m_audioData.clear();*/
-/*    QImage img = pix.toImage();*/
-/*    for(int i=0; i < pixelPos.size(); i++)*/
-/*    {*/
-/*        auto pixelpos = pixelPos[i];*/
-/*        auto x = pixelpos.x();*/
-/*        auto y = pixelpos.y();*/
-/*        int intensity = qGray(img.pixel(x, y));*/
-/*        auto sine = m_GenerateSineWave(intensity * 1000, y, x);*/
-/*        for(int j=0; j < sine.size(); j++)*/
-/*            m_audioData.push_back(sine[j]);*/
-/*    }*/
-/**/
-/*    SDL_zero(m_wavSpec);*/
-/*    m_wavSpec.samples = m_NumSamples;*/
-/*    m_wavSpec.freq = m_SampleRate;*/
-/*    m_wavSpec.format = AUDIO_S16LSB;*/
-/*    m_wavSpec.channels = m_ChannelCount;*/
-/*    m_wavSpec.callback = sdlAudioCallback;*/
-/*    m_wavSpec.userdata = this;*/
-/**/
-/*    sonifier->setSampleRate(m_SampleRate);*/
-/*    sonifier->setSamples(m_NumSamples);*/
-/**/
-/*    if (m_audioDevice)*/
-/*        SDL_CloseAudioDevice(m_audioDevice);*/
-/*    m_audioDevice = SDL_OpenAudioDevice(nullptr, 0, &m_wavSpec, nullptr, 0);*/
-/*    if (m_audioDevice == 0) {*/
-/*        qDebug() << "Failed to open audio device: " << SDL_GetError();*/
-/*        return;*/
-/*    }*/
 /*}*/
 
 template <typename T>
