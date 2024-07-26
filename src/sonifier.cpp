@@ -15,7 +15,6 @@ void Sonifier::setSampleRate(float SR)
 
 void Sonifier::LeftToRight()
 {
-    if (m_stop_sonifying) return;
     QImage img = m_pix.toImage();
 
     QVector<short> temp;
@@ -54,6 +53,7 @@ void Sonifier::RightToLeft()
 
     for(int x = img.width() - 1; x >= 0; x--)
     {
+        if (m_stop_sonifying) return;
         temp.clear();
         temp.resize(m_nsamples);
         for(int y=0; y < img.height(); y++)
@@ -81,6 +81,7 @@ void Sonifier::TopToBottom()
     QVector<short> temp;
     for(int y = 0; y < img.height(); y++)
     {
+        if (m_stop_sonifying) return;
         temp.clear();
         temp.resize(m_nsamples);
         for(int x = 0; x < img.width(); x++)
@@ -110,6 +111,7 @@ void Sonifier::BottomToTop()
     QVector<short> audioData;
     for(int y = img.height() - 1; y >= 0; y--)
     {
+        if (m_stop_sonifying) return;
         temp.clear();
         temp.resize(m_nsamples);
         for(int x = 0; x < img.width(); x++)
@@ -146,6 +148,7 @@ void Sonifier::CircleOutwards()
 
     for (int r = 0; r < radius; r++)
     {
+        if (m_stop_sonifying) return;
         temp.clear();
         temp.resize(m_nsamples);
         for (int angle = 0; angle < 360; angle++)
@@ -185,6 +188,7 @@ void Sonifier::CircleInwards()
 
     for (int r = radius - 1; r >= 0; r--)
     {
+        if (m_stop_sonifying) return;
         temp.clear();
         temp.resize(m_nsamples);
         for (int angle = 0; angle < 360; angle++)
@@ -225,6 +229,7 @@ void Sonifier::Clockwise()
 
     for (int angle = 0; angle < 360; angle++)
     {
+        if (m_stop_sonifying) return;
         temp.clear();
         temp.resize(m_nsamples);
         for (int r = 0; r < length; r++)
@@ -263,6 +268,7 @@ void Sonifier::AntiClockwise()
 
     for (int angle = 359; angle >= 0; angle--)
     {
+        if (m_stop_sonifying) return;
         temp.clear();
         temp.resize(m_nsamples);
         for (int r = 0; r < length; r++)
@@ -293,6 +299,7 @@ void Sonifier::PathDrawn()
     QImage img = m_pix.toImage();
     for(int i=0; i < m_pixpos.size(); i++)
     {
+        if (m_stop_sonifying) return;
         auto pixelpos = m_pixpos[i];
         auto x = pixelpos.x();
         auto y = pixelpos.y();

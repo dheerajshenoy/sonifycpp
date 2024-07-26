@@ -11,16 +11,14 @@ Sonification::Sonification()
         return;
     }
     sonifier = new Sonifier();
-    sonifier->moveToThread(&m_thread);
     connect(sonifier, &Sonifier::sonificationDone, this, [&](QVector<short>audioData) {
             m_audioData = audioData;
         emit sonificationDone();
     });
-    connect(&m_thread, &QThread::started, sonifier, &Sonifier::Sonify);
     connect(sonifier, &Sonifier::sonificationProgress, this, [&](int progress) {
+        qDebug() << progress;
         emit sonificationProgress(progress);
     });
-    /*connect(&m_thread, &QThread::finished, &m_thread, &QThread::deleteLater);*/
 }
 
 Sonification::~Sonification()
@@ -30,11 +28,11 @@ Sonification::~Sonification()
     }
     SDL_Quit();
 
-    if (m_thread.isRunning())
+    if (m_thread->isRunning())
     {
         sonifier->stopSonifying(true);
-        m_thread.quit();
-        m_thread.wait();
+        m_thread->quit();
+        m_thread->wait();
     }
 }
 
@@ -74,7 +72,13 @@ void Sonification::Sonify(QPixmap &pix, GV *gv, Traverse mode)
 
     gv->setTraverse(mode);
     sonifier->setParameters(pix, mode);
-    m_thread.start();
+    if (!m_thread)
+    {
+        m_thread = new QThread();
+        connect(m_thread, &QThread::started, sonifier, &Sonifier::Sonify);
+        sonifier->moveToThread(m_thread);
+    }
+    m_thread->start();
 
 }
 
@@ -185,14 +189,13 @@ QVector<short> Sonification::getAudioData()
 
 void Sonification::stopSonification(bool state)
 {
+    sonifier->stopSonifying(state);
     if (state)
     {
-        if (m_thread.isRunning())
+        if (m_thread->isRunning())
         {
-            sonifier->stopSonifying(true);
-            m_thread.quit();
-            m_thread.wait();
+            m_thread->quit();
+            m_thread->wait();
         }
     }
-
 }

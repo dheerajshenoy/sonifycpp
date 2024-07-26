@@ -84,6 +84,9 @@ private:
 
     QProgressBar *m_progress_bar;
     QPushButton *m_stop_sonification_btn;
+
+    QLineEdit *m_input_img_height, *m_input_img_width;
+    QLabel *m_input_img_height_label, *m_input_img_width_label;
 };
 
 #endif

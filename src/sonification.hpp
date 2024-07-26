@@ -43,37 +43,26 @@ signals:
     void sonificationProgress(int);
 
 private:
-
     void m_GenerateSound();
     bool m_GenerateWavFile(QString filename);
 
     template <typename T>
     QVector<T> addVectors(QVector<T> &, QVector<T> &);
-
     static void sdlAudioCallback(void* userdata, Uint8* stream, int len);
-
     float m_SampleRate = 44100.0f;
     int m_ChannelCount = 1;
-
     double m_Duration;
-
     int m_NumSamples = 1024;
-
     QVector<short> m_audioData;
-
     double m_val;
     SDL_AudioSpec m_wavSpec;
     SDL_AudioDeviceID m_audioDevice;
     size_t m_audioOffset = 0;
-
     Traverse m_traverse = Traverse::LEFT_TO_RIGHT;
-
     const double M_PI2 = 6.28318530718;
     Mapping *mapping = new Mapping();
-
     Sonifier *sonifier = nullptr;
-
-    QThread m_thread;
+    QThread *m_thread = nullptr;
 };
 
 #endif
