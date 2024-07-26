@@ -28,5 +28,6 @@ HEADERS += src/gv.hpp \
            src/circle.hpp \
            src/qcustomplot.h \
            src/path.hpp \
-           src/mapping.hpp
-SOURCES += src/gv.cpp src/main.cpp src/sonification.cpp src/sonify.cpp src/qcustomplot.cpp src/mapping.cpp
+           src/mapping.hpp \
+           src/sonifier.hpp
+SOURCES += src/gv.cpp src/main.cpp src/sonification.cpp src/sonify.cpp src/qcustomplot.cpp src/mapping.cpp src/sonifier.cpp
