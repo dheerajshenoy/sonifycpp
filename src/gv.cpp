@@ -195,8 +195,6 @@ void GV::setTraverse(Traverse t)
 void GV::setDuration(double s)
 {
     m_duration_s = s;
-
-    qDebug() << "DD";
 }
 
 void GV::setPixmap(QPixmap &pix)

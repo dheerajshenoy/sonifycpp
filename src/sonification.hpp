@@ -10,7 +10,8 @@
 #include <qt6/QtCore/QtMath>
 #include <qt6/QtCore/QDebug>
 #include <qt6/QtCore/QObject>
-#include <qt6/QtConcurrent/QtConcurrent>
+#include <qt6/QtCore/QThreadPool>
+#include <qt6/QtCore/QThread>
 #include <qt6/QtGui/QRgb>
 #include "gv.hpp"
 #include "sonifier.hpp"
@@ -31,6 +32,7 @@ public:
     int getNumSamples();
     ~Sonification();
     QVector<short> getAudioData();
+    void stopSonification(bool state);
     float getSampleRate();
 
 signals:
@@ -38,10 +40,10 @@ signals:
     void audioindex(int);
     void sonificationDone();
     void audioFinishedPlaying();
+    void sonificationProgress(int);
 
 private:
 
-    double m_MapIntensityToFrequence(int intensity);
     void m_GenerateSound();
     bool m_GenerateWavFile(QString filename);
 
@@ -69,7 +71,9 @@ private:
     const double M_PI2 = 6.28318530718;
     Mapping *mapping = new Mapping();
 
-    Sonifier *sonifier = new Sonifier();
+    Sonifier *sonifier = nullptr;
+
+    QThread m_thread;
 };
 
 #endif

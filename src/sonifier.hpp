@@ -5,6 +5,7 @@
 #include <qt6/QtGui/QPixmap>
 #include <qt6/QtCore/QObject>
 #include <qt6/QtCore/QVector>
+#include "traverse.hpp"
 
 #ifdef __linux__
     #include <alsa/asoundlib.h>
@@ -22,27 +23,36 @@ class Sonifier : public QObject
 public:
     Sonifier() {}
     ~Sonifier() {}
+    void setParameters(QPixmap &pix, Traverse t);
+    void setParameters(QPixmap &pix, Traverse t, QVector<QPointF>&);
     void setSampleRate(float SR);
     void setSamples(int nsamples);
-    void LeftToRight(QPixmap &pix, QVector<short> &audioData);
-    void RightToLeft(QPixmap &pix, QVector<short> &audioData);
-    void TopToBottom(QPixmap &pix, QVector<short> &audioData);
-    void BottomToTop(QPixmap &pix, QVector<short> &audioData);
-    void CircleOutwards(QPixmap &pix, QVector<short> &audioData);
-    void CircleInwards(QPixmap &pix, QVector<short> &audioData);
-    void Clockwise(QPixmap &pix, QVector<short> &audioData);
-    void AntiClockwise(QPixmap &pix, QVector<short> &audioData);
-    void PathDrawn(QVector<QPointF> &pixelPos, QPixmap &pix, QVector<short> &audioData);
+    void LeftToRight();
+    void RightToLeft();
+    void TopToBottom();
+    void BottomToTop();
+    void CircleOutwards();
+    void CircleInwards();
+    void Clockwise();
+    void AntiClockwise();
+    void PathDrawn();
+    void Sonify();
+    void stopSonifying(bool state);
 
 signals:
-    void sonificationDone();
+    void sonificationDone(QVector<short>);
+    void sonificationProgress(int progress);
 
 private:
     float m_SampleRate;
     int m_nsamples;
     Mapping *m_mapping = new Mapping();
 
+    Traverse m_traverse;
+    QPixmap m_pix;
+    QVector<QPointF> m_pixpos;
 
+    bool m_stop_sonifying = false;
 };
 
 #endif

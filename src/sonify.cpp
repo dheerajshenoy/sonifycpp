@@ -38,6 +38,8 @@ void Sonify::initStatusbar()
 {
 
     m_status_bar_layout->addWidget(m_statusbar_msg_label);
+    m_status_bar_layout->addWidget(m_progress_bar);
+    m_status_bar_layout->addWidget(m_stop_sonification_btn);
     m_status_bar_layout->addWidget(m_audio_progress_label);
     m_status_bar_layout->addWidget(m_duration_label);
     m_status_bar->setLayout(m_status_bar_layout);
@@ -62,6 +64,8 @@ void Sonify::initWidgets()
     m_num_samples_spinbox->setMaximum(4000);
     m_num_samples_spinbox->setValue(1024);
     m_splitter = new QSplitter();
+    m_progress_bar = new QProgressBar();
+    m_stop_sonification_btn = new QPushButton("Stop");
 
     m_status_bar = new QWidget();
     m_status_bar->setMaximumHeight(30);
@@ -90,6 +94,8 @@ void Sonify::initWidgets()
     m_layout->addWidget(m_status_bar);
     m_play_btn->setEnabled(false);
     m_reset_btn->setEnabled(false);
+    m_progress_bar->setVisible(false);
+    m_stop_sonification_btn->setVisible(false);
 
     gv->setAlignment(Qt::AlignmentFlag::AlignCenter);
     this->setCentralWidget(m_widget);
@@ -157,6 +163,7 @@ void Sonify::PlayAudio()
         sonification->pause();
         m_reset_btn->setEnabled(true);
         m_num_samples_spinbox->setEnabled(true);
+        m_traverse_combo->setEnabled(true);
     }
     else  
     {
@@ -164,6 +171,7 @@ void Sonify::PlayAudio()
         sonification->play();
         m_reset_btn->setEnabled(false);
         m_num_samples_spinbox->setEnabled(false);
+        m_traverse_combo->setEnabled(false);
     }
     m_isAudioPlaying = !m_isAudioPlaying;
 }
@@ -195,6 +203,10 @@ void Sonify::initConnections()
         m_audio_progress_label->setText(QString::number(location));
     });
 
+    connect(m_stop_sonification_btn, &QPushButton::clicked, this, [&]() {
+        sonification->stopSonification(true);
+    });
+
     connect(gv, &GV::animationFinished, this, [&]() {
         m_play_btn->setText("Play");
         m_isAudioPlaying = false;
@@ -207,6 +219,12 @@ void Sonify::initConnections()
         m_duration_label->setText("Duration: " + QString::number(sonification->getDuration()) + "s");
         m_play_btn->setEnabled(true);
         m_reset_btn->setEnabled(true);
+        m_progress_bar->setVisible(false);
+        m_stop_sonification_btn->setVisible(false);
+    });
+
+    connect(sonification, &Sonification::sonificationProgress, this, [&](int progress) {
+        m_progress_bar->setValue(progress);
     });
 }
 
@@ -292,6 +310,12 @@ bool Sonify::Open(QString filename)
 
 void Sonify::doSonify()
 {
+    sonification->stopSonification(false);
+    m_progress_bar->setVisible(true);
+    m_stop_sonification_btn->setVisible(true);
+    m_progress_bar->reset();
+    m_traverse_combo->setEnabled(false);
+    m_num_samples_spinbox->setEnabled(false);
     sonification->setNumSamples(m_num_samples_spinbox->value());
     if (!m_pix)
     {
@@ -327,13 +351,18 @@ void Sonify::doSonify()
                 gv->setDrawPathMode(true);
                 connect(gv, &GV::drawPathFinished, this, [&]() {
                     sonification->Sonify(m_pix, gv, Traverse::PATH);
-                    qDebug() << "Duration " << sonification->getDuration();
-                    /*m_duration_label->setText("Duration: " + QString::number(sonification->getDuration()) + "s");*/
-                    /*m_play_btn->setEnabled(true);*/
-                    /*m_reset_btn->setEnabled(true);*/
                 });
             }
+
         }
+        else
+    {
+            m_num_samples_spinbox->setEnabled(true);
+            m_traverse_combo->setEnabled(true);
+            m_progress_bar->setVisible(false);
+            m_stop_sonification_btn->setVisible(false);
+        }
+
         return;
     }
 
@@ -363,13 +392,12 @@ void Sonify::doSonify()
 
     else if (m_traverse_combo->currentText() == "Draw Path")
     {
-        /*auto pixelpos = gv->getPathDrawnPos();*/
-        /*sonification->SonifyPath(m_pix, pixelpos);*/
+    gv->setDrawPathMode(true);
+    connect(gv, &GV::drawPathFinished, this, [&]() {
+        sonification->Sonify(m_pix, gv, Traverse::PATH);
+    });
     }
 
-    m_duration_label->setText("Duration: " + QString::number(sonification->getDuration()) + "s");
-    m_play_btn->setEnabled(true);
-    m_reset_btn->setEnabled(true);
 }
 
 void Sonify::Reset()

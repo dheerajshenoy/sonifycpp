@@ -5,14 +5,22 @@ Sonification::Sonification()
 {
 
     m_val = M_PI2 * m_NumSamples / m_SampleRate;
-    // Initialize SDL
+
     if (SDL_Init(SDL_INIT_AUDIO) < 0) {
         qDebug() << "SDL could not initialize! SDL_Error: " << SDL_GetError();
         return;
     }
-
-    connect(sonifier, &Sonifier::sonificationDone, this, [&]() { emit sonificationDone(); });
-
+    sonifier = new Sonifier();
+    sonifier->moveToThread(&m_thread);
+    connect(sonifier, &Sonifier::sonificationDone, this, [&](QVector<short>audioData) {
+            m_audioData = audioData;
+        emit sonificationDone();
+    });
+    connect(&m_thread, &QThread::started, sonifier, &Sonifier::Sonify);
+    connect(sonifier, &Sonifier::sonificationProgress, this, [&](int progress) {
+        emit sonificationProgress(progress);
+    });
+    /*connect(&m_thread, &QThread::finished, &m_thread, &QThread::deleteLater);*/
 }
 
 Sonification::~Sonification()
@@ -21,6 +29,13 @@ Sonification::~Sonification()
         SDL_CloseAudioDevice(m_audioDevice);
     }
     SDL_Quit();
+
+    if (m_thread.isRunning())
+    {
+        sonifier->stopSonifying(true);
+        m_thread.quit();
+        m_thread.wait();
+    }
 }
 
 void Sonification::setNumSamples(int nsamples)
@@ -58,66 +73,9 @@ void Sonification::Sonify(QPixmap &pix, GV *gv, Traverse mode)
     }
 
     gv->setTraverse(mode);
-    switch(mode)
-    {
-    
-        case Traverse::LEFT_TO_RIGHT:
-            sonifier->LeftToRight(pix, m_audioData);
-            break;
+    sonifier->setParameters(pix, mode);
+    m_thread.start();
 
-        case Traverse::RIGHT_TO_LEFT:
-            sonifier->RightToLeft(pix, m_audioData);
-            break;
-
-        case Traverse::TOP_TO_BOTTOM:
-            sonifier->TopToBottom(pix, m_audioData);
-            break;
-
-        case Traverse::BOTTOM_TO_TOP:
-            sonifier->BottomToTop(pix, m_audioData);
-            break;
-
-        case Traverse::CIRCLE_INWARDS:
-            sonifier->CircleInwards(pix, m_audioData);
-            break;
-
-        case Traverse::CIRCLE_OUTWARDS:
-            sonifier->CircleOutwards(pix, m_audioData);
-            break;
-
-        case Traverse::CLOCKWISE:
-            sonifier->Clockwise(pix, m_audioData);
-            break;
-
-        case Traverse::ANTICLOCKWISE:
-            sonifier->AntiClockwise(pix, m_audioData);
-            break;
-
-        case Traverse::PATH:
-            auto pixelpos = gv->getPathDrawnPos();
-            sonifier->PathDrawn(pixelpos, pix, m_audioData);
-            break;
-    }
-
-}
-
-/**/
-/*void Sonification::SonifyPath(QPixmap &pix, QVector<QPointF> &pixelPos)*/
-/*{*/
-/*}*/
-
-template <typename T>
-QVector<T> Sonification::addVectors(QVector<T> &a, QVector<T> &b)
-{
-    if (a.length() != b.length()) return {};
-    QVector<T> res;
-    res.resize(a.length());
-
-    for(int i=0; i < a.length(); i++)
-    {
-        res[i] = a[i] + b[i];
-    }
-    return res;
 }
 
 void Sonification::pause()
@@ -136,13 +94,6 @@ void Sonification::reset()
     m_audioOffset = 0; // Reset the audio offset
     SDL_UnlockAudioDevice(m_audioDevice); // Unlock the audio device
     SDL_PauseAudioDevice(m_audioDevice, 1);
-}
-
-
-
-double Sonification::m_MapIntensityToFrequence(int intensity)
-{
-    return 200.0 + (intensity * 800.0 / 255.0);
 }
 
 bool Sonification::save(QString filename, Format f)
@@ -215,10 +166,6 @@ void Sonification::sdlAudioCallback(void* userdata, Uint8* stream, int len)
         emit s->audioFinishedPlaying();
     }
 
-    /*if (s->m_audioOffset >= s->m_audioData.size() * sizeof(short)) {*/
-    /*    s->m_audioOffset = 0;*/
-    /*    SDL_PauseAudioDevice(s->m_audioDevice, 1);*/
-    /*}*/
 }
 
 int Sonification::getNumSamples()
@@ -234,4 +181,18 @@ float Sonification::getSampleRate()
 QVector<short> Sonification::getAudioData()
 {
     return m_audioData;
+}
+
+void Sonification::stopSonification(bool state)
+{
+    if (state)
+    {
+        if (m_thread.isRunning())
+        {
+            sonifier->stopSonifying(true);
+            m_thread.quit();
+            m_thread.wait();
+        }
+    }
+
 }

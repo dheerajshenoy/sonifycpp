@@ -20,6 +20,7 @@
 #include <qt6/QtConcurrent/QtConcurrent>
 #include <qt6/QtMultimedia/QWindowCapture>
 #include <qt6/QtWidgets/QSizePolicy>
+#include <qt6/QtWidgets/QProgressBar>
 #include "sonification.hpp"
 #include "gv.hpp"
 #include "qcustomplot.h"
@@ -80,6 +81,9 @@ private:
 
     void viewWaveform(bool state = false);
     QCustomPlot *waveformplot = new QCustomPlot();
+
+    QProgressBar *m_progress_bar;
+    QPushButton *m_stop_sonification_btn;
 };
 
 #endif

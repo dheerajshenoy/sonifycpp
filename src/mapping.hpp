@@ -6,6 +6,7 @@
 #include <qt6/QtGui/QRgb>
 #include <qt6/QtGui/QColor>
 #include "utils.hpp"
+#include "notes.hpp"
 
 /*
 * ####################################################################################################
@@ -42,7 +43,7 @@ private:
 
     double m_samplerate;
     int m_nsamples;
-
+    Notes m_notes;
 };
 
 #endif
