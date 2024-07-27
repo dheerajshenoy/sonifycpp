@@ -3,7 +3,6 @@
 
 Sonification::Sonification()
 {
-
     m_val = M_PI2 * m_NumSamples / m_SampleRate;
 
     if (SDL_Init(SDL_INIT_AUDIO) < 0) {
@@ -45,7 +44,6 @@ void Sonification::setNumSamples(int nsamples)
 // Function to sonify an `image` provided by QImage and in mode `mode`
 void Sonification::Sonify(QPixmap &pix, GV *gv, Traverse mode)
 {
-
     // Return if null
     if (pix.isNull()) return;
 
@@ -70,7 +68,6 @@ void Sonification::Sonify(QPixmap &pix, GV *gv, Traverse mode)
         return;
     }
 
-
     if (mode == Traverse::PATH)
         sonifier->setParameters(pix, mode, gv->getPathDrawnPos());
     sonifier->setParameters(pix, mode);
@@ -87,7 +84,6 @@ void Sonification::Sonify(QPixmap &pix, GV *gv, Traverse mode)
     }
 
     m_thread->start();
-
 }
 
 void Sonification::pause()

@@ -3,6 +3,7 @@
 
 #include <qt6/QtWidgets/QDialog>
 #include <qt6/QtWidgets/QLabel>
+#include <qt6/QtWidgets/QFileDialog>
 #include <qt6/QtWidgets/QGridLayout>
 #include <qt6/QtWidgets/QPushButton>
 #include <qt6/QtWidgets/QSpinBox>

@@ -15,7 +15,10 @@ void Mapping::setSampleRate(float &samplerate)
 QVector<short> Mapping::Map1(QRgb pixel, int x, int y)
 {
     double intensity = static_cast<double>(qGray(pixel));
-    return generateSineWave(intensity, static_cast<double>(x), static_cast<double>(y));
+    if (x < 20)
+        x = 20;
+
+    return generateSineWave(90 * intensity / 255, static_cast<double>(x), static_cast<double>(y));
 }
 
 QVector<short> Mapping::Map2(QRgb pixel, int x, int y)

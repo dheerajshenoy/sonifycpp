@@ -35,8 +35,8 @@ Sonify::Sonify(QWidget *parent)
     this->show();
     /*Open("/home/neo/Gits/sonifycpp/test2.png");*/
 
-    WaveformSaveDialog wd(this);
-    wd.exec();
+    /*WaveformSaveDialog wd(this);*/
+    /*wd.exec();*/
 }
 
 void Sonify::initChart()
@@ -278,6 +278,7 @@ void Sonify::initConnections()
 
     connect(m_wf_save_btn, &QPushButton::clicked, this, [&]() {
         Pause();
+        
     });
 
     connect(m_wf_show_vline_btn, &QPushButton::clicked, this, [&](bool state) {
@@ -346,7 +347,7 @@ void Sonify::Open(QString filename)
     if (filename.isEmpty())
     {
         QFileDialog fd;
-        QStringList files = fd.getOpenFileNames(this, "Open Image", nullptr, "Image Files (*.png *.peg *.pg)");
+        QStringList files = fd.getOpenFileNames(this, "Open Image", nullptr, "Image Files (*.png *.jpeg *.jpg)");
 
         if (files.empty())
             return;
@@ -517,7 +518,6 @@ void Sonify::AskForResize(QString filename)
     ask_widget->exec();
 
 }
-
 
 void Sonify::Play()
 {
