@@ -168,12 +168,17 @@ Since I use Arch Linux, the commands to install these packages is `sudo pacman -
 - 27 July 2024
     
     - New feature
-        - Ask for resizing image when opening
+
+      - Waveform visualization
+        
+      ![Waveform](https://github.com/user-attachments/assets/77632937-f965-4782-a547-1770e57b17fc)
+
+      - Ask for resizing image when opening
 
     - Bug fix
 
-        - Back to back change in different traversal methods 
-        - Buffer size effect on the animation
+      - Back to back change in different traversal methods 
+      - Buffer size effect on the animation
 
 - 26 July 2024
 
