@@ -106,7 +106,7 @@ Credit: [Link](https://www.seeingwithsound.com/im2sound.htm)
 2. [x] Save resulting audio
 3. [ ] Option for mapping selection
 4. [ ] Support for custom mapping user functions (maybe add lua scripting support ?)
-5. [ ] Waveform visualizer
+5. [x] Waveform visualizer
 6. [ ] Export audio to various formats like MP4, AAC etc.
 7. [ ] Pixel audio visualiser (inpsecting each column or row of pixel from the image and producing the audio instantly).
 8. [ ] Video Export: Create a video file that combines the image and the sonification, showing the progression over time.
