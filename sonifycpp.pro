@@ -12,31 +12,27 @@ DESTDIR = bin/
 
 QT += gui core widgets printsupport
 LIBS += -lsndfile -lSDL2
-# You can make your code fail to compile if you use deprecated APIs.
-# In order to do so, uncomment the following line.
-# Please consult the documentation of the deprecated API in order to know
-# how to port your code away from it.
-# You can also select to disable deprecated APIs only up to a certain version of Qt.
-#DEFINES += QT_DISABLE_DEPRECATED_UP_TO=0x060000 # disables all APIs deprecated in Qt 6.0.0 and earlier
 
 # Input
 HEADERS +=  src/gv.hpp \
             src/line.hpp \
             src/sonification.hpp \
+            src/waveform_savedialog.hpp \
             src/sonify.hpp \
             src/traverse.hpp \
             src/circle.hpp \
-            src/qcustomplot.h \
             src/path.hpp \
             src/mapping.hpp \
             src/sonifier.hpp \
-            src/notes.hpp
+            src/notes.hpp \
+            src/qcustomplot.h \
 
 SOURCES +=  src/gv.cpp \
             src/main.cpp \
             src/sonification.cpp \
+            src/waveform_savedialog.cpp \
             src/sonify.cpp \
-            src/qcustomplot.cpp \
             src/mapping.cpp \
             src/sonifier.cpp \
-            src/notes.cpp
+            src/notes.cpp \
+            src/qcustomplot.cpp
