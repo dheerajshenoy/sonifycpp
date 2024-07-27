@@ -229,6 +229,10 @@ void Sonify::initConnections()
     connect(sonification, &Sonification::sonificationProgress, this, [&](int progress) {
         m_progress_bar->setValue(progress);
     });
+
+    connect(gv, &GV::dropFile, this, [&](QString droppedFilePath) {
+        Open(droppedFilePath);
+    });
 }
 
 QVector<double> linspace(double start, double stop, int num) {
@@ -443,3 +447,4 @@ void Sonify::AskForResize(QString filename)
     ask_widget->exec();
 
 }
+

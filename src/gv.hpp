@@ -1,6 +1,7 @@
 #ifndef GV_HPP
 #define GV_HPP
 
+#include "qevent.h"
 #include "qgraphicsview.h"
 #include <qt6/QtWidgets/QGraphicsView>
 #include <qt6/QtWidgets/QGraphicsScene>
@@ -12,6 +13,10 @@
 #include <qt6/QtCore/QTimer>
 #include <qt6/QtWidgets/QGraphicsItemAnimation>
 #include <qt6/QtCore/QObject>
+#include <qt6/QtCore/QMimeData>
+#include <qt6/QtGui/QDropEvent>
+#include <qt6/QtGui/QDragEnterEvent>
+#include <qt6/QtGui/QDragMoveEvent>
 #include "traverse.hpp"
 #include "line.hpp"
 #include "circle.hpp"
@@ -37,11 +42,15 @@ signals:
     void animationFinished();
     void drawPathFinished();
     void audioIndexSet();
+    void dropFile(QString filepath);
 
 protected:
     void mousePressEvent(QMouseEvent *) override; 
     void mouseReleaseEvent(QMouseEvent *) override;
     void mouseMoveEvent(QMouseEvent *) override;
+    void dropEvent(QDropEvent *e) override;
+    void dragEnterEvent(QDragEnterEvent *e) override;
+    void dragMoveEvent(QDragMoveEvent *e) override;
 
 private:
 

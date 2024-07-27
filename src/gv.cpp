@@ -1,10 +1,10 @@
 #include "gv.hpp"
-#include "qcontainerfwd.h"
-#include "qtimeline.h"
+
 GV::GV(QWidget *parent) : QGraphicsView(parent)
 {
     this->setScene(m_scene);
     m_scene->addItem(m_pi);
+    this->setAcceptDrops(true);
     this->show();
 }
 
@@ -270,4 +270,29 @@ GV::~GV()
 QVector<QPointF> GV::getPathDrawnPos()
 {
     return m_pathDrawnPixelsPos;
+}
+
+
+void GV::dropEvent(QDropEvent *e)
+{
+    QString droppedFilePath = e->mimeData()->urls()[0].toLocalFile();
+    e->acceptProposedAction();
+    emit dropFile(droppedFilePath);
+
+}
+
+void GV::dragEnterEvent(QDragEnterEvent *e)
+{
+    if (e->mimeData()->hasUrls())
+    {
+        e->setAccepted(true);
+        this->update();
+    }
+
+}
+
+void GV::dragMoveEvent(QDragMoveEvent *e)
+{
+
+
 }
