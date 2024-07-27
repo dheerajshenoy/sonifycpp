@@ -3,6 +3,7 @@ Convert images to audio signals.
 
 ## Table of Contents
 
+
 1. [Introduction](#introduction)
 2. [Traversal Methods](#traversal)
     1. [Left to Right (Linear)](#left_to_right)
@@ -17,6 +18,8 @@ Convert images to audio signals.
 3. [Pixel Mapping](#pixel_mapping)
 4. [Things to do](#todo)
 5. [Demo](#demo)
+6. [Installation](#installation)
+7. [Changelogs and Bug fixes](#changelogs_and_bug_fixes)
 
 <a name="introduction"/>
 
@@ -133,6 +136,32 @@ https://github.com/user-attachments/assets/5749613d-6004-4d84-90ae-adaa8904268f
 # NOTE: The new GUI looks cool and it's not the same as shown in the demo videos
 
 ![2024-07-25_11-04](https://github.com/user-attachments/assets/ddd37fa0-c448-4d0a-992a-6850777874fb)
+
+<a name="installation" />
+
+# Installation
+
+**NOTE: I haven't tested this software on Windows, but it works on Linux.**
+
+1. Make sure you have the following dependencies
+    
+    - Qt6
+    - libsndfile
+    - SDL2
+
+Since I use Arch Linux, the commands to install these packages is `sudo pacman -S qt6 libsndfile sdl2`
+
+2. Clone this repo and go to the directory
+    
+    `git clone https://github.com/dheerajshenoy/sonifycpp && cd sonifycpp`
+
+3. Run qmake to produce the makefile and make to build
+
+    `qmake6 . && make`
+
+4. The binary will be in the `bin` folder. You can move this file to appropriate location like /usr/bin/ if you want system wide access.
+
+<a name="changelogs_and_bug_fixes" />
 
 # Chanegelogs and Bug fixes
 
