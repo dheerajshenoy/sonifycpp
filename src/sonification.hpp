@@ -34,6 +34,7 @@ public:
     QVector<short> getAudioData();
     void stopSonification(bool state);
     float getSampleRate();
+    void AddReverb();
 
 signals:
     void audioprogress(double);

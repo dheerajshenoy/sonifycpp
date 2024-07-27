@@ -22,9 +22,15 @@
 #include <qt6/QtWidgets/QSizePolicy>
 #include <qt6/QtWidgets/QCheckBox>
 #include <qt6/QtWidgets/QProgressBar>
+#include <qt6/QtCharts/QChart>
+#include <qt6/QtCharts/QChartView>
+#include <qt6/QtCharts/QValueAxis>
+#include <qt6/QtCharts/QLineSeries>
+#include <qt6/QtCharts/QBarSeries>
 #include "sonification.hpp"
 #include "gv.hpp"
 #include "qcustomplot.h"
+#include "waveform_savedialog.hpp"
 
 class Sonify : public QMainWindow
 {
@@ -34,6 +40,9 @@ public:
     ~Sonify();
 
 private:
+
+    void Play();
+    void Pause();
     void PlayAudio();
     void Reset();
     void Open(QString filename = "");
@@ -41,6 +50,7 @@ private:
     void setMsg(QString msg, int s = -1);
     void doSonify();
     void initConnections();
+    void initChart();
     void initMenu();
     void initWidgets();
     void initStatusbar();
@@ -82,13 +92,24 @@ private:
     QPixmap m_pix;
 
     void viewWaveform(bool state = false);
-    QCustomPlot *waveformplot = new QCustomPlot();
 
     QProgressBar *m_progress_bar;
     QPushButton *m_stop_sonification_btn;
 
     QLabel *m_input_img_height_label, *m_input_img_width_label;
     Traverse m_mode;
+
+    bool m_wf_show_vline = true;
+
+    QWidget *m_wf_widget = new QWidget();
+    QPushButton *m_wf_show_vline_btn = new QPushButton("Show Position Line");
+    QPushButton *m_wf_save_btn = new QPushButton("Save Figure");
+    QVBoxLayout *m_wf_widget_layout = new QVBoxLayout();
+    QHBoxLayout *m_wf_btm_layout = new QHBoxLayout();
+    QCustomPlot *m_wf_plot = new QCustomPlot();
+    QCPItemStraightLine *m_wf_vertline;
+    QCPLayer *m_wf_vertline_layer;
 };
+
 
 #endif

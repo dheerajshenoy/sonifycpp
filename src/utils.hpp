@@ -2,11 +2,10 @@
 #define UTILS_HPP
 
 #include <qt6/QtCore/QVector>
-
+#include <sndfile.h>
 
 namespace utils
 {
-
     template<typename T, typename... Args>
     QVector<T> addVectors(const QVector<T>& first, const QVector<T>& second, const Args&... args) {
         size_t size = first.size();
@@ -22,7 +21,7 @@ namespace utils
 
         return result;
     }
-
 }
+
 
 #endif
