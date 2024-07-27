@@ -31,22 +31,29 @@ void GV::setDrawPathMode(bool t)
 }
 void GV::setTraverse(Traverse t)
 {
-    m_traverse = t;
+    if (m_traverse == t) return;
 
+    m_traverse = t;
 
     // Clean the canvas
     if (m_li && m_scene)
     {
         m_scene->removeItem(m_li);
+        delete m_li;
+        m_li = nullptr;
     }
     if (m_ci && m_scene)
     {
         m_scene->removeItem(m_ci);
+        delete m_ci;
+        m_ci = nullptr;
     }
 
     if (m_pathi && m_scene)
     {
         m_scene->removeItem(m_pathi);
+        delete m_pathi;
+        m_pathi = nullptr;
     }
 
     switch(t)
@@ -74,6 +81,7 @@ void GV::setTraverse(Traverse t)
             {
                 m_li = new AnimatedLineItem();
                 m_scene->addItem(m_li);
+                qDebug() << "DD";
             }
             connect(this, &GV::audioIndexSet, m_li, [&]() {
                 m_li->setLine(m_width - m_audio_index, 0, m_width - m_audio_index, m_height);

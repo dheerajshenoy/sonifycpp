@@ -41,6 +41,7 @@ signals:
     void sonificationDone();
     void audioFinishedPlaying();
     void sonificationProgress(int);
+    void sonificationStopped();
 
 private:
     void m_GenerateSound();

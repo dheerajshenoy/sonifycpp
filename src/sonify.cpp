@@ -1,5 +1,4 @@
 #include "sonify.hpp"
-#include "qcustomplot.h"
 
 
 Sonify::Sonify(QWidget *parent)
@@ -28,13 +27,9 @@ void Sonify::initSidePanel()
     m_side_panel_layout->addWidget(m_traverse_combo, 2, 1);
     m_side_panel_layout->addWidget(m_num_samples_label, 3, 0);
     m_side_panel_layout->addWidget(m_num_samples_spinbox, 3, 1);
-    m_side_panel_layout->addWidget(m_input_img_width_label, 4, 0);
-    m_side_panel_layout->addWidget(m_input_img_width, 4, 1);
-    m_side_panel_layout->addWidget(m_input_img_height_label, 5, 0);
-    m_side_panel_layout->addWidget(m_input_img_height, 5, 1);
 
     QLabel *m_separator = new QLabel();
-    m_side_panel_layout->addWidget(m_separator, 6, 0, 1, 1, Qt::AlignCenter);
+    m_side_panel_layout->addWidget(m_separator, 4, 0, 1, 1, Qt::AlignCenter);
 }
 
 void Sonify::initStatusbar()
@@ -69,17 +64,6 @@ void Sonify::initWidgets()
     m_splitter = new QSplitter();
     m_progress_bar = new QProgressBar();
     m_stop_sonification_btn = new QPushButton("Stop");
-    m_input_img_width = new QSpinBox();
-    m_input_img_height = new QSpinBox();
-
-    m_input_img_width->setValue(0);
-    m_input_img_height->setValue(0);
-
-    m_input_img_width->setRange(0, 5000);
-    m_input_img_height->setRange(0, 5000);
-
-    m_input_img_width_label = new QLabel("Width: ");
-    m_input_img_height_label = new QLabel("Height: ");
 
     m_status_bar = new QWidget();
     m_status_bar->setMaximumHeight(30);
@@ -225,16 +209,22 @@ void Sonify::initConnections()
         m_play_btn->setText("Play");
         m_isAudioPlaying = false;
         sonification->reset();
+        m_traverse_combo->setEnabled(true);
     });
 
     connect(m_view__waveform, &QAction::triggered, this, &Sonify::viewWaveform);
+    connect(sonification, &Sonification::sonificationStopped, this, [&]() {
+        m_sonify_btn->setEnabled(true);
+    });
     connect(sonification, &Sonification::sonificationDone, this, [&]() {
         gv->setDuration(sonification->getDuration());
         m_duration_label->setText("Duration: " + QString::number(sonification->getDuration()) + "s");
+        m_sonify_btn->setEnabled(true);
         m_play_btn->setEnabled(true);
         m_reset_btn->setEnabled(true);
         m_progress_bar->setVisible(false);
         m_stop_sonification_btn->setVisible(false);
+        gv->setTraverse(m_mode);
     });
     connect(sonification, &Sonification::sonificationProgress, this, [&](int progress) {
         m_progress_bar->setValue(progress);
@@ -280,7 +270,7 @@ bool Sonify::Save(QString filename)
     return false;
 }
 
-bool Sonify::Open(QString filename)
+void Sonify::Open(QString filename)
 {
     if (filename.isEmpty())
     {
@@ -288,26 +278,18 @@ bool Sonify::Open(QString filename)
         QStringList files = fd.getOpenFileNames(this, "Open Image", nullptr, "Image Files (*.png *.jpeg *.jpg)");
 
         if (files.empty())
-            return false;
-        m_pix = QPixmap(files[0]);
+            return;
+
+        filename = files[0];
     }
-    else {
-        m_pix = QPixmap(filename);
-    }
-    m_pix = m_pix.scaled(720, 480, Qt::KeepAspectRatio);
+
+    AskForResize(filename);
     m_sonify_btn->setEnabled(true);
-    gv->setPixmap(m_pix);
-    return true;
 }
 
 void Sonify::doSonify()
 {
-    /*if (m_input_img_height->text().toInt() > 0 && m_input_img_width->text().toInt() > 0)*/
-    /*{*/
-    /*    m_pix = m_pix.scaled(m_input_img_width->text().toInt(), m_input_img_height->text().toInt(), Qt::KeepAspectRatio);*/
-    /*    gv->setPixmap(m_pix);*/
-    /*}*/
-
+    m_sonify_btn->setEnabled(false);
     sonification->stopSonification(false);
     m_progress_bar->reset();
     m_traverse_combo->setEnabled(false);
@@ -316,65 +298,74 @@ void Sonify::doSonify()
 
     if (m_traverse_combo->currentText() == "Left to Right")
     {
-        sonification->Sonify(m_pix, gv, Traverse::LEFT_TO_RIGHT);
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
+        m_mode = Traverse::LEFT_TO_RIGHT;
+        sonification->Sonify(m_pix, gv, m_mode);
     }
 
     else if (m_traverse_combo->currentText() == "Right to Left")
     {
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
-        sonification->Sonify(m_pix, gv, Traverse::RIGHT_TO_LEFT);
+        m_mode = Traverse::RIGHT_TO_LEFT;
+        sonification->Sonify(m_pix, gv, m_mode);
     }
 
     else if (m_traverse_combo->currentText() == "Top to Bottom")
     {
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
-        sonification->Sonify(m_pix, gv, Traverse::TOP_TO_BOTTOM);
+        m_mode = Traverse::TOP_TO_BOTTOM;
+        sonification->Sonify(m_pix, gv, m_mode);
     }
 
     else if (m_traverse_combo->currentText() == "Bottom to Top")
     {
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
-        sonification->Sonify(m_pix, gv, Traverse::BOTTOM_TO_TOP);
+        m_mode = Traverse::BOTTOM_TO_TOP;
+        sonification->Sonify(m_pix, gv, m_mode);
     }
 
     else if (m_traverse_combo->currentText() == "Circle Outwards")
     {
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
-        sonification->Sonify(m_pix, gv, Traverse::CIRCLE_OUTWARDS);
+        m_mode = Traverse::CIRCLE_OUTWARDS;
+        sonification->Sonify(m_pix, gv, m_mode);
     }
 
     else if (m_traverse_combo->currentText() == "Circle Inwards")
     {
         m_stop_sonification_btn->setVisible(true);
         m_progress_bar->setVisible(true);
-        sonification->Sonify(m_pix, gv, Traverse::CIRCLE_INWARDS);
+        m_mode = Traverse::CIRCLE_INWARDS;
+        sonification->Sonify(m_pix, gv, m_mode);
     }
 
     else if (m_traverse_combo->currentText() == "Clockwise")
     {
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
-        sonification->Sonify(m_pix, gv, Traverse::CLOCKWISE);
+        m_mode = Traverse::CLOCKWISE;
+        sonification->Sonify(m_pix, gv, m_mode);
     }
 
     else if (m_traverse_combo->currentText() == "Anti-Clockwise")
     {
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
-        sonification->Sonify(m_pix, gv, Traverse::ANTICLOCKWISE);
+        m_mode = Traverse::ANTICLOCKWISE;
+        sonification->Sonify(m_pix, gv, m_mode);
     }
 
     else if (m_traverse_combo->currentText() == "Draw Path")
     {
         gv->setDrawPathMode(true);
         connect(gv, &GV::drawPathFinished, this, [&]() {
-            sonification->Sonify(m_pix, gv, Traverse::PATH);
+            m_mode = Traverse::PATH;
+            sonification->Sonify(m_pix, gv, m_mode);
         });
     }
 }
@@ -395,4 +386,60 @@ Sonify::~Sonify()
 void Sonify::CaptureWindow()
 {
     /*pix.save("screen.png");*/
+}
+
+void Sonify::AskForResize(QString filename)
+{
+    QDialog *ask_widget = new QDialog();
+    QGridLayout *ask_layout = new QGridLayout();
+
+    m_pix = QPixmap(filename);
+
+    ask_widget->setLayout(ask_layout);
+    QString msgtext = QString("The input image (%1) has dimensions (%2,%3). Images with large dimensions tend be to slow during the sonification process and can result in longer waiting time"
+    ).arg(filename).arg(m_pix.width()).arg(m_pix.height());
+    QLabel *msg = new QLabel(msgtext);
+    msg->setWordWrap(true);
+
+    QSpinBox *input_img_width = new QSpinBox();
+    QSpinBox *input_img_height = new QSpinBox();
+    QPushButton *ok_btn = new QPushButton("Ok"),
+                *keep_original_btn = new QPushButton("Ignore and Keep Original Dimension");
+    QCheckBox *keep_aspect_ratio_cb = new QCheckBox();
+
+    connect(ok_btn, &QPushButton::clicked, this, [&]() {
+
+        auto width = input_img_width->text().toInt();
+        auto height = input_img_height->text().toInt();
+
+        if (keep_aspect_ratio_cb->isChecked())
+            m_pix = m_pix.scaled(width, height, Qt::KeepAspectRatio);
+        else
+            m_pix = m_pix.scaled(width, height, Qt::IgnoreAspectRatio);
+        gv->setPixmap(m_pix);
+        ask_widget->accept();
+    });
+
+    connect(keep_original_btn, &QPushButton::clicked, this, [&]() {
+        gv->setPixmap(m_pix);
+        ask_widget->reject();
+    });
+
+    input_img_width->setRange(0, 5000);
+    input_img_height->setRange(0, 5000);
+    input_img_width->setValue(m_pix.width());
+    input_img_height->setValue(m_pix.height());
+
+    ask_layout->addWidget(msg, 0, 0, 1, 2);
+    ask_layout->addWidget(new QLabel("Width"), 1, 0);
+    ask_layout->addWidget(input_img_width, 1, 1);
+    ask_layout->addWidget(new QLabel("Height"), 2, 0);
+    ask_layout->addWidget(input_img_height, 2, 1);
+    ask_layout->addWidget(new QLabel("Keep aspect ratio"), 3, 0);
+    ask_layout->addWidget(keep_aspect_ratio_cb, 3, 1);
+    ask_layout->addWidget(keep_original_btn, 4, 0);
+    ask_layout->addWidget(ok_btn, 4, 1);
+
+    ask_widget->exec();
+
 }

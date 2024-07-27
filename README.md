@@ -86,7 +86,6 @@ SonifyCPP is currently able to traverse images in the following manner:
 
 ![Draw Path](https://github.com/user-attachments/assets/7825fb6d-7b3e-4763-9604-b6b46677bdd7)
 
-
 <a name="pixel_mapping"/>
  
 ### Pixel mapping
@@ -109,7 +108,7 @@ Credit: [Link](https://www.seeingwithsound.com/im2sound.htm)
 7. [ ] Pixel audio visualiser (inpsecting each column or row of pixel from the image and producing the audio instantly).
 8. [ ] Video Export: Create a video file that combines the image and the sonification, showing the progression over time.
 9. [ ] **Reverse audio to produce image**
-10. [ ] Path-based Sonification: Draw a path on the image and sonify along that path.
+10. [x] Path-based Sonification: Draw a path on the image and sonify along that path.
 11. [ ] Sonify specific regions or objects within the image.
 12. [ ] Color Mapping: Map different colors to different sounds or musical notes.
 13. [ ] Map textures or patterns within the image to different sound effects.
@@ -119,6 +118,7 @@ Credit: [Link](https://www.seeingwithsound.com/im2sound.htm)
 17. [ ] MIDI Support: Allow users to export sonification data as MIDI files for further musical manipulation.
 18. [ ] Spectrogram: Display a spectrogram that shows the frequency content of the sonified sound over time.
 19. [ ] 3D Visualization: Provide a 3D view of the image and its corresponding soundscape.
+20. [ ] **Handle Large Images**
 
 <a name="demo"/>
 
@@ -134,5 +134,21 @@ https://github.com/user-attachments/assets/5749613d-6004-4d84-90ae-adaa8904268f
 
 ![2024-07-25_11-04](https://github.com/user-attachments/assets/ddd37fa0-c448-4d0a-992a-6850777874fb)
 
+# Chanegelogs and Bug fixes
 
+- 27 July 2024
+    
+    - New feature
+        - Ask for resizing image when opening
+
+    - Bug fix
+
+        - Back to back change in different traversal methods 
+        - Buffer size effect on the animation
+
+- 26 July 2024
+
+    - Bug fix
+
+        - Fix delay between animation and audio playback
 

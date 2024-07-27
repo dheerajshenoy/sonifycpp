@@ -38,6 +38,7 @@ public:
     void PathDrawn();
     void Sonify();
     void stopSonifying(bool state);
+    bool hasStopped() { return m_stop_sonifying; }
 
 signals:
     void sonificationDone(QVector<short>);

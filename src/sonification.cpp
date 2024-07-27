@@ -69,17 +69,22 @@ void Sonification::Sonify(QPixmap &pix, GV *gv, Traverse mode)
         return;
     }
 
-    gv->setTraverse(mode);
 
     if (mode == Traverse::PATH)
         sonifier->setParameters(pix, mode, gv->getPathDrawnPos());
     sonifier->setParameters(pix, mode);
+
     if (!m_thread)
     {
         m_thread = new QThread();
         connect(m_thread, &QThread::started, sonifier, &Sonifier::Sonify);
+        connect(m_thread, &QThread::finished, this, [&]() {});
+        connect(sonifier, &Sonifier::sonificationDone, this, [&]() {
+            m_thread->quit();
+        });
         sonifier->moveToThread(m_thread);
     }
+
     m_thread->start();
 
 }
@@ -208,4 +213,6 @@ void Sonification::stopSonification(bool state)
             m_thread->wait();
         }
     }
+
+    emit sonificationStopped();
 }

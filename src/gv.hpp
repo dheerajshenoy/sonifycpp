@@ -53,7 +53,7 @@ private:
     AnimatedPathItem *m_pathi = nullptr;
     double m_duration_s = 1.0f;
 
-    Traverse m_traverse = Traverse::LEFT_TO_RIGHT;
+    Traverse m_traverse;
 
     bool m_draw_path_mode = false;
 

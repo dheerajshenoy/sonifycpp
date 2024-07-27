@@ -20,6 +20,7 @@
 #include <qt6/QtConcurrent/QtConcurrent>
 #include <qt6/QtMultimedia/QWindowCapture>
 #include <qt6/QtWidgets/QSizePolicy>
+#include <qt6/QtWidgets/QCheckBox>
 #include <qt6/QtWidgets/QProgressBar>
 #include "sonification.hpp"
 #include "gv.hpp"
@@ -35,7 +36,7 @@ public:
 private:
     void PlayAudio();
     void Reset();
-    bool Open(QString filename = "");
+    void Open(QString filename = "");
     bool Save(QString filename = "");
     void setMsg(QString msg, int s = -1);
     void doSonify();
@@ -45,6 +46,7 @@ private:
     void initStatusbar();
     void initSidePanel();
     void CaptureWindow();
+    void AskForResize(QString filename);
     QWidget *m_widget;
     QSplitter *m_splitter;
     QWidget *m_side_panel;
@@ -72,7 +74,7 @@ private:
     QComboBox *m_traverse_combo;
 
     QLabel *m_duration_label, *m_audio_progress_label, *m_traverse_label, *m_num_samples_label, *m_statusbar_msg_label;
-    QSpinBox *m_num_samples_spinbox, *m_input_img_height, *m_input_img_width;
+    QSpinBox *m_num_samples_spinbox;
 
     QWidget *m_status_bar;
     QHBoxLayout *m_status_bar_layout;
@@ -86,6 +88,7 @@ private:
     QPushButton *m_stop_sonification_btn;
 
     QLabel *m_input_img_height_label, *m_input_img_width_label;
+    Traverse m_mode;
 };
 
 #endif

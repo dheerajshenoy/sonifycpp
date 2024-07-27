@@ -23,43 +23,15 @@ QVector<short> Mapping::Map2(QRgb pixel, int x, int y)
     QColor col = QColor(pixel).toHsv();
     QVector<short> res;
 
-    // 0 to 360 : color
-    auto h = col.hue();
+    float frequencies[] = {440.0, 660.0, 880.0, 1100.0};
+    float decayRates[] = {0.001, 0.002, 0.003, 0.004};
 
-    // 0 to 255 : shade
-    auto s = col.saturation();
-
-    // 0 to 255 : brightness
-    auto v = col.value();
-
-    QVector<short> c1;
-
-    if (s < 50)
-    {
-        c1 = utils::addVectors(generateSineWave(v, h * m_notes.getFrequency("A4"), 0),
-            generateSineWave(v, h * m_notes.getFrequency("B4"), 0));
-    }
-    else if ( s < 100)
-    {
-        c1 = utils::addVectors(generateSineWave(v, h * m_notes.getFrequency("C4"), 0),
-            generateSineWave(v, h * m_notes.getFrequency("D4"), 0));
-    }
-
-    else if ( s < 150)
-    {
-        c1 = utils::addVectors(generateSineWave(v, h * m_notes.getFrequency("E4"), 0),
-            generateSineWave(v, h * m_notes.getFrequency("F4"), 0));
-    }
-
-    else if ( s < 200)
-    {
-        c1 = utils::addVectors(generateSineWave(v, h * m_notes.getFrequency("A5"), 0),
-            generateSineWave(v, h * m_notes.getFrequency("B5"), 0));
-    }
-    else
-        c1 = generateSineWave(v, h * m_notes.getFrequency("C5"), 0);
-
-    return c1;
+    double intensity = static_cast<double>(qGray(pixel));
+    auto s1 = generateSineWave(intensity * std::exp(-decayRates[0] * 0.5), frequencies[0], static_cast<double>(y));
+    auto s2 = generateSineWave(intensity * std::exp(-decayRates[1] * 0.5), frequencies[1], static_cast<double>(y));
+    auto s3 = generateSineWave(intensity * std::exp(-decayRates[2] * 0.5), frequencies[2], static_cast<double>(y));
+    auto s4 = generateSineWave(intensity * std::exp(-decayRates[3] * 0.5), frequencies[3], static_cast<double>(y));
+    return utils::addVectors(s1, s2, s3, s4);
 }
 
 QVector<short> Mapping::generateSineWave(double amplitude, double frequency, double time)

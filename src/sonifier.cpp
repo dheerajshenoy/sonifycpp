@@ -30,7 +30,7 @@ void Sonifier::LeftToRight()
         for(int y=0; y < img.height(); y++)
         {
             QRgb pixel = img.pixel(x, y);
-            auto sine = m_mapping->Map1(pixel, y, x);
+            auto sine = m_mapping->Map2(pixel, y, x);
             temp = utils::addVectors<short>(temp, sine);
         }
 
@@ -70,6 +70,7 @@ void Sonifier::RightToLeft()
 
         emit sonificationProgress(100 - x / static_cast<double>(totalsamples) * 100);
     }
+
 
     emit sonificationDone(audioData);
 
@@ -333,6 +334,7 @@ void Sonifier::setParameters(QPixmap &pix, Traverse t)
 
 void Sonifier::Sonify()
 {
+
     switch(m_traverse)
     {
         case Traverse::LEFT_TO_RIGHT:
