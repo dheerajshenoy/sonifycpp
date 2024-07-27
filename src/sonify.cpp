@@ -30,11 +30,11 @@ void Sonify::initSidePanel()
     m_side_panel_layout->addWidget(m_num_samples_spinbox, 3, 1);
     m_side_panel_layout->addWidget(m_input_img_width_label, 4, 0);
     m_side_panel_layout->addWidget(m_input_img_width, 4, 1);
-    m_side_panel_layout->addWidget(m_input_img_height_label, 4, 2);
-    m_side_panel_layout->addWidget(m_input_img_height, 4, 3);
+    m_side_panel_layout->addWidget(m_input_img_height_label, 5, 0);
+    m_side_panel_layout->addWidget(m_input_img_height, 5, 1);
 
     QLabel *m_separator = new QLabel();
-    m_side_panel_layout->addWidget(m_separator, 4, 0, 1, 1, Qt::AlignCenter);
+    m_side_panel_layout->addWidget(m_separator, 6, 0, 1, 1, Qt::AlignCenter);
 }
 
 void Sonify::initStatusbar()
@@ -69,8 +69,14 @@ void Sonify::initWidgets()
     m_splitter = new QSplitter();
     m_progress_bar = new QProgressBar();
     m_stop_sonification_btn = new QPushButton("Stop");
-    m_input_img_width = new QLineEdit();
-    m_input_img_height = new QLineEdit();
+    m_input_img_width = new QSpinBox();
+    m_input_img_height = new QSpinBox();
+
+    m_input_img_width->setValue(0);
+    m_input_img_height->setValue(0);
+
+    m_input_img_width->setRange(0, 5000);
+    m_input_img_height->setRange(0, 5000);
 
     m_input_img_width_label = new QLabel("Width: ");
     m_input_img_height_label = new QLabel("Height: ");
@@ -197,7 +203,7 @@ void Sonify::initConnections()
     connect(m_file__open, &QAction::triggered, this, [&]() { Sonify::Open(); });
     connect(m_audio__save, &QAction::triggered, this, [&]() { Sonify::Save(); });
     connect(sonification, &Sonification::audioindex, gv, [&](int index) {
-        gv->setAudioIndex(index / 1024);
+        gv->setAudioIndex(index);
     });
 
     connect(sonification, &Sonification::audioFinishedPlaying, gv, [&]() {
@@ -249,27 +255,7 @@ void Sonify::viewWaveform(bool state)
 {
     if (state)
     {
-        QVector<short> data = sonification->getAudioData();
-
-        /*SF_INFO sfinfo;*/
-        /*SNDFILE *file = sf_open("test.wav", SFM_READ, &sfinfo);*/
-        /**/
-        /*auto sr = sfinfo.samplerate;*/
-        /*int ns = sfinfo.channels * sfinfo.frames;*/
-        /**/
-        /*QVector<double> y;*/
-        /*y.resize(ns);*/
-        /**/
-        /*sf_read_double(file, y.data(), ns);*/
-        /*sf_close(file);*/
-        /**/
-        /*QVector<double> x = linspace(0, static_cast<float>(y.length()) / sr, y.length());*/
-        /**/
-        /*waveformplot->graph(0)->setPen(QPen(QColor(Qt::red), 2));*/
-        /*waveformplot->graph(0)->setData(x, y);*/
-        /*waveformplot->xAxis->setRange(0, y.size());*/
-        /*waveformplot->yAxis->setRange(-1, 1);*/
-        waveformplot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables);
+        /*waveformplot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables);*/
         waveformplot->xAxis->setLabel("x");
         waveformplot->yAxis->setLabel("y");
         waveformplot->replot();
@@ -308,51 +294,86 @@ bool Sonify::Open(QString filename)
     else {
         m_pix = QPixmap(filename);
     }
-    /*m_pix = m_pix.scaled(720, 480, Qt::KeepAspectRatio);*/
+    m_pix = m_pix.scaled(720, 480, Qt::KeepAspectRatio);
     m_sonify_btn->setEnabled(true);
     gv->setPixmap(m_pix);
     return true;
-
 }
 
 void Sonify::doSonify()
 {
+    /*if (m_input_img_height->text().toInt() > 0 && m_input_img_width->text().toInt() > 0)*/
+    /*{*/
+    /*    m_pix = m_pix.scaled(m_input_img_width->text().toInt(), m_input_img_height->text().toInt(), Qt::KeepAspectRatio);*/
+    /*    gv->setPixmap(m_pix);*/
+    /*}*/
+
     sonification->stopSonification(false);
-    m_progress_bar->setVisible(true);
-    m_stop_sonification_btn->setVisible(true);
     m_progress_bar->reset();
     m_traverse_combo->setEnabled(false);
     m_num_samples_spinbox->setEnabled(false);
     sonification->setNumSamples(m_num_samples_spinbox->value());
 
     if (m_traverse_combo->currentText() == "Left to Right")
+    {
         sonification->Sonify(m_pix, gv, Traverse::LEFT_TO_RIGHT);
+        m_progress_bar->setVisible(true);
+        m_stop_sonification_btn->setVisible(true);
+    }
 
     else if (m_traverse_combo->currentText() == "Right to Left")
+    {
+        m_progress_bar->setVisible(true);
+        m_stop_sonification_btn->setVisible(true);
         sonification->Sonify(m_pix, gv, Traverse::RIGHT_TO_LEFT);
+    }
 
     else if (m_traverse_combo->currentText() == "Top to Bottom")
+    {
+        m_progress_bar->setVisible(true);
+        m_stop_sonification_btn->setVisible(true);
         sonification->Sonify(m_pix, gv, Traverse::TOP_TO_BOTTOM);
+    }
 
     else if (m_traverse_combo->currentText() == "Bottom to Top")
+    {
+        m_progress_bar->setVisible(true);
+        m_stop_sonification_btn->setVisible(true);
         sonification->Sonify(m_pix, gv, Traverse::BOTTOM_TO_TOP);
+    }
 
     else if (m_traverse_combo->currentText() == "Circle Outwards")
+    {
+        m_progress_bar->setVisible(true);
+        m_stop_sonification_btn->setVisible(true);
         sonification->Sonify(m_pix, gv, Traverse::CIRCLE_OUTWARDS);
+    }
 
     else if (m_traverse_combo->currentText() == "Circle Inwards")
+    {
+        m_stop_sonification_btn->setVisible(true);
+        m_progress_bar->setVisible(true);
         sonification->Sonify(m_pix, gv, Traverse::CIRCLE_INWARDS);
+    }
 
     else if (m_traverse_combo->currentText() == "Clockwise")
+    {
+        m_progress_bar->setVisible(true);
+        m_stop_sonification_btn->setVisible(true);
         sonification->Sonify(m_pix, gv, Traverse::CLOCKWISE);
+    }
 
-    else if (m_traverse_combo->currentText() == "Anticlockwise")
+    else if (m_traverse_combo->currentText() == "Anti-Clockwise")
+    {
+        m_progress_bar->setVisible(true);
+        m_stop_sonification_btn->setVisible(true);
         sonification->Sonify(m_pix, gv, Traverse::ANTICLOCKWISE);
+    }
 
     else if (m_traverse_combo->currentText() == "Draw Path")
     {
+        gv->setDrawPathMode(true);
         connect(gv, &GV::drawPathFinished, this, [&]() {
-            gv->setDrawPathMode(true);
             sonification->Sonify(m_pix, gv, Traverse::PATH);
         });
     }

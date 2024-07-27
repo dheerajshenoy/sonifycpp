@@ -16,7 +16,6 @@ Sonification::Sonification()
         emit sonificationDone();
     });
     connect(sonifier, &Sonifier::sonificationProgress, this, [&](int progress) {
-        qDebug() << progress;
         emit sonificationProgress(progress);
     });
 }
@@ -71,6 +70,9 @@ void Sonification::Sonify(QPixmap &pix, GV *gv, Traverse mode)
     }
 
     gv->setTraverse(mode);
+
+    if (mode == Traverse::PATH)
+        sonifier->setParameters(pix, mode, gv->getPathDrawnPos());
     sonifier->setParameters(pix, mode);
     if (!m_thread)
     {
@@ -152,23 +154,31 @@ double Sonification::getDuration()
     return m_audioData.size() / m_SampleRate;
 }
 
-void Sonification::sdlAudioCallback(void* userdata, Uint8* stream, int len)
+void Sonification::sdlAudioCallback(void* userdata, Uint8* _stream, int _len)
 {
+
     Sonification *s = static_cast<Sonification*>(userdata);
 
+    if (s->m_audioData.size() == 0) return;
+
+    Sint16 *stream = reinterpret_cast<Sint16*>(_stream);
+    int len = _len / 2;
+
     int bytesToCopy = std::min(static_cast<int>(s->m_audioData.size() * sizeof(short) - s->m_audioOffset), len);
-    
-    memcpy(stream, s->m_audioData.data() + s->m_audioOffset / sizeof(short), bytesToCopy);
 
-    s->m_audioOffset += bytesToCopy;
-    emit s->audioprogress(static_cast<double>(s->m_audioOffset / (s->m_SampleRate * sizeof(short))));
-    emit s->audioindex(static_cast<int>(s->m_audioOffset / (sizeof(short))));
-
-    if (bytesToCopy < len) {
+    if (bytesToCopy == 0) {
         memset(stream + bytesToCopy, 0, len - bytesToCopy);
         SDL_PauseAudioDevice(s->m_audioDevice, 1); // Stop audio playback
         emit s->audioFinishedPlaying();
     }
+
+    memcpy(stream, s->m_audioData.data() + s->m_audioOffset / sizeof(short), bytesToCopy);
+
+    s->m_audioOffset += bytesToCopy;
+
+    auto d = s->m_audioOffset / sizeof(short);
+    emit s->audioprogress(static_cast<double>(d / s->m_SampleRate));
+    emit s->audioindex(d / static_cast<double>(s->m_NumSamples));
 
 }
 

@@ -6,7 +6,6 @@ GV::GV(QWidget *parent) : QGraphicsView(parent)
     this->setScene(m_scene);
     m_scene->addItem(m_pi);
     this->show();
-
 }
 
 void GV::setAudioIndex(int index)

@@ -2,7 +2,7 @@
 #define SONIFIER_HPP
 
 #include <qt6/QtGui/QPixmap>
-#include <qt6/QtGui/QPixmap>
+#include <qt6/QtGui/QRgb>
 #include <qt6/QtCore/QObject>
 #include <qt6/QtCore/QVector>
 #include "traverse.hpp"
@@ -24,7 +24,7 @@ public:
     Sonifier() {}
     ~Sonifier() {}
     void setParameters(QPixmap &pix, Traverse t);
-    void setParameters(QPixmap &pix, Traverse t, QVector<QPointF>&);
+    void setParameters(QPixmap &pix, Traverse t, QVector<QPointF>);
     void setSampleRate(float SR);
     void setSamples(int nsamples);
     void LeftToRight();

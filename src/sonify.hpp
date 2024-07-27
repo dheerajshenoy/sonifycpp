@@ -72,7 +72,7 @@ private:
     QComboBox *m_traverse_combo;
 
     QLabel *m_duration_label, *m_audio_progress_label, *m_traverse_label, *m_num_samples_label, *m_statusbar_msg_label;
-    QSpinBox *m_num_samples_spinbox;
+    QSpinBox *m_num_samples_spinbox, *m_input_img_height, *m_input_img_width;
 
     QWidget *m_status_bar;
     QHBoxLayout *m_status_bar_layout;
@@ -85,7 +85,6 @@ private:
     QProgressBar *m_progress_bar;
     QPushButton *m_stop_sonification_btn;
 
-    QLineEdit *m_input_img_height, *m_input_img_width;
     QLabel *m_input_img_height_label, *m_input_img_width_label;
 };
 
