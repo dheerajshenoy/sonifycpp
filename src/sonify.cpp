@@ -1,6 +1,28 @@
 #include "sonify.hpp"
 
 
+QVector<short> readWAVFile(const QString filename)
+{
+    SF_INFO sfinfo;
+
+    SNDFILE *file = sf_open(filename.toStdString().c_str(), SFM_READ, &sfinfo);
+
+    if(!file)
+    {
+        fprintf(stderr, "Could not open the file");
+        return {};
+    }
+
+    QVector<short> data;
+    data.resize(sfinfo.frames);
+
+    sf_read_short(file, data.data(), sfinfo.frames);
+
+    sf_close(file);
+
+    return data;
+}
+
 Sonify::Sonify(QWidget *parent)
     : QMainWindow(parent)
 {
@@ -9,11 +31,44 @@ Sonify::Sonify(QWidget *parent)
     initSidePanel();
     initMenu();
     initConnections();
-    waveformplot->addGraph();
-    waveformplot->setVisible(false);
-
+    initChart();
     this->show();
     /*Open("/home/neo/Gits/sonifycpp/test2.png");*/
+
+    WaveformSaveDialog wd(this);
+    wd.exec();
+}
+
+void Sonify::initChart()
+{
+    m_wf_widget->setLayout(m_wf_widget_layout);
+    m_wf_widget_layout->addWidget(m_wf_plot);
+    m_wf_plot->addGraph();
+    m_wf_plot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables);
+    m_wf_plot->yAxis->setRange(-1, 1);
+
+    m_wf_plot->addLayer("Line", 0, QCustomPlot::LayerInsertMode::limAbove);
+    m_wf_plot->setCurrentLayer("Line");
+    m_wf_vertline_layer = m_wf_plot->layer("Line");
+    m_wf_vertline_layer->setMode(QCPLayer::LayerMode::lmBuffered);
+
+    m_wf_vertline = new QCPItemStraightLine(m_wf_plot);
+    m_wf_vertline->setPen(QPen(Qt::red, 1));
+    m_wf_vertline->point1->setCoords(0, 0);
+    m_wf_vertline->point2->setCoords(0, 1);
+    m_wf_vertline->setLayer(m_wf_vertline_layer);
+    
+    m_wf_show_vline_btn->setCheckable(true);
+    m_wf_show_vline_btn->setChecked(true);
+
+    m_wf_save_btn = new QPushButton();
+
+
+    m_wf_widget_layout->addLayout(m_wf_btm_layout);
+
+    m_wf_btm_layout->addWidget(m_wf_show_vline_btn);
+    m_wf_btm_layout->addWidget(m_wf_save_btn, 1);
+
 }
 
 void Sonify::initSidePanel()
@@ -88,7 +143,6 @@ void Sonify::initWidgets()
     m_splitter->addWidget(m_side_panel);
     m_splitter->addWidget(gv);
 
-    m_layout->addWidget(waveformplot);
     m_layout->addWidget(m_status_bar);
     m_play_btn->setEnabled(false);
     m_reset_btn->setEnabled(false);
@@ -155,23 +209,12 @@ void Sonify::initMenu()
 
 void Sonify::PlayAudio()
 {
-    if (m_isAudioPlaying)
-    {
-        m_play_btn->setText("Play");
-        sonification->pause();
-        m_reset_btn->setEnabled(true);
-        m_num_samples_spinbox->setEnabled(true);
-        m_traverse_combo->setEnabled(true);
-    }
-    else  
-    {
-        m_play_btn->setText("Pause");
-        sonification->play();
-        m_reset_btn->setEnabled(false);
-        m_num_samples_spinbox->setEnabled(false);
-        m_traverse_combo->setEnabled(false);
-    }
+
     m_isAudioPlaying = !m_isAudioPlaying;
+    if (m_isAudioPlaying)
+        Play();
+    else
+        Pause();
 }
 
 void Sonify::initConnections()
@@ -195,7 +238,10 @@ void Sonify::initConnections()
     });
 
     connect(sonification, &Sonification::audioprogress, gv, [&](double location) {
-        m_audio_progress_label->setText(QString::number(location));
+        m_audio_progress_label->setText(QString::number(location / static_cast<double>(sonification->getSampleRate())));
+        m_wf_vertline->point1->setCoords(location, 0);
+        m_wf_vertline->point2->setCoords(location, 1);
+        m_wf_vertline_layer->replot();
     });
 
     connect(m_stop_sonification_btn, &QPushButton::clicked, this, [&]() {
@@ -229,6 +275,15 @@ void Sonify::initConnections()
     connect(sonification, &Sonification::sonificationProgress, this, [&](int progress) {
         m_progress_bar->setValue(progress);
     });
+
+    connect(m_wf_save_btn, &QPushButton::clicked, this, [&]() {
+        Pause();
+    });
+
+    connect(m_wf_show_vline_btn, &QPushButton::clicked, this, [&](bool state) {
+        m_wf_show_vline = state;
+        m_wf_vertline->setVisible(state);
+    });
 }
 
 QVector<double> linspace(double start, double stop, int num) {
@@ -245,13 +300,29 @@ void Sonify::viewWaveform(bool state)
 {
     if (state)
     {
-        /*waveformplot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables);*/
-        waveformplot->xAxis->setLabel("x");
-        waveformplot->yAxis->setLabel("y");
-        waveformplot->replot();
-    }
+        m_wf_widget->show();
+        /*auto data = readWAVFile("/home/neo/Downloads/gettysburg10.wav");*/
 
-    waveformplot->setVisible(state);
+        auto data = sonification->getAudioData();
+
+        QVector<double> x, y;
+        auto size = data.size();
+        x.resize(size);
+        y.resize(size);
+
+        for(int i=0; i < data.size(); i++)
+        {
+            x[i] = i;
+            y[i] = static_cast<double>(data[i] / (double) 32767);
+        }
+
+        m_wf_plot->graph(0)->setData(x, y);
+        m_wf_plot->xAxis->setRange(0, size);
+        m_wf_plot->replot();
+    }
+    else
+        m_wf_widget->close();
+
 }
 
 bool Sonify::Save(QString filename)
@@ -275,7 +346,7 @@ void Sonify::Open(QString filename)
     if (filename.isEmpty())
     {
         QFileDialog fd;
-        QStringList files = fd.getOpenFileNames(this, "Open Image", nullptr, "Image Files (*.png *.jpeg *.jpg)");
+        QStringList files = fd.getOpenFileNames(this, "Open Image", nullptr, "Image Files (*.png *.peg *.pg)");
 
         if (files.empty())
             return;
@@ -375,6 +446,9 @@ void Sonify::Reset()
 {
     m_play_btn->setText("Play");
     m_isAudioPlaying = false;
+    m_wf_vertline->point1->setCoords(0, 0);
+    m_wf_vertline->point2->setCoords(0, 0);
+    m_wf_vertline_layer->replot();
     gv->reset();
     sonification->reset();
     m_audio_progress_label->setText("");
@@ -442,4 +516,23 @@ void Sonify::AskForResize(QString filename)
 
     ask_widget->exec();
 
+}
+
+
+void Sonify::Play()
+{
+    sonification->play();
+    m_play_btn->setText("Pause");
+    m_reset_btn->setEnabled(false);
+    m_num_samples_spinbox->setEnabled(false);
+    m_traverse_combo->setEnabled(false);
+}
+
+void Sonify::Pause()
+{
+    sonification->pause();
+    m_play_btn->setText("Play");
+    m_reset_btn->setEnabled(true);
+    m_num_samples_spinbox->setEnabled(true);
+    m_traverse_combo->setEnabled(true);
 }
