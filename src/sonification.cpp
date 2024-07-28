@@ -9,7 +9,9 @@ Sonification::Sonification()
         qDebug() << "SDL could not initialize! SDL_Error: " << SDL_GetError();
         return;
     }
+
     sonifier = new Sonifier();
+
     connect(sonifier, &Sonifier::sonificationDone, this, [&](QVector<short>audioData) {
         m_audioData = audioData;
         /*AddReverb();*/
@@ -174,6 +176,7 @@ void Sonification::sdlAudioCallback(void* userdata, Uint8* _stream, int _len)
 
     if (s->m_audioData.size() == 0) return;
 
+
     Sint16 *stream = reinterpret_cast<Sint16*>(_stream);
     int len = _len / 2;
 
@@ -192,6 +195,7 @@ void Sonification::sdlAudioCallback(void* userdata, Uint8* _stream, int _len)
     auto d = s->m_audioOffset / sizeof(short);
     emit s->audioprogress(d);
     emit s->audioindex(d / static_cast<double>(s->m_NumSamples));
+
 
 }
 

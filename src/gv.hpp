@@ -56,23 +56,16 @@ private:
 
     QGraphicsScene *m_scene = new QGraphicsScene();
     QGraphicsPixmapItem *m_pi = new QGraphicsPixmapItem();
-
     AnimatedLineItem *m_li = nullptr;
     AnimatedCircleItem *m_ci = nullptr;
     AnimatedPathItem *m_pathi = nullptr;
     double m_duration_s = 1.0f;
-
     Traverse m_traverse;
-
     bool m_draw_path_mode = false;
-
     QPainterPath m_painter_path = QPainterPath();
     QGraphicsPathItem *m_path_item = nullptr;
-
     QVector<QPointF> m_pathDrawnPixelsPos;
-
     int m_width, m_height, m_audio_index;
-
     double m_sqrt;
 };
 

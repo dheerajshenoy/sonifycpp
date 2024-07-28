@@ -292,7 +292,4 @@ void GV::dragEnterEvent(QDragEnterEvent *e)
 }
 
 void GV::dragMoveEvent(QDragMoveEvent *e)
-{
-
-
-}
+{}

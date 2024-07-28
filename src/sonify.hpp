@@ -29,8 +29,10 @@
 #include <qt6/QtCharts/QBarSeries>
 #include "sonification.hpp"
 #include "gv.hpp"
-#include "qcustomplot.h"
 #include "waveform_savedialog.hpp"
+#include "tonegenerator.hpp"
+#include "waveformwidget.hpp"
+#include "aboutdialog.hpp"
 
 class Sonify : public QMainWindow
 {
@@ -74,12 +76,18 @@ private:
           *m_audio_menu,
           *m_tools_menu,
           *m_view_menu,
-          *m_about_menu;
+          *m_help_menu;
 
     QAction *m_file__open,
             *m_file__exit;
+
     QAction *m_audio__save;
+
+    QAction *m_tools__tone_generator;
+
     QAction *m_view__waveform;
+
+    QAction *m_help__about;
 
     QComboBox *m_traverse_combo;
 
@@ -99,16 +107,7 @@ private:
     QLabel *m_input_img_height_label, *m_input_img_width_label;
     Traverse m_mode;
 
-    bool m_wf_show_vline = true;
-
-    QWidget *m_wf_widget = new QWidget();
-    QPushButton *m_wf_show_vline_btn = new QPushButton("Show Position Line");
-    QPushButton *m_wf_save_btn = new QPushButton("Save Figure");
-    QVBoxLayout *m_wf_widget_layout = new QVBoxLayout();
-    QHBoxLayout *m_wf_btm_layout = new QHBoxLayout();
-    QCustomPlot *m_wf_plot = new QCustomPlot();
-    QCPItemStraightLine *m_wf_vertline;
-    QCPLayer *m_wf_vertline_layer;
+    WaveformWidget *m_wf_widget = nullptr;
 };
 
 
