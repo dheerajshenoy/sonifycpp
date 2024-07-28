@@ -23,6 +23,7 @@
 #include <qt6/QtWidgets/QLabel>
 #include <qt6/QtWidgets/QSpinBox>
 #include <qt6/QtCore/QTimer>
+#include <qt6/QtCore/QThread>
 #include <qt6/QtConcurrent/QtConcurrent>
 #include <qt6/QtMultimedia/QWindowCapture>
 #include <qt6/QtWidgets/QSizePolicy>
@@ -39,6 +40,17 @@
 #include "tonegenerator.hpp"
 #include "waveformwidget.hpp"
 #include "aboutdialog.hpp"
+#include "screenRecorder.hpp"
+
+/*#include <opencv4/opencv2/opencv.hpp>*/
+/**/
+/**/
+/*extern "C" {*/
+/*#include <libavcodec/avcodec.h>*/
+/*#include <libavformat/avformat.h>*/
+/*#include <libavutil/time.h>*/
+/*#include <libswscale/swscale.h>*/
+/*}*/
 
 class Sonify : public QMainWindow
 {
@@ -50,6 +62,7 @@ public:
 private:
 
     void Play();
+    void ConvertToVideo();
     void Pause();
     void PlayAudio();
     void Reset();
@@ -89,7 +102,8 @@ private:
 
     QAction *m_audio__save;
 
-    QAction *m_tools__tone_generator;
+    QAction *m_tools__tone_generator,
+            *m_tools__screen_record;
 
     QAction *m_view__waveform;
 
@@ -114,6 +128,7 @@ private:
     Traverse m_mode;
 
     WaveformWidget *m_wf_widget = nullptr;
+    ScreenRecorder *m_recorder = new ScreenRecorder();
 };
 
 

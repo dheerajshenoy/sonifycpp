@@ -34,6 +34,9 @@ Sonify::Sonify(QWidget *parent)
     /*Open("/home/neo/Gits/sonifycpp/test2.png");*/
 
 
+
+    /*ConvertToVideo();*/
+    m_recorder->setGraphicsView(gv);
 }
 
 void Sonify::initSidePanel()
@@ -142,7 +145,10 @@ void Sonify::initMenu()
     m_file_menu->addAction(m_file__exit);
 
     m_tools__tone_generator = new QAction("Tone Generator");
+    m_tools__screen_record = new QAction("Screen Record");
+    m_tools__screen_record->setCheckable(true);
     m_tools_menu->addAction(m_tools__tone_generator);
+    m_tools_menu->addAction(m_tools__screen_record);
 
     m_audio_menu->addAction(m_audio__save);
 
@@ -245,6 +251,19 @@ void Sonify::initConnections()
         tg.exec();
     });
 
+    connect(m_tools__screen_record, &QAction::triggered, this, [&](bool state)
+    {
+        if (state)
+        {
+            connect(m_recorder, &ScreenRecorder::finished, this, [&]() {
+            qDebug() << "Screen recording finished";
+            });
+            m_recorder->Start();
+        }
+        else
+            m_recorder->Stop();
+    });
+
     connect(m_help__about, &QAction::triggered, this, [&]() {
         AboutDialog *aboutDialog = new AboutDialog(this);
         aboutDialog->exec();
@@ -335,7 +354,6 @@ void Sonify::Open(QString filename)
 // Function that handles action of sonification
 void Sonify::doSonify()
 {
-
     m_sonify_btn->setEnabled(false);
     sonification->stopSonification(false);
     m_progress_bar->reset();
@@ -434,7 +452,6 @@ Sonify::~Sonify()
 // TODO: Screen record
 void Sonify::CaptureWindow()
 {
-    /*pix.save("screen.png");*/
 }
 
 // Function to ask for image resize when opening
@@ -515,3 +532,44 @@ void Sonify::Pause()
     m_traverse_combo->setEnabled(true);
 
 }
+
+/*void Sonify::ConvertToVideo()*/
+/*{*/
+/*    std::vector<std::string> imagePaths = {*/
+/*        "temp/0.png",*/
+/*        "temp/1.png",*/
+/*        "temp/2.png"*/
+/*        // Add more image paths as needed*/
+/*    };*/
+/**/
+/*    std::vector<cv::Mat> images;*/
+/**/
+/*    for (const auto& path : imagePaths) {*/
+/*        cv::Mat img = cv::imread(path);*/
+/*        if (img.empty()) {*/
+/*            std::cerr << "Could not read image: " << path << std::endl;*/
+/*            continue;*/
+/*        }*/
+/*        images.push_back(img);*/
+/*    }*/
+/**/
+/*    if (images.empty()) {*/
+/*        std::cerr << "No images were loaded." << std::endl;*/
+/*        return;*/
+/*    }*/
+/**/
+/*    // Define the codec and create VideoWriter object*/
+/*    cv::VideoWriter video("output.avi", cv::VideoWriter::fourcc('M','J','P','G'), 10, cv::Size(images[0].cols, images[0].rows));*/
+/**/
+/*    if (!video.isOpened()) {*/
+/*        std::cerr << "Could not open the output video file for write." << std::endl;*/
+/*        return;*/
+/*    }*/
+/**/
+/*    for (const auto& img : images) {*/
+/*        video.write(img);*/
+/*    }*/
+/**/
+/*    video.release();*/
+/*    std::cout << "Video created successfully!" << std::endl;*/
+/*}*/

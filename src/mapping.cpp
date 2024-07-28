@@ -34,17 +34,35 @@ QVector<short> Mapping::Map2(QRgb pixel, int x, int y)
     QColor col = QColor(pixel).toHsv();
     QVector<short> res;
 
-    float frequencies[] = {440.0, 660.0, 880.0, 1100.0};
-    float decayRates[] = {0.001, 0.002, 0.003, 0.004};
+    double intensity = qGray(pixel);
 
-    double intensity = static_cast<double>(qGray(pixel));
-    auto s1 = generateSineWave(intensity * std::exp(-decayRates[0] * 0.5), frequencies[0], static_cast<double>(y));
-    auto s2 = generateSineWave(intensity * std::exp(-decayRates[1] * 0.5), frequencies[1], static_cast<double>(y));
-    auto s3 = generateSineWave(intensity * std::exp(-decayRates[2] * 0.5), frequencies[2], static_cast<double>(y));
-    auto s4 = generateSineWave(intensity * std::exp(-decayRates[3] * 0.5), frequencies[3], static_cast<double>(y));
-    return utils::addVectors(s1, s2, s3, s4);
+    if (intensity < 40)
+        return generateSineWave(0, 0, 0);
+    if (intensity < 60)
+    {
+        auto s1 = generateSineWave(intensity, m_notes.getFrequency("C4"), 0);
+        auto s2 = generateSineWave(intensity, m_notes.getFrequency("E4"), 0);
+        auto s3 = generateSineWave(intensity, m_notes.getFrequency("G4"), 0);
+        auto s4 = generateSineWave(intensity, m_notes.getFrequency("D4"), 0);
+        return utils::addVectors(s1, s2, s3, s4);
+    }
+
+    if (intensity < 100)
+    {
+        auto s1 = generateSineWave(intensity, m_notes.getFrequency("C6"), 0);
+        auto s2 = generateSineWave(intensity, m_notes.getFrequency("E6"), 0);
+        auto s3 = generateSineWave(intensity, m_notes.getFrequency("G6"), 0);
+        auto s4 = generateSineWave(intensity, m_notes.getFrequency("D6"), 0);
+        return utils::addVectors(s1, s2, s3, s4);
+    }
+
+    auto s1 = generateSineWave(intensity, m_notes.getFrequency("G4"), 0);
+    auto s2 = generateSineWave(intensity, m_notes.getFrequency("C4"), 0);
+    auto s3 = generateSineWave(intensity, m_notes.getFrequency("D4"), 0);
+    return utils::addVectors(s1, s2, s3);
+
+
 }
-
 QVector<short> Mapping::generateSineWave(double amplitude, double frequency, double time)
 {
     QVector <short> fs;

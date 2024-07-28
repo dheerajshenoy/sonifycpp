@@ -43,7 +43,7 @@ Sonification::~Sonification()
     }
 }
 
-void Sonification::setNumSamples(int nsamples)
+void Sonification::setNumSamples(int nsamples) noexcept
 {
     m_NumSamples = nsamples; 
     m_val = M_PI2 * m_NumSamples / m_SampleRate;
@@ -124,7 +124,7 @@ void Sonification::reset()
 }
 
 // Save the audio data to file
-bool Sonification::save(QString filename, Format f)
+bool Sonification::save(QString filename, Format f) noexcept
 {
     switch(f)
     {
@@ -173,7 +173,7 @@ bool Sonification::m_GenerateWavFile(QString filename)
     return true;
 }
 
-double Sonification::getDuration()
+double Sonification::getDuration() noexcept
 {
     return m_audioData.size() / m_SampleRate;
 }
@@ -208,22 +208,22 @@ void Sonification::sdlAudioCallback(void* userdata, Uint8* _stream, int _len)
 
 }
 
-int Sonification::getNumSamples()
+int Sonification::getNumSamples() noexcept
 {
     return m_NumSamples;
 }
 
-float Sonification::getSampleRate()
+float Sonification::getSampleRate() noexcept
 {
     return m_SampleRate;
 }
 
-QVector<short> Sonification::getAudioData()
+QVector<short> Sonification::getAudioData() noexcept
 {
     return m_audioData;
 }
 
-void Sonification::stopSonification(bool state)
+void Sonification::stopSonification(bool state) noexcept
 {
     sonifier->stopSonifying(state);
     if (state)

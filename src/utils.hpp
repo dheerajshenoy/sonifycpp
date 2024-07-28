@@ -8,6 +8,11 @@ namespace utils
 {
     template<typename T, typename... Args>
     QVector<T> addVectors(const QVector<T>& first, const QVector<T>& second, const Args&... args) {
+        if (first.isEmpty())
+            return second;
+
+        if (second.isEmpty())
+            return first;
         size_t size = first.size();
         QVector<T> result(size, T{});
 

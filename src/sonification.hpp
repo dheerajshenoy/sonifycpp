@@ -22,18 +22,18 @@ class Sonification : public QObject
     Q_OBJECT
 public:
     Sonification();
+    ~Sonification();
     void Sonify(QPixmap &pix, GV *gv, Traverse mode = Traverse::LEFT_TO_RIGHT);
-    void setNumSamples(int nsamples);
+    void setNumSamples(int nsamples) noexcept;
     void play();
     void pause();
     void reset();
-    bool save(QString filename, Format format = Format::WAV);
-    double getDuration();
-    int getNumSamples();
-    ~Sonification();
-    QVector<short> getAudioData();
-    void stopSonification(bool state);
-    float getSampleRate();
+    bool save(QString filename, Format format = Format::WAV) noexcept;
+    double getDuration() noexcept;
+    int getNumSamples() noexcept;
+    QVector<short> getAudioData() noexcept;
+    void stopSonification(bool state) noexcept;
+    float getSampleRate() noexcept;
     void AddReverb();
 
 signals:
@@ -49,7 +49,7 @@ private:
     bool m_GenerateWavFile(QString filename);
 
     template <typename T>
-    QVector<T> addVectors(QVector<T> &, QVector<T> &);
+    QVector<T> addVectors(QVector<T> &, QVector<T> &) noexcept;
     static void sdlAudioCallback(void* userdata, Uint8* stream, int len);
     float m_SampleRate = 44100.0f;
     int m_ChannelCount = 1;
