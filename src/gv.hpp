@@ -1,3 +1,8 @@
+/*
+*
+*   Class for the graphics view
+*
+*/
 #ifndef GV_HPP
 #define GV_HPP
 

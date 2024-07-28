@@ -1,3 +1,7 @@
+/*
+* Contains the code for different traversal types.
+*/
+
 #include "sonifier.hpp"
 
 
@@ -104,9 +108,6 @@ void Sonifier::TopToBottom()
     emit sonificationDone(audioData);
 }
 
-// Top to Bottom
-// Vertical position to frequency, horizontal position to time
-// brightness into amplitude
 void Sonifier::BottomToTop()
 {
 
@@ -319,6 +320,7 @@ void Sonifier::PathDrawn()
     emit sonificationDone(audioData);
 }
 
+// If path drawn mode is selected, pass the pixels drawn.
 void Sonifier::setParameters(QPixmap &pix, Traverse t, QVector<QPointF> pixels)
 {
     m_traverse = t;
@@ -326,12 +328,14 @@ void Sonifier::setParameters(QPixmap &pix, Traverse t, QVector<QPointF> pixels)
     m_pixpos = pixels;
 }
 
+// For other methods, no pixel pos is required
 void Sonifier::setParameters(QPixmap &pix, Traverse t)
 {
     m_traverse = t;
     m_pix = pix;
 }
 
+// Function that handles which traversal method to call
 void Sonifier::Sonify()
 {
 
@@ -378,6 +382,7 @@ void Sonifier::Sonify()
     }
 }
 
+// Stop the sonification process
 void Sonifier::stopSonifying(bool state)
 {
     m_stop_sonifying = state;

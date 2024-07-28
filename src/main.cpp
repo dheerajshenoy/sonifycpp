@@ -1,3 +1,7 @@
+/*
+* Main entry point of the program. This calls the Sonify class.
+*
+*/
 #include "sonify.hpp"
 
 int main (int argc, char *argv[]) {

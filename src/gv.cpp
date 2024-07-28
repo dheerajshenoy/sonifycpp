@@ -1,3 +1,10 @@
+/*
+*
+*   Contains functions that are used to draw the line, circle or path on the graphicsview along with
+*   rendering the image
+*
+*/
+
 #include "gv.hpp"
 
 GV::GV(QWidget *parent) : QGraphicsView(parent)
@@ -8,12 +15,14 @@ GV::GV(QWidget *parent) : QGraphicsView(parent)
     this->show();
 }
 
+// Get the current location in the audiodata array
 void GV::setAudioIndex(int index)
 {
     m_audio_index = index;
     emit audioIndexSet();
 }
 
+// Function to handle draw path mode
 void GV::setDrawPathMode(bool t)
 {
     m_draw_path_mode = t;
@@ -29,6 +38,8 @@ void GV::setDrawPathMode(bool t)
         }
     }
 }
+
+// Method to set the traverse mode, so as to prepare for the animation
 void GV::setTraverse(Traverse t)
 {
     if (m_traverse == t) return;
@@ -204,6 +215,7 @@ void GV::setDuration(double s)
     m_duration_s = s;
 }
 
+// Set the image onto the graphicsview
 void GV::setPixmap(QPixmap &pix)
 {
     if (!pix) return;
@@ -216,6 +228,7 @@ void GV::setPixmap(QPixmap &pix)
     m_sqrt = sqrt(m_width * m_width / 4.0 + m_height * m_height / 4.0);
 }
 
+// Reset the positions of the object drawn on the graphicsview
 void GV::reset()
 {
     if (m_li)
@@ -224,6 +237,7 @@ void GV::reset()
         m_ci->reset();
 
 }
+
 void GV::mousePressEvent(QMouseEvent *e)
 {
     if(e->button() == Qt::MouseButton::LeftButton)
@@ -272,7 +286,7 @@ QVector<QPointF> GV::getPathDrawnPos()
     return m_pathDrawnPixelsPos;
 }
 
-
+// Function to handle drag and drop event to open the file when it is dropped into the graphicsview
 void GV::dropEvent(QDropEvent *e)
 {
     QString droppedFilePath = e->mimeData()->urls()[0].toLocalFile();

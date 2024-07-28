@@ -1,3 +1,9 @@
+/*
+*
+*   Contains function for audio playback of the sonified data
+*
+*/
+
 #include "sonification.hpp"
 #include <cmath>
 
@@ -117,6 +123,7 @@ void Sonification::reset()
     SDL_PauseAudioDevice(m_audioDevice, 1);
 }
 
+// Save the audio data to file
 bool Sonification::save(QString filename, Format f)
 {
     switch(f)
@@ -127,12 +134,14 @@ bool Sonification::save(QString filename, Format f)
             break;
 
         case Format::MP3:
+            // TODO: Handle MP3 saving
             break;
     }
 
     return false;
 }
 
+// Helper function to generate WAV file
 bool Sonification::m_GenerateWavFile(QString filename)
 {
     SF_INFO sfinfo;

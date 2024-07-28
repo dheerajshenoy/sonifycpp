@@ -1,3 +1,9 @@
+/*
+*
+*   This the class that manages the other classes that handle the GUI, sonification process and audio playback. This represents the main window
+*
+*/
+
 #ifndef SONIFY_HPP
 #define SONIFY_HPP
 

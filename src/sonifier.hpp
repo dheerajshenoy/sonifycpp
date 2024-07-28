@@ -7,6 +7,7 @@
 #include <qt6/QtCore/QVector>
 #include "traverse.hpp"
 
+/*
 #ifdef __linux__
     #include <alsa/asoundlib.h>
 #elif __APPLE__
@@ -14,6 +15,8 @@
 #elif _WIN32
     #include <windows.h>
 #endif
+*/
+
 #include "mapping.hpp"
 #include "utils.hpp"
 

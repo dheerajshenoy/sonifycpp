@@ -1,5 +1,6 @@
 #include "sonify.hpp"
 
+// Read in a WAV file. This was used just to check if the Waveform visualizer worked
 QVector<short> readWAVFile(const QString filename)
 {
     SF_INFO sfinfo;
@@ -117,26 +118,6 @@ void Sonify::initWidgets()
     this->setCentralWidget(m_widget);
 }
 
-void Sonify::setMsg(QString msg, int s)
-{
-    if (!msg.isEmpty())
-    {
-        if (s > 0)
-        {
-            m_statusbar_msg_label->setText(msg);
-
-            QTimer::singleShot(s * 1000, [&]() {
-                m_statusbar_msg_label->clear();
-            });
-
-            return;
-        }
-        else {
-            m_statusbar_msg_label->setText(msg);
-        }
-    }
-}
-
 void Sonify::initMenu()
 {
     m_menu_bar = new QMenuBar();
@@ -175,14 +156,25 @@ void Sonify::initMenu()
     this->setMenuBar(m_menu_bar);
 }
 
-void Sonify::PlayAudio()
+// This is used to show statusbar message for specified seconds `s` or indefinetely if set equal to -1
+void Sonify::setMsg(QString msg, int s)
 {
+    if (!msg.isEmpty())
+    {
+        if (s > 0)
+        {
+            m_statusbar_msg_label->setText(msg);
 
-    m_isAudioPlaying = !m_isAudioPlaying;
-    if (m_isAudioPlaying)
-        Play();
-    else
-        Pause();
+            QTimer::singleShot(s * 1000, [&]() {
+                m_statusbar_msg_label->clear();
+            });
+
+            return;
+        }
+        else {
+            m_statusbar_msg_label->setText(msg);
+        }
+    }
 }
 
 void Sonify::initConnections()
@@ -259,6 +251,20 @@ void Sonify::initConnections()
     });
 }
 
+
+// This is used to set the state of the audio playback. Call Play() if we have to play the audio
+// or call Pause() if we want to pause.
+void Sonify::PlayAudio()
+{
+
+    m_isAudioPlaying = !m_isAudioPlaying;
+    if (m_isAudioPlaying)
+        Play();
+    else
+        Pause();
+}
+
+// Function that is similar to numpy linspace.
 QVector<double> linspace(double start, double stop, int num) {
     QVector<double> result;
     result.reserve(num);
@@ -269,6 +275,7 @@ QVector<double> linspace(double start, double stop, int num) {
     return result;
 }
 
+// Function that handles the waveform widget viewing
 void Sonify::viewWaveform(bool state)
 {
     if (state)
@@ -290,6 +297,7 @@ void Sonify::viewWaveform(bool state)
         m_wf_widget->close();
 }
 
+// Function that handles saving the WAV audio file
 bool Sonify::Save(QString filename)
 {
     if (filename.isEmpty())
@@ -305,6 +313,7 @@ bool Sonify::Save(QString filename)
     return false;
 }
 
+// Function that handles Opening an image. If filename is specified, image will be opened, otherwise a file dialog will ask for the file.
 void Sonify::Open(QString filename)
 {
 
@@ -323,6 +332,7 @@ void Sonify::Open(QString filename)
     m_sonify_btn->setEnabled(true);
 }
 
+// Function that handles action of sonification
 void Sonify::doSonify()
 {
 
@@ -407,7 +417,7 @@ void Sonify::doSonify()
     }
 }
 
-
+// Reset btn function
 void Sonify::Reset()
 {
     m_play_btn->setText("Play");
@@ -421,11 +431,13 @@ void Sonify::Reset()
 Sonify::~Sonify()
 {}
 
+// TODO: Screen record
 void Sonify::CaptureWindow()
 {
     /*pix.save("screen.png");*/
 }
 
+// Function to ask for image resize when opening
 void Sonify::AskForResize(QString filename)
 {
     QDialog *ask_widget = new QDialog();
@@ -482,6 +494,7 @@ void Sonify::AskForResize(QString filename)
 
 }
 
+// Function that handles 'play' state
 void Sonify::Play()
 {
     sonification->play();
@@ -491,6 +504,7 @@ void Sonify::Play()
     m_traverse_combo->setEnabled(false);
 }
 
+// Function that handles 'pause' state
 void Sonify::Pause()
 {
 

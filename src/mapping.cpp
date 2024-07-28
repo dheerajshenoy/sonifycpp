@@ -1,6 +1,14 @@
+/*
+*
+* This contains mapping functions that is used to map the pixels of image to create sound.
+* There is also a function for generating sine waves
+*
+*
+*
+*/
+ 
 #include "mapping.hpp"
 #include <cmath>
-
 
 void Mapping::setSamples(int &samples)
 {
