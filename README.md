@@ -21,6 +21,7 @@ Convert images to audio signals.
 6. [Demo](#demo)
 7. [Installation](#installation)
 8. [Changelogs and Bug fixes](#changelogs_and_bug_fixes)
+9. [Inspirations](#inspirations)
 
 <a name="introduction"/>
 
@@ -256,4 +257,13 @@ Since I use Arch Linux, the commands to install these packages is `sudo pacman -
     - Bug fix
 
         - Fix delay between animation and audio playback
+
+<a name="inspirations"/>
+
+# Inspirations
+
+* NASA has been a big inspiration for making me create this software. If you haven't checked out yet, they have good sonification videos on youtube.
+
+* Main reason why I started this is because of an earlier basic Python version I started on 2023 when I participated in the 2023 NASA Hackathon. It was slow and...it was python, and I love C++, so I thought I'll create this in C++.
+
 
