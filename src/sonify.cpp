@@ -296,24 +296,33 @@ void Sonify::initMenu()
     m_file__exit = new QAction("Exit");
     m_audio__save = new QAction("Save");
 
+    m_audio__save->setEnabled(false);
+
     m_file_menu->addAction(m_file__open);
     m_file_menu->addAction(m_file__exit);
 
+    m_tools__spectrum_analyzer = new QAction("Spectrum Analyzer");
+    m_tools__spectrum_analyzer->setCheckable(true);
+    m_tools__spectrum_analyzer->setEnabled(false);
+
     m_tools__tone_generator = new QAction("Tone Generator");
+    m_tools__tone_generator->setCheckable(true);
     m_tools__screen_record = new QAction("Screen Record");
     m_tools__screen_record->setCheckable(true);
+    m_tools__waveform = new QAction("Waveform");
+    m_tools__waveform->setCheckable(true);
+    m_tools__waveform->setEnabled(false);
+
     m_tools_menu->addAction(m_tools__tone_generator);
+    m_tools_menu->addAction(m_tools__spectrum_analyzer);
     m_tools_menu->addAction(m_tools__screen_record);
+    m_tools_menu->addAction(m_tools__waveform);
 
     m_audio_menu->addAction(m_audio__save);
 
     m_help__about = new QAction("About");
     m_help_menu->addAction(m_help__about);
 
-    m_view__waveform = new QAction("Waveform");
-    m_view__waveform->setCheckable(true);
-
-    m_view_menu->addAction(m_view__waveform);
     this->setMenuBar(m_menu_bar);
 }
 
@@ -376,13 +385,16 @@ void Sonify::initConnections()
         m_traverse_combo->setEnabled(true);
     });
 
-    connect(m_view__waveform, &QAction::triggered, this, &Sonify::viewWaveform);
+    connect(m_tools__waveform, &QAction::triggered, this, &Sonify::viewWaveform);
 
     connect(sonification, &Sonification::sonificationStopped, this, [&]() {
         m_sonify_btn->setEnabled(true);
     });
 
     connect(sonification, &Sonification::sonificationDone, this, [&]() {
+        m_audio__save->setEnabled(true);
+        m_tools__waveform->setEnabled(true);
+        m_tools__spectrum_analyzer->setEnabled(true);
         gv->setDuration(sonification->getDuration());
         m_duration_label->setText("Duration: " + QString::number(sonification->getDuration()) + "s");
         m_sonify_btn->setEnabled(true);
@@ -401,9 +413,39 @@ void Sonify::initConnections()
         Open(droppedFilePath);
     });
 
-    connect(m_tools__tone_generator, &QAction::triggered, this, [&]() {
-        ToneGenerator tg;
-        tg.exec();
+    connect(m_tools__spectrum_analyzer, &QAction::triggered, this, [&](bool state) {
+        if (state)
+        {
+            m_sp = new SpectrumAnalyzer(this);
+            connect(m_sp, &SpectrumAnalyzer::closed, this, [&]() {
+                m_sp->close();
+                delete m_sp;
+                m_sp = nullptr;
+                m_tools__spectrum_analyzer->setChecked(false);
+            });
+            auto data = sonification->getAudioData();
+            auto sr = sonification->getSampleRate();
+            m_sp->setData(data, sr);
+            m_sp->exec();
+        }
+    });
+
+    connect(m_tools__tone_generator, &QAction::triggered, this, [&](bool state) {
+        if (state)
+        {
+            if (!m_tg)
+            {
+                m_tg = new ToneGenerator(this);
+                connect(m_tg, &ToneGenerator::closed, this, [&]() {
+                    m_tools__tone_generator->setChecked(false);
+                    m_tg->close();
+                    disconnect(m_tg, 0, 0, 0);
+                    delete m_tg;
+                    m_tg = nullptr;
+                });
+                m_tg->exec();
+            }
+        }
     });
 
     connect(m_tools__screen_record, &QAction::triggered, this, [&](bool state)

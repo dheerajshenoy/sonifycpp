@@ -9,6 +9,7 @@
 #include <qt6/QtWidgets/QDialog>
 #include <qt6/QtWidgets/QPushButton>
 #include <qt6/QtWidgets/QSpinBox>
+#include <qt6/QtGui/QCloseEvent>
 #include <qt6/QtWidgets/QLabel>
 #include <cmath>
 #include <SDL2/SDL.h>
@@ -24,6 +25,10 @@ public:
 
 signals:
     void audioFinishedPlaying();
+    void closed();
+
+protected:
+    void closeEvent(QCloseEvent *e);
 
 private:
     /*Notes *m_notes = new Notes();*/

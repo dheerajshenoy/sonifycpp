@@ -42,6 +42,7 @@
 #include "waveformwidget.hpp"
 #include "aboutdialog.hpp"
 #include "screenRecorder.hpp"
+#include "SpectrumAnalyzer.hpp"
 
 extern "C" {
     #include <lualib.h>
@@ -118,6 +119,8 @@ private:
     QAction *m_audio__save;
 
     QAction *m_tools__tone_generator,
+            *m_tools__spectrum_analyzer,
+            *m_tools__waveform,
             *m_tools__screen_record;
 
     QAction *m_view__waveform;
@@ -153,6 +156,9 @@ private:
             m_def_ask_for_resize = true;
     int m_def_height = -1;
     int m_def_width = -1;
+
+    ToneGenerator *m_tg = nullptr;
+    SpectrumAnalyzer *m_sp = nullptr;
 };
 
 

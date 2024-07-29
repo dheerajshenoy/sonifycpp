@@ -13,7 +13,7 @@ QT += gui core widgets printsupport
 
 # INCLUDEPATH += /usr/include/opencv4/ -I/usr/include/libavutil -I/usr/include/libswscale
 # LIBS += -lsndfile -lSDL2 -lavcodec -lavformat -lavutil -lswscale -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -lopencv_video -lopencv_videoio 
-LIBS += -lsndfile -lSDL2 -llua
+LIBS += -lsndfile -lSDL2 -llua -lfftw3
 # Input
 HEADERS +=  src/gv.hpp \
             src/line.hpp \
@@ -30,7 +30,8 @@ HEADERS +=  src/gv.hpp \
             src/tonegenerator.hpp \
             src/waveformwidget.hpp \
             src/aboutdialog.hpp \
-            src/screenRecorder.hpp
+            src/screenRecorder.hpp \
+            src/SpectrumAnalyzer.hpp \
 
 SOURCES +=  src/gv.cpp \
             src/main.cpp \
@@ -44,4 +45,5 @@ SOURCES +=  src/gv.cpp \
             src/tonegenerator.cpp \
             src/waveformwidget.cpp \
             src/aboutdialog.cpp \
-            src/screenRecorder.cpp
+            src/screenRecorder.cpp \
+            src/SpectrumAnalyzer.cpp

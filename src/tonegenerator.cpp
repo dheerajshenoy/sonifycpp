@@ -75,3 +75,8 @@ QVector<short> ToneGenerator::generateSineWave(double amplitude, double frequenc
 
 ToneGenerator::~ToneGenerator()
 {}
+
+void ToneGenerator::closeEvent(QCloseEvent *e)
+{
+    emit closed();
+}

@@ -220,7 +220,13 @@ Since I use Arch Linux, the commands to install these packages is `sudo pacman -
 
     - New feature
 
-        - Added lua scripting support. For now, the defaults for sample rate, asking for resizing everytime you open an image, resolution when loading an image, object color can be set through lua which will be accessed at startup if the lua file exists.
+        - *View frequency Spectrum*. Plot frequency vs amplitude of the produced sonified sound
+
+        - *Added lua scripting support*. For now, the defaults for sample rate, asking for resizing everytime you open an image, resolution when loading an image, object color can be set through lua which will be accessed at startup if the lua file exists.
+
+    - Bug fix
+
+        - Handle waveform, spectrum analyser button when no sonified audio was found.
 
 - 27 July 2024
 
