@@ -56,7 +56,7 @@ Apart from sonifying the images, sonifyCPP ships with few features.
     ```lua
 
     -- default settings
-    defaults = {
+    Defaults = {
         object_color = "#FFFFFF", -- set the curve color
         samples = 3000, -- default samples
         traversal = 2, -- default traversal mode number. As given in the traversal section of the github README. This will set it to Right to Left.
@@ -78,7 +78,7 @@ Apart from sonifying the images, sonifyCPP ships with few features.
 
     -- Future feature
     -- Custom mapping
-    maps = {
+    Maps = {
         { name = "Mapping1", func = mapping1 },
     }
 
