@@ -4,15 +4,16 @@
 
 TEMPLATE = app
 TARGET = sonifycpp
-INCLUDEPATH += .
 
 OBJECTS_DIR = obj/
 MOC_DIR = moc/
 DESTDIR = bin/
 
 QT += gui core widgets printsupport
-LIBS += -lsndfile -lSDL2
 
+# INCLUDEPATH += /usr/include/opencv4/ -I/usr/include/libavutil -I/usr/include/libswscale
+# LIBS += -lsndfile -lSDL2 -lavcodec -lavformat -lavutil -lswscale -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -lopencv_video -lopencv_videoio
+LIBS += -lsndfile -lSDL2
 # Input
 HEADERS +=  src/gv.hpp \
             src/line.hpp \
@@ -26,6 +27,10 @@ HEADERS +=  src/gv.hpp \
             src/sonifier.hpp \
             src/notes.hpp \
             src/qcustomplot.h \
+            src/tonegenerator.hpp \
+            src/waveformwidget.hpp \
+            src/aboutdialog.hpp \
+            src/screenRecorder.hpp
 
 SOURCES +=  src/gv.cpp \
             src/main.cpp \
@@ -35,4 +40,8 @@ SOURCES +=  src/gv.cpp \
             src/mapping.cpp \
             src/sonifier.cpp \
             src/notes.cpp \
-            src/qcustomplot.cpp
+            src/qcustomplot.cpp \
+            src/tonegenerator.cpp \
+            src/waveformwidget.cpp \
+            src/aboutdialog.cpp \
+            src/screenRecorder.cpp

@@ -165,9 +165,13 @@ Since I use Arch Linux, the commands to install these packages is `sudo pacman -
 
 # Chanegelogs and Bug fixes
 
+- 28 July 2024
+
 - 27 July 2024
     
     - New feature
+
+      - Drag and Drop to open Image
 
       - Waveform visualization
         
