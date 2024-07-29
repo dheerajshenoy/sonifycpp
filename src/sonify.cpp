@@ -25,6 +25,7 @@ QVector<short> readWAVFile(const QString filename)
 Sonify::Sonify(QWidget *parent)
 : QMainWindow(parent)
 {
+    initConfigDir();
     initWidgets();
     initStatusbar();
     initSidePanel();
@@ -51,12 +52,26 @@ int MyFunc(lua_State *s)
     return 1;
 }
 
+void Sonify::initConfigDir()
+{
+    m_config_dir = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+    QDir dir = QDir(m_config_dir);
+    if (!dir.exists())
+        dir.mkdir(dir.path());
+
+    m_script_file_path = QDir::cleanPath(m_config_dir + QDir::separator() + "script.lua");
+}
+
+// Handle lua script file content
 void Sonify::initLuaBindings()
 {
-    lua_register(m_lua_state, "MyFunc", MyFunc);
+
+    QFile file = QFile(m_script_file_path);
+    if(!file.exists()) return; // If no script file, don't load lua
 
     luaopen_base(m_lua_state);
-    if (checkLua(m_lua_state, luaL_dofile(m_lua_state, "script.lua")).status)
+
+    if (checkLua(m_lua_state, luaL_dofile(m_lua_state, m_script_file_path.toStdString().c_str())).status)
     {
         // Read defaults
 
@@ -87,8 +102,8 @@ void Sonify::initLuaBindings()
             if (lua_isnumber(m_lua_state, -1))
             {
                 int index = static_cast<int>(lua_tonumber(m_lua_state, -1));
-                if (index <= m_traverse_combo->count() && index >= 0)
-                    m_traverse_combo->setCurrentIndex(index);
+                if (index <= m_traverse_combo->count() && index > 0)
+                    m_traverse_combo->setCurrentIndex(index - 1);
             }
             lua_pop(m_lua_state, 1);
 

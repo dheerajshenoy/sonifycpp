@@ -23,6 +23,8 @@
 #include <qt6/QtWidgets/QLabel>
 #include <qt6/QtWidgets/QSpinBox>
 #include <qt6/QtCore/QTimer>
+#include <qt6/QtCore/QStandardPaths>
+#include <qt6/QtCore/QDir>
 #include <qt6/QtCore/QDebug>
 #include <qt6/QtCore/QThread>
 #include <qt6/QtConcurrent/QtConcurrent>
@@ -30,11 +32,6 @@
 #include <qt6/QtWidgets/QSizePolicy>
 #include <qt6/QtWidgets/QCheckBox>
 #include <qt6/QtWidgets/QProgressBar>
-#include <qt6/QtCharts/QChart>
-#include <qt6/QtCharts/QChartView>
-#include <qt6/QtCharts/QValueAxis>
-#include <qt6/QtCharts/QLineSeries>
-#include <qt6/QtCharts/QBarSeries>
 #include "sonification.hpp"
 #include "gv.hpp"
 #include "waveform_savedialog.hpp"
@@ -85,9 +82,9 @@ private:
     void setMsg(QString msg, int s = -1);
     void doSonify();
     LuaError checkLua(lua_State *, int);
+    void initConfigDir();
     void initConnections();
     void initLuaBindings();
-    void initChart();
     void initMenu();
     void initWidgets();
     void initStatusbar();
@@ -159,6 +156,8 @@ private:
 
     ToneGenerator *m_tg = nullptr;
     SpectrumAnalyzer *m_sp = nullptr;
+    QString m_script_file_path, m_config_dir;
+
 };
 
 

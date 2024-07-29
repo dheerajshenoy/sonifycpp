@@ -50,7 +50,7 @@ Apart from sonifying the images, sonifyCPP ships with few features.
 
 * Lua scripting
 
-    Able to set options of the program in a script file. For now, only defaults can be set. In the future, I am planning to add the ability to create mapping functions from within lua to call in the C++ code for sonifying. The file can look something like this.
+    Able to set options of the program in a script file. For now, only defaults can be set. In the future, I am planning to add the ability to create mapping functions from within lua to call in the C++ code for sonifying. Script file should be placed at `/home/<USER>/.config/sonifycpp/` on linux and `C:/Users/<USER>/AppData/Local/sonifycpp/`, The file can look something like this.
 
     ```lua
 
@@ -58,7 +58,7 @@ Apart from sonifying the images, sonifyCPP ships with few features.
     defaults = {
         object_color = "#FFFFFF", -- set the curve color
         samples = 3000, -- default samples
-        traversal = 2, -- default traversal mode number
+        traversal = 2, -- default traversal mode number. As given in the traversal section of the github README. This will set it to Right to Left.
         resolution = { height = 480, width = 720, keep_aspect = true; ask_for_resize = false; } -- default image loading resolution
     }
 
