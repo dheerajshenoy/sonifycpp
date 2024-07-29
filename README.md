@@ -44,6 +44,41 @@ Apart from sonifying the images, sonifyCPP ships with few features.
 
     Visualize the sonified sound waveform
 
+* Lua scripting
+
+    Able to set options of the program in a script file. For now, only defaults can be set. In the future, I am planning to add the ability to create mapping functions from within lua to call in the C++ code for sonifying. The file can look something like this.
+
+    ```lua
+
+    -- default settings
+    defaults = {
+        object_color = "#FFFFFF", -- set the curve color
+        samples = 3000, -- default samples
+        traversal = 2, -- default traversal mode number
+        resolution = { height = 480, width = 720, keep_aspect = true; ask_for_resize = false; } -- default image loading resolution
+    }
+
+    -- The code given hereafter is just a proof of concept. It doesn't work even if it's in the script.lua file
+    -- Mapping function. This will be called if chosen at the GUI and for sonifying
+    local mapping1 = function (data)
+        -- logic for mapping
+        if (data.intensity < 100)
+            ...
+        else if (data.intensity < 200)
+            ...
+        else
+            ...
+        end
+    end
+
+    -- Future feature
+    -- Custom mapping
+    maps = {
+        { name = "Mapping1", func = mapping1 },
+    }
+
+    ```
+
 <a name="traversal"/>
 
 ## Traversal Methods
@@ -181,24 +216,28 @@ Since I use Arch Linux, the commands to install these packages is `sudo pacman -
 
 # Chanegelogs and Bug fixes
 
-- 28 July 2024
+- 29 July 2024
 
-- 27 July 2024
-    
     - New feature
 
-      - Drag and Drop to open Image
+        - Added lua scripting support. For now, the defaults for sample rate, asking for resizing everytime you open an image, resolution when loading an image, object color can be set through lua which will be accessed at startup if the lua file exists.
 
-      - Waveform visualization
-        
+- 27 July 2024
+
+    - New feature
+
+        - Drag and Drop to open Image
+
+        - Waveform visualization
+
       ![Waveform](https://github.com/user-attachments/assets/77632937-f965-4782-a547-1770e57b17fc)
 
-      - Ask for resizing image when opening
+        - Ask for resizing image when opening
 
     - Bug fix
 
-      - Back to back change in different traversal methods 
-      - Buffer size effect on the animation
+        - Back to back change in different traversal methods 
+        - Buffer size effect on the animation
 
 - 26 July 2024
 

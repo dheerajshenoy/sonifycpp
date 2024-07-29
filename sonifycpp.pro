@@ -12,8 +12,8 @@ DESTDIR = bin/
 QT += gui core widgets printsupport
 
 # INCLUDEPATH += /usr/include/opencv4/ -I/usr/include/libavutil -I/usr/include/libswscale
-# LIBS += -lsndfile -lSDL2 -lavcodec -lavformat -lavutil -lswscale -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -lopencv_video -lopencv_videoio
-LIBS += -lsndfile -lSDL2
+# LIBS += -lsndfile -lSDL2 -lavcodec -lavformat -lavutil -lswscale -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -lopencv_video -lopencv_videoio 
+LIBS += -lsndfile -lSDL2 -llua
 # Input
 HEADERS +=  src/gv.hpp \
             src/line.hpp \

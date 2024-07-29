@@ -40,6 +40,7 @@ public:
     void setDrawPathMode(bool t);
     void getOffset(size_t &offset);
     void setAudioIndex(int index);
+    void setObjColor(QString);
     QVector<QPointF> getPathDrawnPos();
     ~GV();
 
@@ -72,6 +73,8 @@ private:
     QVector<QPointF> m_pathDrawnPixelsPos;
     int m_width, m_height, m_audio_index;
     double m_sqrt;
+
+    QColor m_obj_color = QColor("#FF5000");
 };
 
 #endif

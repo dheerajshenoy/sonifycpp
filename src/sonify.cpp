@@ -33,11 +33,161 @@ Sonify::Sonify(QWidget *parent)
     this->show();
     /*Open("/home/neo/Gits/sonifycpp/test2.png");*/
 
-
+    initLuaBindings();
 
     /*ConvertToVideo();*/
     m_recorder->setGraphicsView(gv);
 }
+
+int MyFunc(lua_State *s)
+{
+    int a = lua_tointeger(s, 1);
+    int b = lua_tointeger(s, 2);
+
+    int result = a + b;
+
+    lua_pushinteger(s, result);
+
+    return 1;
+}
+
+void Sonify::initLuaBindings()
+{
+    lua_register(m_lua_state, "MyFunc", MyFunc);
+
+    luaopen_base(m_lua_state);
+    if (checkLua(m_lua_state, luaL_dofile(m_lua_state, "script.lua")).status)
+    {
+        // Read defaults
+
+        lua_getglobal(m_lua_state, "defaults");
+
+        if (lua_istable(m_lua_state, -1))
+        {
+            lua_pushstring(m_lua_state, "object_color");
+            lua_gettable(m_lua_state, -2);
+            if (lua_isstring(m_lua_state, -1))
+            {
+                gv->setObjColor(lua_tostring(m_lua_state, -1));
+            }
+            lua_pop(m_lua_state, 1);
+
+            // Default sample rate
+
+            lua_pushstring(m_lua_state, "samples");
+            lua_gettable(m_lua_state, -2);
+            if (lua_isnumber(m_lua_state, -1))
+            {
+                m_num_samples_spinbox->setValue(static_cast<int>(lua_tonumber(m_lua_state, -1)));
+            }
+            lua_pop(m_lua_state, 1);
+
+            lua_pushstring(m_lua_state, "traversal");
+            lua_gettable(m_lua_state, -2);
+            if (lua_isnumber(m_lua_state, -1))
+            {
+                int index = static_cast<int>(lua_tonumber(m_lua_state, -1));
+                if (index <= m_traverse_combo->count() && index >= 0)
+                    m_traverse_combo->setCurrentIndex(index);
+            }
+            lua_pop(m_lua_state, 1);
+
+            // get default resolution if any
+            lua_pushstring(m_lua_state, "resolution");
+            lua_gettable(m_lua_state, -2);
+
+            if (lua_istable(m_lua_state, -1))
+            {
+
+                lua_pushstring(m_lua_state, "height");
+                lua_gettable(m_lua_state, -2);
+
+                if (lua_isnumber(m_lua_state, -1))
+                    m_def_height = lua_tonumber(m_lua_state, -1);
+
+                lua_pop(m_lua_state, 1);
+
+                lua_pushstring(m_lua_state, "width");
+                lua_gettable(m_lua_state, -2);
+
+                if (lua_isnumber(m_lua_state, -1))
+                    m_def_width = lua_tonumber(m_lua_state, -1);
+
+                lua_pop(m_lua_state, 1);
+
+                lua_pushstring(m_lua_state, "keep_aspect");
+                lua_gettable(m_lua_state, -2);
+
+                if (lua_isboolean(m_lua_state, -1))
+                    m_def_keep_aspect = lua_toboolean(m_lua_state, -1);
+
+                lua_pop(m_lua_state, 1);
+
+                lua_pushstring(m_lua_state, "ask_for_resize");
+                lua_gettable(m_lua_state, -2);
+
+                if (lua_isboolean(m_lua_state, -1))
+                    m_def_ask_for_resize = lua_toboolean(m_lua_state, -1);
+
+            }
+
+            lua_pop(m_lua_state, 1);
+        }
+
+        lua_pop(m_lua_state, 1);
+
+        lua_getglobal(m_lua_state, "maps");
+
+        if (lua_istable(m_lua_state, -1))
+        {
+            // Iterate through the maps table
+            lua_pushnil(m_lua_state);  // First key
+            while (lua_next(m_lua_state, -2) != 0)
+            {
+                // Now 'key' is at index -2 and 'value' at index -1
+                // Check if value is a table
+                if (lua_istable(m_lua_state, -1))
+                {
+
+                    // Get the 'name' field from the table
+                    lua_getfield(m_lua_state, -1, "name");
+                    const char* name = lua_tostring(m_lua_state, -1);
+                    qDebug() << "Name: " << name;
+                    lua_pop(m_lua_state, 1);  // Remove 'name' value
+
+                    // Get the 'func' field from the table
+                    lua_getfield(m_lua_state, -1, "func");
+                    if (lua_isfunction(m_lua_state, -1))
+                    {
+                        if (lua_pcall(m_lua_state, 0, 0, 0) != LUA_OK)
+                        {
+                            qDebug() << "CANNOT CALL FUNCTION" << lua_tostring(m_lua_state, -1);
+                            lua_pop(m_lua_state, 1);
+                        }
+
+                        else {
+                            lua_pop(m_lua_state, 1);
+                        }
+                    }
+                }
+                /*lua_pop(m_lua_state, 1);  // Remove value, keep key for next iteration*/
+            }
+        }
+    }
+}
+
+LuaError Sonify::checkLua(lua_State *s, int r)
+{
+    LuaError l;
+    if (r != LUA_OK)
+    {
+        l.status = false;
+        l.errmsg = lua_tostring(s, -1);
+    }
+
+    return l;
+}
+
 
 void Sonify::initSidePanel()
 {
@@ -82,7 +232,6 @@ void Sonify::initWidgets()
     m_num_samples_spinbox = new QSpinBox();
     m_num_samples_spinbox->setMinimum(1);
     m_num_samples_spinbox->setMaximum(4000);
-    m_num_samples_spinbox->setValue(1024);
     m_splitter = new QSplitter();
     m_progress_bar = new QProgressBar();
     m_stop_sonification_btn = new QPushButton("Stop");
@@ -92,17 +241,23 @@ void Sonify::initWidgets()
     m_status_bar_layout = new QHBoxLayout();
     m_statusbar_msg_label = new QLabel();
 
-    m_traverse_combo->addItem("Left to Right");
-    m_traverse_combo->addItem("Right to Left");
-    m_traverse_combo->addItem("Top to Bottom");
-    m_traverse_combo->addItem("Bottom to Top");
-    m_traverse_combo->addItem("Circle Outwards");
-    m_traverse_combo->addItem("Circle Inwards");
-    m_traverse_combo->addItem("Clockwise");
-    m_traverse_combo->addItem("Anti-Clockwise");
-    m_traverse_combo->addItem("Select Region");
-    m_traverse_combo->addItem("Draw Path");
-    m_traverse_combo->addItem("Random Paths");
+    m_traversal_name_list = {
+        "Left to Right",
+        "Right to Left",
+        "Top to Bottom",
+        "Bottom to Top",
+        "Circle Outwards",
+        "Circle Inwards",
+        "Clockwise",
+        "Anti-Clockwise",
+        "Draw Path",
+        "Select Region",
+    };
+
+    for(const QString &t : m_traversal_name_list)
+    {
+        m_traverse_combo->addItem(t);
+    }
 
     m_widget->setLayout(m_layout);
 
@@ -347,7 +502,17 @@ void Sonify::Open(QString filename)
         filename = files[0];
     }
 
-    AskForResize(filename);
+    if (m_def_ask_for_resize)
+        AskForResize(filename);
+    else {
+        m_pix = QPixmap(filename);
+        if (m_def_keep_aspect)
+            m_pix = m_pix.scaled(m_def_width, m_def_height, Qt::KeepAspectRatio);
+        else
+            m_pix = m_pix.scaled(m_def_width, m_def_height, Qt::IgnoreAspectRatio);
+    }
+
+    gv->setPixmap(m_pix);
     m_sonify_btn->setEnabled(true);
 }
 
@@ -361,7 +526,7 @@ void Sonify::doSonify()
     m_num_samples_spinbox->setEnabled(false);
     sonification->setNumSamples(m_num_samples_spinbox->value());
 
-    if (m_traverse_combo->currentText() == "Left to Right")
+    if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::LEFT_TO_RIGHT])
     {
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
@@ -369,7 +534,7 @@ void Sonify::doSonify()
         sonification->Sonify(m_pix, gv, m_mode);
     }
 
-    else if (m_traverse_combo->currentText() == "Right to Left")
+    else if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::RIGHT_TO_LEFT])
     {
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
@@ -377,7 +542,7 @@ void Sonify::doSonify()
         sonification->Sonify(m_pix, gv, m_mode);
     }
 
-    else if (m_traverse_combo->currentText() == "Top to Bottom")
+    else if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::TOP_TO_BOTTOM])
     {
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
@@ -385,7 +550,7 @@ void Sonify::doSonify()
         sonification->Sonify(m_pix, gv, m_mode);
     }
 
-    else if (m_traverse_combo->currentText() == "Bottom to Top")
+    else if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::BOTTOM_TO_TOP])
     {
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
@@ -393,7 +558,7 @@ void Sonify::doSonify()
         sonification->Sonify(m_pix, gv, m_mode);
     }
 
-    else if (m_traverse_combo->currentText() == "Circle Outwards")
+    else if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::CIRCLE_OUTWARDS])
     {
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
@@ -401,7 +566,7 @@ void Sonify::doSonify()
         sonification->Sonify(m_pix, gv, m_mode);
     }
 
-    else if (m_traverse_combo->currentText() == "Circle Inwards")
+    else if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::CIRCLE_INWARDS])
     {
         m_stop_sonification_btn->setVisible(true);
         m_progress_bar->setVisible(true);
@@ -409,7 +574,7 @@ void Sonify::doSonify()
         sonification->Sonify(m_pix, gv, m_mode);
     }
 
-    else if (m_traverse_combo->currentText() == "Clockwise")
+    else if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::CLOCKWISE])
     {
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
@@ -417,7 +582,7 @@ void Sonify::doSonify()
         sonification->Sonify(m_pix, gv, m_mode);
     }
 
-    else if (m_traverse_combo->currentText() == "Anti-Clockwise")
+    else if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::ANTICLOCKWISE])
     {
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
@@ -425,7 +590,7 @@ void Sonify::doSonify()
         sonification->Sonify(m_pix, gv, m_mode);
     }
 
-    else if (m_traverse_combo->currentText() == "Draw Path")
+    else if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::PATH])
     {
         gv->setDrawPathMode(true);
         connect(gv, &GV::drawPathFinished, this, [&]() {
@@ -474,6 +639,8 @@ void Sonify::AskForResize(QString filename)
     *keep_original_btn = new QPushButton("Ignore and Keep Original Dimension");
     QCheckBox *keep_aspect_ratio_cb = new QCheckBox();
 
+    keep_aspect_ratio_cb->setChecked(m_def_keep_aspect);
+
     connect(ok_btn, &QPushButton::clicked, this, [&]() {
 
         auto width = input_img_width->text().toInt();
@@ -494,8 +661,16 @@ void Sonify::AskForResize(QString filename)
 
     input_img_width->setRange(0, 5000);
     input_img_height->setRange(0, 5000);
-    input_img_width->setValue(m_pix.width());
-    input_img_height->setValue(m_pix.height());
+
+    if (m_def_width > -1)
+        input_img_width->setValue(m_def_width);
+    else
+        input_img_width->setValue(m_pix.width());
+
+    if (m_def_height > -1)
+        input_img_height->setValue(m_def_height);
+    else
+        input_img_height->setValue(m_pix.height());
 
     ask_layout->addWidget(msg, 0, 0, 1, 2);
     ask_layout->addWidget(new QLabel("Width"), 1, 0);

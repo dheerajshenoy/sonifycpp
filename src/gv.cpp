@@ -75,7 +75,7 @@ void GV::setTraverse(Traverse t)
 
             if (!m_li)
             {
-                m_li = new AnimatedLineItem();
+                m_li = new AnimatedLineItem(m_obj_color);
                 m_scene->addItem(m_li);
             }
 
@@ -90,7 +90,7 @@ void GV::setTraverse(Traverse t)
 
             if (!m_li)
             {
-                m_li = new AnimatedLineItem();
+                m_li = new AnimatedLineItem(m_obj_color);
                 m_scene->addItem(m_li);
                 qDebug() << "DD";
             }
@@ -105,7 +105,7 @@ void GV::setTraverse(Traverse t)
 
             if (!m_li)
             {
-                m_li = new AnimatedLineItem();
+                m_li = new AnimatedLineItem(m_obj_color);
                 m_scene->addItem(m_li);
             }
             connect(this, &GV::audioIndexSet, m_li, [&]() {
@@ -119,7 +119,7 @@ void GV::setTraverse(Traverse t)
 
             if (!m_li)
             {
-                m_li = new AnimatedLineItem();
+                m_li = new AnimatedLineItem(m_obj_color);
                 m_scene->addItem(m_li);
             }
             connect(this, &GV::audioIndexSet, m_li, [&]() {
@@ -133,7 +133,7 @@ void GV::setTraverse(Traverse t)
 
             if (!m_ci)
             {
-                m_ci = new AnimatedCircleItem();
+                m_ci = new AnimatedCircleItem(m_obj_color);
                 m_ci->setImageHeight(m_height);
                 m_ci->setImageWidth(m_width);
                 m_ci->setCenter();
@@ -150,7 +150,7 @@ void GV::setTraverse(Traverse t)
 
             if (!m_ci)
             {
-                m_ci = new AnimatedCircleItem();
+                m_ci = new AnimatedCircleItem(m_obj_color);
                 m_ci->setImageHeight(m_height);
                 m_ci->setImageWidth(m_width);
                 m_ci->setCenter();
@@ -167,7 +167,7 @@ void GV::setTraverse(Traverse t)
 
             if (!m_li)
             {
-                m_li = new AnimatedLineItem();
+                m_li = new AnimatedLineItem(m_obj_color);
                 m_li->setImageHeight(m_height);
                 m_li->setImageWidth(m_width);
                 m_li->setLength();
@@ -184,7 +184,7 @@ void GV::setTraverse(Traverse t)
 
             if (!m_li)
             {
-                m_li = new AnimatedLineItem();
+                m_li = new AnimatedLineItem(m_obj_color);
                 m_li->setImageHeight(m_height);
                 m_li->setImageWidth(m_width);
                 m_li->setLength();
@@ -201,7 +201,7 @@ void GV::setTraverse(Traverse t)
 
             if (!m_pathi)
             {
-                m_pathi = new AnimatedPathItem();
+                m_pathi = new AnimatedPathItem(m_obj_color);
                 m_scene->addItem(m_pathi);
             }
             connect(this, &GV::audioIndexSet, m_pathi, [&]() {
@@ -307,3 +307,10 @@ void GV::dragEnterEvent(QDragEnterEvent *e)
 
 void GV::dragMoveEvent(QDragMoveEvent *e)
 {}
+
+// Function to set the color of "object" (line or circle or path) drawn over the image
+void GV::setObjColor(QString color)
+{
+    if (QColor::isValidColorName(color))
+        m_obj_color = QColor(color);
+}

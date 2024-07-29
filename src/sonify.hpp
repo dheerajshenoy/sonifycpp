@@ -23,6 +23,7 @@
 #include <qt6/QtWidgets/QLabel>
 #include <qt6/QtWidgets/QSpinBox>
 #include <qt6/QtCore/QTimer>
+#include <qt6/QtCore/QDebug>
 #include <qt6/QtCore/QThread>
 #include <qt6/QtConcurrent/QtConcurrent>
 #include <qt6/QtMultimedia/QWindowCapture>
@@ -42,6 +43,12 @@
 #include "aboutdialog.hpp"
 #include "screenRecorder.hpp"
 
+extern "C" {
+    #include <lualib.h>
+    #include <lua.h>
+    #include <lauxlib.h>
+}
+
 /*#include <opencv4/opencv2/opencv.hpp>*/
 /**/
 /**/
@@ -51,6 +58,12 @@
 /*#include <libavutil/time.h>*/
 /*#include <libswscale/swscale.h>*/
 /*}*/
+
+struct LuaError
+{
+    bool status = true;
+    const char* errmsg = "";
+};
 
 class Sonify : public QMainWindow
 {
@@ -70,7 +83,9 @@ private:
     bool Save(QString filename = "");
     void setMsg(QString msg, int s = -1);
     void doSonify();
+    LuaError checkLua(lua_State *, int);
     void initConnections();
+    void initLuaBindings();
     void initChart();
     void initMenu();
     void initWidgets();
@@ -129,6 +144,15 @@ private:
 
     WaveformWidget *m_wf_widget = nullptr;
     ScreenRecorder *m_recorder = new ScreenRecorder();
+
+    lua_State *m_lua_state = luaL_newstate();
+
+    QStringList m_traversal_name_list;
+
+    bool    m_def_keep_aspect = false,
+            m_def_ask_for_resize = true;
+    int m_def_height = -1;
+    int m_def_width = -1;
 };
 
 

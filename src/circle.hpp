@@ -11,9 +11,9 @@ class AnimatedCircleItem : public QObject, public QGraphicsEllipseItem {
     Q_PROPERTY(qreal radius READ radius WRITE setRadius)
 
 public:
-    AnimatedCircleItem()
+    AnimatedCircleItem(QColor color)
     {
-        this->setPen(QPen(Qt::red, 2));
+        this->setPen(QPen(color, 2));
         this->setZValue(1);
     }
 

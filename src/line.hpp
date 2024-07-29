@@ -10,9 +10,9 @@
 class AnimatedLineItem : public QObject, public QGraphicsLineItem {
     Q_OBJECT
 public:
-    AnimatedLineItem()
+    AnimatedLineItem(QColor color)
     {
-        this->setPen(QPen(Qt::red, 2));
+        this->setPen(QPen(color, 2));
         this->setZValue(1);
     }
 

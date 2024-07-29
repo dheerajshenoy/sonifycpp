@@ -10,10 +10,10 @@ class AnimatedPathItem : public QObject, public QGraphicsEllipseItem
 {
     Q_OBJECT
 public:
-    AnimatedPathItem()
+    AnimatedPathItem(QColor color)
     {
-        this->setPen(QPen(Qt::yellow, 2));
-        this->setBrush(QBrush(Qt::yellow));
+        this->setPen(QPen(color, 2));
+        this->setBrush(QBrush(color));
         this->setRect(0, 0, 10, 10);
     }
     using QGraphicsEllipseItem::QGraphicsEllipseItem;
