@@ -32,12 +32,10 @@ Sonify::Sonify(QWidget *parent)
     initMenu();
     initConnections();
     this->show();
-    /*Open("/home/neo/Gits/sonifycpp/test2.png");*/
+    m_recorder->setGraphicsView(gv);
 
     initLuaBindings();
 
-    /*ConvertToVideo();*/
-    m_recorder->setGraphicsView(gv);
 }
 
 int MyFunc(lua_State *s)
@@ -75,7 +73,7 @@ void Sonify::initLuaBindings()
     {
         // Read defaults
 
-        lua_getglobal(m_lua_state, "defaults");
+        lua_getglobal(m_lua_state, "Defaults");
 
         if (lua_istable(m_lua_state, -1))
         {
@@ -151,7 +149,8 @@ void Sonify::initLuaBindings()
 
         lua_pop(m_lua_state, 1);
 
-        lua_getglobal(m_lua_state, "maps");
+        // Get all the mapping functions defined (if any)
+        lua_getglobal(m_lua_state, "Maps");
 
         if (lua_istable(m_lua_state, -1))
         {
@@ -189,6 +188,7 @@ void Sonify::initLuaBindings()
             }
         }
     }
+
 }
 
 LuaError Sonify::checkLua(lua_State *s, int r)

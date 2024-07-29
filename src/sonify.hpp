@@ -69,6 +69,7 @@ class Sonify : public QMainWindow
 public:
     Sonify(QWidget *parent = nullptr);
     ~Sonify();
+    void Open(QString filename = "");
 
 private:
 
@@ -77,7 +78,6 @@ private:
     void Pause();
     void PlayAudio();
     void Reset();
-    void Open(QString filename = "");
     bool Save(QString filename = "");
     void setMsg(QString msg, int s = -1);
     void doSonify();
