@@ -44,6 +44,10 @@ Apart from sonifying the images, sonifyCPP ships with few features.
 
     Visualize the sonified sound waveform
 
+* Frequency Spectrum Analyzer
+
+    Visualize the frequency vs amplitude plot
+
 * Lua scripting
 
     Able to set options of the program in a script file. For now, only defaults can be set. In the future, I am planning to add the ability to create mapping functions from within lua to call in the C++ code for sonifying. The file can look something like this.
@@ -196,11 +200,13 @@ https://github.com/user-attachments/assets/5749613d-6004-4d84-90ae-adaa8904268f
 
 1. Make sure you have the following dependencies
     
-    - Qt6
-    - libsndfile
-    - SDL2
+    - `Qt6` (GUI)
+    - `libsndfile` (reading and writing audio files)
+    - `SDL2` (audio playback)
+    - `lua` (scripting)
+    - `fftw3` (fast fourier transforms and inverse transforms)
 
-Since I use Arch Linux, the commands to install these packages is `sudo pacman -S qt6 libsndfile sdl2`
+Since I use Arch Linux, the commands to install these packages is `sudo pacman -S qt6 libsndfile sdl2 fftw`
 
 2. Clone this repo and go to the directory
     
