@@ -5,7 +5,8 @@ Convert images to audio signals.
 
 
 1. [Introduction](#introduction)
-2. [Traversal Methods](#traversal)
+2. [Features](#features)
+3. [Traversal Methods](#traversal)
     1. [Left to Right (Linear)](#left_to_right)
     2. [Right to Left (Linear)](#right_to_left)
     3. [Top to Bottom (Linear)](#top_to_bottom)
@@ -15,11 +16,11 @@ Convert images to audio signals.
     7. [Clockwise (Linear)](#clockwise)
     8. [Anti-Clockwise (Linear)](#anti_clockwise)
     9. [Draw Path](#draw_path)
-3. [Pixel Mapping](#pixel_mapping)
-4. [Things to do](#todo)
-5. [Demo](#demo)
-6. [Installation](#installation)
-7. [Changelogs and Bug fixes](#changelogs_and_bug_fixes)
+4. [Pixel Mapping](#pixel_mapping)
+5. [Things to do](#todo)
+6. [Demo](#demo)
+7. [Installation](#installation)
+8. [Changelogs and Bug fixes](#changelogs_and_bug_fixes)
 
 <a name="introduction"/>
 
@@ -28,6 +29,20 @@ Convert images to audio signals.
 Image sonification refers to the process of converting images to audio signals. This is done by mapping the pixels of the image to frequencies of sound. The way in which the image is traversed changes the resultant audio, and the way in which the pixels are mapped to frequencies also changes the audio. So, there can be an infinite possibilites of mapping things.
 
 This project is a performant successor to [Sonify](https://github.com/dheerajshenoy/sonify/) which was written in Python.
+
+<a name="features" />
+
+## Features
+
+Apart from sonifying the images, sonifyCPP ships with few features.
+
+* Tone Generator
+
+    Just generate single frequency tones. It's fun
+
+* Waveform visualizer
+
+    Visualize the sonified sound waveform
 
 <a name="traversal"/>
 
@@ -122,6 +137,7 @@ Credit: [Link](https://www.seeingwithsound.com/im2sound.htm)
 18. [ ] Spectrogram: Display a spectrogram that shows the frequency content of the sonified sound over time.
 19. [ ] 3D Visualization: Provide a 3D view of the image and its corresponding soundscape.
 20. [ ] **Handle Large Images**
+21. [ ] Frequency Analyzer
 
 <a name="demo"/>
 
