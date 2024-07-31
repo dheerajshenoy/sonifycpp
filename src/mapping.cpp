@@ -153,7 +153,7 @@ QVector<short> Mapping::MapFull2(QVector<PixelColumn> &pixelCol)
     {
         p = pixelCol[i];
         auto hsv = QColor(p.pixel).toHsv();
-        f = LinearMap(0, 360, 20, 400, hsv.hue()) / static_cast<double>(N);
+        f = LinearMap(0, 360, 4000, 0, hsv.hue()) / static_cast<double>(N);
         wave = generateSineWave(0.5, f, 1);
         fs = utils::addVectors(fs, wave);
     }

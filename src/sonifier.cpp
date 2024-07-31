@@ -34,7 +34,7 @@ void Sonifier::processImageChunk__LeftToRight(int startX, int endX, void *s)
         for(int y=0; y < son->m_img.height(); y++)
             pixcols[y] = PixelColumn { son->m_img.pixel(x, y), x, y };
 
-        temp = son->m_mapping->MapFull(pixcols);
+        temp = son->m_mapping->MapFull2(pixcols);
 
         int index = startX + x * nsamples;
 
