@@ -60,3 +60,10 @@ void SpectrumAnalyzer::closeEvent(QCloseEvent *e)
 {
     emit closed();
 }
+
+void SpectrumAnalyzer::keyPressEvent(QKeyEvent *e)
+{
+    if (e->key() != Qt::Key_Escape)
+        QDialog::keyPressEvent(e);
+    else {}
+}

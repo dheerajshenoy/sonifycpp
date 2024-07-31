@@ -14,6 +14,7 @@
 #include <qt6/QtGui/QColor>
 #include "utils.hpp"
 #include "notes.hpp"
+#include "pixelColumn.hpp"
 
 /*
 * ####################################################################################################
@@ -41,11 +42,16 @@ public:
     void setSampleRate(float &samplerate);
     void setSamples(int &samples);
 
+    QVector<short> MapFull(QVector<PixelColumn> &);
+    QVector<short> MapFull2(QVector<PixelColumn> &);
+    double Hue2Freq(int H);
     QVector<short> Map1(QRgb pixel, int x, int y);
-    QVector<short> Map2(QRgb pixel, int x, int y);
+    QVector<short> Pentatonic(QRgb pixel, int x, int y);
+    QVector<short> Bells(QRgb pixel, int x, int y);
+    QVector<short> generateSineWave(double amplitude, double frequency, double time);
+    QVector<short> generateBellSound(double amplitude, double frequency, double time);
 
 private:
-    QVector<short> generateSineWave(double amplitude, double frequency, double time);
 
 
     double m_samplerate;

@@ -6,6 +6,7 @@
 #include <qt6/QtCore/QVector>
 #include <qt6/QtCore/QObject>
 #include <qt6/QtGui/QCloseEvent>
+#include <qt6/QtGui/QKeyEvent>
 #include "qcustomplot.h"
 #include <fftw3.h>
 
@@ -22,6 +23,7 @@ signals:
 
 protected:
     void closeEvent(QCloseEvent *e);
+    void keyPressEvent(QKeyEvent *e);
 
 private:
     QVBoxLayout *m_layout = new QVBoxLayout();

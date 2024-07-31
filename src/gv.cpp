@@ -244,10 +244,12 @@ void GV::mousePressEvent(QMouseEvent *e)
     {
         if(m_draw_path_mode)
         {
-            QPointF s = mapToScene(e->pos());
-            m_painter_path.moveTo(s);
-            m_path_item->setPath(m_painter_path);
-            m_pathDrawnPixelsPos.push_back(s);
+            auto pos = mapToScene(e->pos());
+
+                QPointF s = pos;
+                m_painter_path.moveTo(s);
+                m_path_item->setPath(m_painter_path);
+                m_pathDrawnPixelsPos.push_back(s);
         }
     }
     QGraphicsView::mousePressEvent(e);
@@ -270,10 +272,17 @@ void GV::mouseMoveEvent(QMouseEvent *e)
 {
     if(m_draw_path_mode)
     {
-        QPointF s = mapToScene(e->pos());
-        m_painter_path.lineTo(s);
-        m_path_item->setPath(m_painter_path);
-        m_pathDrawnPixelsPos.push_back(s);
+
+        auto pos = mapToScene(e->pos());
+        auto posx = pos.x();
+        auto posy = pos.y();
+        if (posx >= 0 && posx < m_pi->pixmap().width() && posy >=0 && posy < m_pi->pixmap().height())
+        {
+            QPointF s = mapToScene(e->pos());
+            m_painter_path.lineTo(s);
+            m_path_item->setPath(m_painter_path);
+            m_pathDrawnPixelsPos.push_back(s);
+        }
     }
     QGraphicsView::mouseMoveEvent(e);
 }
@@ -292,7 +301,6 @@ void GV::dropEvent(QDropEvent *e)
     QString droppedFilePath = e->mimeData()->urls()[0].toLocalFile();
     e->acceptProposedAction();
     emit dropFile(droppedFilePath);
-
 }
 
 void GV::dragEnterEvent(QDragEnterEvent *e)
@@ -302,7 +310,6 @@ void GV::dragEnterEvent(QDragEnterEvent *e)
         e->setAccepted(true);
         this->update();
     }
-
 }
 
 void GV::dragMoveEvent(QDragMoveEvent *e)

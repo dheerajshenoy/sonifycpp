@@ -5,7 +5,12 @@
 #include <qt6/QtGui/QRgb>
 #include <qt6/QtCore/QObject>
 #include <qt6/QtCore/QVector>
+#include <qt6/QtCore/QMutex>
+#include <qt6/QtCore/QMutexLocker>
+#include <qt6/QtCore/QThreadPool>
+#include <qt6/QtConcurrent/QtConcurrent>
 #include "traverse.hpp"
+#include "pixelColumn.hpp"
 
 /*
 #ifdef __linux__
@@ -57,6 +62,23 @@ private:
     QVector<QPointF> m_pixpos;
 
     bool m_stop_sonifying = false;
+    QThreadPool m_threadpool;
+    QImage m_img;
+
+
+    /*static void processImageChunk__LeftToRight(QImage &img, int startX, int endX, Mapping *, QVector<short> &, QMutex &, std::atomic<int> &);*/
+    static void processImageChunk__LeftToRight(int startX, int endX, void *userData);
+    static void processImageChunk__RightToLeft(int startX, int endX, void *userData);
+    static void processImageChunk__TopToBottom(int startY, int endY, void *userData);
+    static void processImageChunk__BottomToTop(int startY, int endY, void *userData);
+    static void processImageChunk__CircleOutwards(int &startRadius, int &endRadius, int &lastRadius, void *userData);
+    static void processImageChunk__Clockwise(int &startAngle, int &endAngle, void *userData);
+    static void processImageChunk__AntiClockwise(int &startAngle, int &endAngle, void *userData);
+
+    QVector<short> m_audioData;
+    std::atomic<int> m_progressCounter = 0;
+
+    QMutex m_mutex;
 };
 
 #endif

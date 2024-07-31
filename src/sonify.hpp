@@ -40,12 +40,7 @@
 #include "aboutdialog.hpp"
 #include "screenRecorder.hpp"
 #include "SpectrumAnalyzer.hpp"
-
-extern "C" {
-    #include <lualib.h>
-    #include <lua.h>
-    #include <lauxlib.h>
-}
+#include "sol/sol.hpp"
 
 /*#include <opencv4/opencv2/opencv.hpp>*/
 /**/
@@ -56,12 +51,6 @@ extern "C" {
 /*#include <libavutil/time.h>*/
 /*#include <libswscale/swscale.h>*/
 /*}*/
-
-struct LuaError
-{
-    bool status = true;
-    const char* errmsg = "";
-};
 
 class Sonify : public QMainWindow
 {
@@ -81,7 +70,6 @@ private:
     bool Save(QString filename = "");
     void setMsg(QString msg, int s = -1);
     void doSonify();
-    LuaError checkLua(lua_State *, int);
     void initConfigDir();
     void initConnections();
     void initLuaBindings();
@@ -145,8 +133,6 @@ private:
     WaveformWidget *m_wf_widget = nullptr;
     ScreenRecorder *m_recorder = new ScreenRecorder();
 
-    lua_State *m_lua_state = luaL_newstate();
-
     QStringList m_traversal_name_list;
 
     bool    m_def_keep_aspect = false,
@@ -158,6 +144,7 @@ private:
     SpectrumAnalyzer *m_sp = nullptr;
     QString m_script_file_path, m_config_dir;
 
+    sol::state m_lua_state;
 };
 
 

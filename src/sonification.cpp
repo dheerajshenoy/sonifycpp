@@ -77,8 +77,11 @@ void Sonification::Sonify(QPixmap &pix, GV *gv, Traverse mode)
     }
 
     if (mode == Traverse::PATH)
+    {
         sonifier->setParameters(pix, mode, gv->getPathDrawnPos());
-    sonifier->setParameters(pix, mode);
+    }
+    else
+        sonifier->setParameters(pix, mode);
 
     if (!m_thread)
     {
@@ -178,16 +181,14 @@ double Sonification::getDuration() noexcept
     return m_audioData.size() / m_SampleRate;
 }
 
-void Sonification::sdlAudioCallback(void* userdata, Uint8* _stream, int _len)
+void Sonification::sdlAudioCallback(void* userdata, Uint8* _stream, int len)
 {
 
     Sonification *s = static_cast<Sonification*>(userdata);
 
     if (s->m_audioData.size() == 0) return;
 
-
     Sint16 *stream = reinterpret_cast<Sint16*>(_stream);
-    int len = _len / 2;
 
     int bytesToCopy = std::min(static_cast<int>(s->m_audioData.size() * sizeof(short) - s->m_audioOffset), len);
 
@@ -204,7 +205,6 @@ void Sonification::sdlAudioCallback(void* userdata, Uint8* _stream, int _len)
     auto d = s->m_audioOffset / sizeof(short);
     emit s->audioprogress(d);
     emit s->audioindex(d / static_cast<double>(s->m_NumSamples));
-
 
 }
 
@@ -237,3 +237,4 @@ void Sonification::stopSonification(bool state) noexcept
 
     emit sonificationStopped();
 }
+

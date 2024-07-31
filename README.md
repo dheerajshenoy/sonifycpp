@@ -223,6 +223,25 @@ Since I use Arch Linux, the commands to install these packages is `sudo pacman -
 
 # Chanegelogs and Bug fixes
 
+- 31 July 2024
+
+    - New Feature
+
+        1. *Multi-threading support*. The image traversal algorithm performance has been boosted through multithreading support. *NOTE* : Not all traversal support multi-threading for now. Only the following supports multi-threading
+            - Left to Right
+            - Right to Left
+            - Top to Bottom
+            - Bottom to Top
+            
+            The rest will still sadly be single-threaded until it's updated.
+
+        2. *Effecient pixel reading*. This is bit technical. Previously, pixels from image were read one by one and sine waves were generated. This is very memory and CPU intensive when the number of pixels are more. So, to increase the efficiency, pixels are read in groups, and the waves are produced for the group.
+
+        3. Tone generator
+            - *Wave visualizer for tone generator*. See realtime changes in frequency, amplitude and duration through plot of the tone being generated.
+            - *Progress of tone being played*.
+
+
 - 29 July 2024
 
     - New feature

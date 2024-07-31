@@ -35,7 +35,6 @@ Sonify::Sonify(QWidget *parent)
     m_recorder->setGraphicsView(gv);
 
     initLuaBindings();
-
 }
 
 int MyFunc(lua_State *s)
@@ -67,142 +66,80 @@ void Sonify::initLuaBindings()
     QFile file = QFile(m_script_file_path);
     if(!file.exists()) return; // If no script file, don't load lua
 
-    luaopen_base(m_lua_state);
+    m_lua_state.open_libraries(sol::lib::io, sol::lib::base, sol::lib::table);
 
-    if (checkLua(m_lua_state, luaL_dofile(m_lua_state, m_script_file_path.toStdString().c_str())).status)
+    try
     {
-        // Read defaults
+        m_lua_state.safe_script_file(m_script_file_path.toStdString());
+        qDebug() << "Lua script loaded";
+    }
+    catch (const sol::error& e)
+    {
+        qDebug() << "Error while loading lua script: " << e.what();
+        return;
+    }
 
-        lua_getglobal(m_lua_state, "Defaults");
+    // Get defaults table
+    sol::optional<sol::table> defaults_table_exists = m_lua_state["Defaults"];
 
-        if (lua_istable(m_lua_state, -1))
+    if (defaults_table_exists)
+    {
+        sol::table defaults_table = defaults_table_exists.value();
+
+        gv->setObjColor(defaults_table["object_color"].get_or<QString>("#FF5000"));
+        m_num_samples_spinbox->setValue(defaults_table["samples"].get_or(1024));
+        m_traverse_combo->setCurrentIndex(defaults_table["traverse_mode"].get_or(1) - 1);
+
+        sol::optional<sol::table> res_table_exists = defaults_table["resolution"];
+        if (res_table_exists)
         {
-            lua_pushstring(m_lua_state, "object_color");
-            lua_gettable(m_lua_state, -2);
-            if (lua_isstring(m_lua_state, -1))
+            sol::table res_table = res_table_exists.value();
+            m_def_width = res_table["width"].get_or(-1);
+            m_def_height = res_table["height"].get_or(-1);
+            m_def_keep_aspect = res_table["keep_aspect"].get_or(true);
+            m_def_ask_for_resize = res_table["ask_for_resize"].get_or(true);
+            
+            auto side_panel_location = res_table["side_panel"].get_or<QString>("left");
+            if (side_panel_location == "right")
             {
-                gv->setObjColor(lua_tostring(m_lua_state, -1));
+                // TODO: Handle side panel location change
             }
-            lua_pop(m_lua_state, 1);
-
-            // Default sample rate
-
-            lua_pushstring(m_lua_state, "samples");
-            lua_gettable(m_lua_state, -2);
-            if (lua_isnumber(m_lua_state, -1))
+            else if (side_panel_location == "hidden")
+                m_side_panel->setHidden(true);
+            else if (side_panel_location == "bottom")
             {
-                m_num_samples_spinbox->setValue(static_cast<int>(lua_tonumber(m_lua_state, -1)));
-            }
-            lua_pop(m_lua_state, 1);
-
-            lua_pushstring(m_lua_state, "traversal");
-            lua_gettable(m_lua_state, -2);
-            if (lua_isnumber(m_lua_state, -1))
-            {
-                int index = static_cast<int>(lua_tonumber(m_lua_state, -1));
-                if (index <= m_traverse_combo->count() && index > 0)
-                    m_traverse_combo->setCurrentIndex(index - 1);
-            }
-            lua_pop(m_lua_state, 1);
-
-            // get default resolution if any
-            lua_pushstring(m_lua_state, "resolution");
-            lua_gettable(m_lua_state, -2);
-
-            if (lua_istable(m_lua_state, -1))
-            {
-
-                lua_pushstring(m_lua_state, "height");
-                lua_gettable(m_lua_state, -2);
-
-                if (lua_isnumber(m_lua_state, -1))
-                    m_def_height = lua_tonumber(m_lua_state, -1);
-
-                lua_pop(m_lua_state, 1);
-
-                lua_pushstring(m_lua_state, "width");
-                lua_gettable(m_lua_state, -2);
-
-                if (lua_isnumber(m_lua_state, -1))
-                    m_def_width = lua_tonumber(m_lua_state, -1);
-
-                lua_pop(m_lua_state, 1);
-
-                lua_pushstring(m_lua_state, "keep_aspect");
-                lua_gettable(m_lua_state, -2);
-
-                if (lua_isboolean(m_lua_state, -1))
-                    m_def_keep_aspect = lua_toboolean(m_lua_state, -1);
-
-                lua_pop(m_lua_state, 1);
-
-                lua_pushstring(m_lua_state, "ask_for_resize");
-                lua_gettable(m_lua_state, -2);
-
-                if (lua_isboolean(m_lua_state, -1))
-                    m_def_ask_for_resize = lua_toboolean(m_lua_state, -1);
-
+                // TODO: Handle side panel location change
             }
 
-            lua_pop(m_lua_state, 1);
+            else if (side_panel_location == "top")
+            {
+                // TODO: Handle side panel location change
+            }
+
         }
+    }
 
-        lua_pop(m_lua_state, 1);
+    // Get defaults table
+    sol::optional<sol::table> maps_table_exists = m_lua_state["Maps"];
 
-        // Get all the mapping functions defined (if any)
-        lua_getglobal(m_lua_state, "Maps");
-
-        if (lua_istable(m_lua_state, -1))
+    if (maps_table_exists)
+    {
+        for(const auto &entry : maps_table_exists.value())
         {
-            // Iterate through the maps table
-            lua_pushnil(m_lua_state);  // First key
-            while (lua_next(m_lua_state, -2) != 0)
+            sol::object key = entry.first;
+            sol::object value = entry.second;
+
+            if (value.is<sol::table>())
             {
-                // Now 'key' is at index -2 and 'value' at index -1
-                // Check if value is a table
-                if (lua_istable(m_lua_state, -1))
-                {
+                sol::table maps_table = value.as<sol::table>();
 
-                    // Get the 'name' field from the table
-                    lua_getfield(m_lua_state, -1, "name");
-                    const char* name = lua_tostring(m_lua_state, -1);
-                    qDebug() << "Name: " << name;
-                    lua_pop(m_lua_state, 1);  // Remove 'name' value
-
-                    // Get the 'func' field from the table
-                    lua_getfield(m_lua_state, -1, "func");
-                    if (lua_isfunction(m_lua_state, -1))
-                    {
-                        if (lua_pcall(m_lua_state, 0, 0, 0) != LUA_OK)
-                        {
-                            qDebug() << "CANNOT CALL FUNCTION" << lua_tostring(m_lua_state, -1);
-                            lua_pop(m_lua_state, 1);
-                        }
-
-                        else {
-                            lua_pop(m_lua_state, 1);
-                        }
-                    }
-                }
-                /*lua_pop(m_lua_state, 1);  // Remove value, keep key for next iteration*/
+                qDebug() << QString::fromStdString(maps_table["name"]);
+                maps_table["func"]();
             }
         }
     }
 
 }
-
-LuaError Sonify::checkLua(lua_State *s, int r)
-{
-    LuaError l;
-    if (r != LUA_OK)
-    {
-        l.status = false;
-        l.errmsg = lua_tostring(s, -1);
-    }
-
-    return l;
-}
-
 
 void Sonify::initSidePanel()
 {
@@ -390,6 +327,8 @@ void Sonify::initConnections()
         sonification->stopSonification(true);
         m_progress_bar->setVisible(false);
         m_stop_sonification_btn->setVisible(false);
+        m_num_samples_spinbox->setEnabled(true);
+        m_traverse_combo->setEnabled(true);
         setMsg("Sonification Stopped", 5);
     });
 
