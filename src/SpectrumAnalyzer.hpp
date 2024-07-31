@@ -16,7 +16,7 @@ class SpectrumAnalyzer : public QDialog
 public:
     SpectrumAnalyzer(QWidget *parent = nullptr);
     ~SpectrumAnalyzer();
-    void setData(QVector<short> &data, float &SampleRate);
+    void setData(QVector<short> &data, int &SampleRate);
 
 signals:
     void closed();

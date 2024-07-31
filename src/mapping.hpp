@@ -46,12 +46,12 @@ public:
     QVector<short> MapFull2(QVector<PixelColumn> &);
     double Hue2Freq(int H);
     QVector<short> Map1(QRgb pixel, int x, int y);
-    QVector<short> Pentatonic(QRgb pixel, int x, int y);
-    QVector<short> Bells(QRgb pixel, int x, int y);
-    QVector<short> generateSineWave(double amplitude, double frequency, double time);
-    QVector<short> generateBellSound(double amplitude, double frequency, double time);
 
 private:
+    short LinearMap(double inp_min, double inp_max, double out_min, double out_max, double val);
+    QVector<short> Pentatonic(QRgb pixel, int x, int y);
+    QVector<short> generateSineWave(double amplitude, double frequency, double time);
+    QVector<short> generateBellSound(double amplitude, double frequency, double time);
 
 
     double m_samplerate;

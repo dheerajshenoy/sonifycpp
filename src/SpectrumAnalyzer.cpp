@@ -14,7 +14,7 @@ SpectrumAnalyzer::SpectrumAnalyzer(QWidget *parent)
     m_plot->yAxis->setLabel("Amplitude");
 }
 
-void SpectrumAnalyzer::setData(QVector<short> &data, float &SampleRate)
+void SpectrumAnalyzer::setData(QVector<short> &data, int &SampleRate)
 {
    // Perform FFT
     int N = data.size();

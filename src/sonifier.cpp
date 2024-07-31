@@ -32,20 +32,14 @@ void Sonifier::processImageChunk__LeftToRight(int startX, int endX, void *s)
         temp.resize(nsamples);
 
         for(int y=0; y < son->m_img.height(); y++)
-        {
-            QRgb pixel = son->m_img.pixel(x, y);
-            auto sine = son->m_mapping->generateBellSound(pixel, y, x);
-            temp = utils::addVectors<short>(temp, sine);
-        }
+            pixcols[y] = PixelColumn { son->m_img.pixel(x, y), x, y };
+
+        temp = son->m_mapping->MapFull(pixcols);
 
         int index = startX + x * nsamples;
+
         for(int i=0; i < temp.size(); i++)
             son->m_audioData[index + i] = temp.at(i);
-        /*    pixcols[y] = PixelColumn { son->m_img.pixel(x, y), x, y };*/
-        /**/
-        /*temp = son->m_mapping->MapFull2(pixcols);*/
-
-
 
         QMutexLocker locker(&son->m_mutex);
         son->m_progressCounter++;

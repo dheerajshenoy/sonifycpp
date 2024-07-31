@@ -221,6 +221,7 @@ void GV::setPixmap(QPixmap &pix)
     if (!pix) return;
 
     m_pi->setPixmap(pix);
+    /*this->fitInView(m_pi);*/
 
     m_width = pix.width();
     m_height = pix.height();

@@ -241,6 +241,8 @@ Since I use Arch Linux, the commands to install these packages is `sudo pacman -
             - *Wave visualizer for tone generator*. See realtime changes in frequency, amplitude and duration through plot of the tone being generated.
             - *Progress of tone being played*.
 
+        4. Audio Effects in the works
+            - *Reverb*. This works perfectly. More effects are to be added like phaser, wah-wah, compressor etc.
 
 - 29 July 2024
 

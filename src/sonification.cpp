@@ -20,7 +20,6 @@ Sonification::Sonification()
 
     connect(sonifier, &Sonifier::sonificationDone, this, [&](QVector<short>audioData) {
         m_audioData = audioData;
-        /*AddReverb();*/
         emit sonificationDone();
     });
     connect(sonifier, &Sonifier::sonificationProgress, this, [&](int progress) {
@@ -100,17 +99,6 @@ void Sonification::Sonify(QPixmap &pix, GV *gv, Traverse mode)
 void Sonification::pause()
 {
     SDL_PauseAudioDevice(m_audioDevice, 1);
-}
-
-void Sonification::AddReverb()
-{
-    int delayMS = 500;
-    int delaySamples = (int)((float)delayMS * 44.1f);
-    float decay = 0.5f;
-    for(int i=0; i < m_audioData.size() - delaySamples; i++)
-    {
-        m_audioData[i + delaySamples] *= (short)((float) m_audioData[i] * decay);
-    }
 }
 
 void Sonification::play()
@@ -213,12 +201,17 @@ int Sonification::getNumSamples() noexcept
     return m_NumSamples;
 }
 
-float Sonification::getSampleRate() noexcept
+void Sonification::setAudioData(QVector<short> &audioData) noexcept
+{
+    m_audioData = audioData;
+}
+
+int& Sonification::getSampleRate() noexcept
 {
     return m_SampleRate;
 }
 
-QVector<short> Sonification::getAudioData() noexcept
+QVector<short>& Sonification::getAudioData() noexcept
 {
     return m_audioData;
 }

@@ -41,6 +41,7 @@
 #include "screenRecorder.hpp"
 #include "SpectrumAnalyzer.hpp"
 #include "sol/sol.hpp"
+#include "ReverbDialog.hpp"
 
 /*#include <opencv4/opencv2/opencv.hpp>*/
 /**/
@@ -92,16 +93,24 @@ private:
     bool m_isAudioPlaying = false;
 
     QMenuBar *m_menu_bar;
-    QMenu *m_file_menu,
-          *m_audio_menu,
-          *m_tools_menu,
-          *m_view_menu,
-          *m_help_menu;
+    QMenu   *m_file_menu,
+            *m_audio_menu,
+            *m_tools_menu,
+            *m_view_menu,
+            *m_effects_menu,
+            *m_help_menu;
 
     QAction *m_file__open,
             *m_file__exit;
 
     QAction *m_audio__save;
+
+    QAction *m_effects__reverb,
+            *m_effects__phaser,
+            *m_effects__distortion,
+            *m_effects__wah_wah,
+            *m_effects__filter,
+            *m_effects__pitch_shifter;
 
     QAction *m_tools__tone_generator,
             *m_tools__spectrum_analyzer,
@@ -114,8 +123,10 @@ private:
 
     QComboBox *m_traverse_combo;
 
-    QLabel *m_duration_label, *m_audio_progress_label, *m_traverse_label, *m_num_samples_label, *m_statusbar_msg_label;
-    QSpinBox *m_num_samples_spinbox;
+    QLabel *m_duration_label, *m_audio_progress_label, *m_traverse_label, *m_num_samples_label, *m_statusbar_msg_label,
+            *m_min_freq_label, *m_max_freq_label;
+
+    QSpinBox *m_num_samples_spinbox, *m_min_freq_sb, *m_max_freq_sb;
 
     QWidget *m_status_bar;
     QHBoxLayout *m_status_bar_layout;
@@ -145,6 +156,7 @@ private:
     QString m_script_file_path, m_config_dir;
 
     sol::state m_lua_state;
+
 };
 
 

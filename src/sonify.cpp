@@ -152,9 +152,15 @@ void Sonify::initSidePanel()
     m_side_panel_layout->addWidget(m_traverse_combo, 2, 1);
     m_side_panel_layout->addWidget(m_num_samples_label, 3, 0);
     m_side_panel_layout->addWidget(m_num_samples_spinbox, 3, 1);
+    m_side_panel_layout->addWidget(m_min_freq_label, 4, 0);
+    m_side_panel_layout->addWidget(m_min_freq_sb, 4, 1);
+    m_side_panel_layout->addWidget(m_max_freq_label, 5, 0);
+    m_side_panel_layout->addWidget(m_max_freq_sb, 5, 1);
+
+
 
     QLabel *m_separator = new QLabel();
-    m_side_panel_layout->addWidget(m_separator, 4, 0, 1, 1, Qt::AlignCenter);
+    m_side_panel_layout->addWidget(m_separator, 6, 0, 1, 1, Qt::AlignCenter);
 }
 
 void Sonify::initStatusbar()
@@ -184,6 +190,14 @@ void Sonify::initWidgets()
     m_num_samples_spinbox = new QSpinBox();
     m_num_samples_spinbox->setMinimum(1);
     m_num_samples_spinbox->setMaximum(4000);
+    m_max_freq_sb = new QSpinBox();
+    m_min_freq_sb = new QSpinBox();
+
+    m_min_freq_sb->setValue(0);
+    m_max_freq_sb->setValue(20000);
+
+    m_min_freq_label = new QLabel("Min Freq");
+    m_max_freq_label = new QLabel("Max Freq");
     m_splitter = new QSplitter();
     m_progress_bar = new QProgressBar();
     m_stop_sonification_btn = new QPushButton("Stop");
@@ -223,6 +237,9 @@ void Sonify::initWidgets()
     m_progress_bar->setVisible(false);
     m_stop_sonification_btn->setVisible(false);
 
+    m_min_freq_sb->setRange(0, 40000);
+    m_max_freq_sb->setRange(0, 40000);
+
     m_sonify_btn->setEnabled(false);
     gv->setAlignment(Qt::AlignmentFlag::AlignCenter);
     this->setCentralWidget(m_widget);
@@ -249,6 +266,9 @@ void Sonify::initMenu()
     m_audio__save = new QAction("Save");
 
     m_audio__save->setEnabled(false);
+    m_effects_menu = new QMenu("Effects");
+
+    m_audio_menu->addMenu(m_effects_menu);
 
     m_file_menu->addAction(m_file__open);
     m_file_menu->addAction(m_file__exit);
@@ -271,6 +291,20 @@ void Sonify::initMenu()
     m_tools_menu->addAction(m_tools__waveform);
 
     m_audio_menu->addAction(m_audio__save);
+
+
+    m_effects__reverb = new QAction("Reverb");
+    m_effects__phaser = new QAction("Phaser");
+    m_effects__distortion = new QAction("Distortion");
+    m_effects__wah_wah = new QAction("Wah-Wah");
+    m_effects__filter = new QAction("Filter");
+    m_effects__pitch_shifter = new QAction("Pitch Shifter");
+
+    m_effects_menu->addAction(m_effects__reverb);
+    m_effects_menu->addAction(m_effects__phaser);
+    m_effects_menu->addAction(m_effects__distortion);
+    m_effects_menu->addAction(m_effects__wah_wah);
+    m_effects_menu->addAction(m_effects__pitch_shifter);
 
     m_help__about = new QAction("About");
     m_help_menu->addAction(m_help__about);
@@ -418,6 +452,17 @@ void Sonify::initConnections()
     connect(m_help__about, &QAction::triggered, this, [&]() {
         AboutDialog *aboutDialog = new AboutDialog(this);
         aboutDialog->exec();
+    });
+
+    connect(m_effects__reverb, &QAction::triggered, this, [&]() {
+        ReverbDialog *reverbDialog = new ReverbDialog(this);
+        reverbDialog->setData(sonification->getAudioData(), sonification->getSampleRate());
+        connect(reverbDialog, &ReverbDialog::outputReady, this, [&](QVector<short> reverbedOutput) {
+            sonification->setAudioData(reverbedOutput);
+            qDebug() << "REVERBED";
+        });
+        reverbDialog->exec();
+
     });
 }
 

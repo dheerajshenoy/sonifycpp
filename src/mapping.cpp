@@ -47,27 +47,6 @@ QVector<short> Mapping::Pentatonic(QRgb pixel, int x, int y)
 
 }
 
-QVector<short> Mapping::Bells(QRgb pixel, int x, int y)
-{
-    QColor col = QColor(pixel).toHsv();
-
-    double intensity = qGray(pixel) / 255.0;
-
-    if (intensity < 150)
-        return generateSineWave(0, 0, 0);
-
-    auto s1 = generateSineWave(intensity, 814.0, 1);
-    auto s2 = generateSineWave(intensity, 752.0, 1);
-    auto s3 = generateSineWave(intensity, 600.0, 1);
-    auto s4 = generateSineWave(intensity, 548.0, 1);
-    auto s5 = generateSineWave(intensity, 400.0, 1);
-    auto s6 = generateSineWave(intensity, 342.0, 1);
-    auto s7 = generateSineWave(intensity, 238.0, 1);
-    auto s8 = generateSineWave(intensity, 184.0, 1);
-    auto s9 = generateSineWave(intensity, 112.0, 1);
-    return utils::addVectors(s1, s2, s3, s4, s5, s6, s7, s8, s9);
-
-}
 
 QVector<short> Mapping::generateBellSound(double _amplitude, double frequency, double time)
 {
@@ -155,6 +134,11 @@ double Mapping::Hue2Freq(int H)
     return note;
 }
 
+short Mapping::LinearMap(double inp_min, double inp_max, double out_min, double out_max, double val)
+{
+    return out_min + (val - inp_min) * (out_max - out_min) / (inp_max - inp_min);
+}
+
 QVector<short> Mapping::MapFull2(QVector<PixelColumn> &pixelCol)
 {
     QVector<short> fs;
@@ -163,13 +147,16 @@ QVector<short> Mapping::MapFull2(QVector<PixelColumn> &pixelCol)
     PixelColumn p;
     QVector<short> wave;
     double f=0;
+    double intensity = 0.f;
 
     for(int i=0; i < N; i++)
     {
         p = pixelCol[i];
-        f += p.y;
+        auto hsv = QColor(p.pixel).toHsv();
+        f = LinearMap(0, 360, 20, 400, hsv.hue()) / static_cast<double>(N);
+        wave = generateSineWave(0.5, f, 1);
+        fs = utils::addVectors(fs, wave);
     }
 
-    fs = generateBellSound(0.5, f, 1);
     return fs;
 }

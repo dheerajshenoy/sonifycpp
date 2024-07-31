@@ -32,7 +32,8 @@ HEADERS +=  src/gv.hpp \
             src/aboutdialog.hpp \
             src/screenRecorder.hpp \
             src/SpectrumAnalyzer.hpp \
-            src/pixelColumn.hpp
+            src/pixelColumn.hpp \
+            src/ReverbDialog.hpp
 
 SOURCES +=  src/gv.cpp \
             src/main.cpp \
@@ -48,3 +49,4 @@ SOURCES +=  src/gv.cpp \
             src/aboutdialog.cpp \
             src/screenRecorder.cpp \
             src/SpectrumAnalyzer.cpp \
+            src/ReverbDialog.cpp
