@@ -33,8 +33,8 @@ public:
     ~Sonifier() {}
     void setParameters(QPixmap &pix, Traverse t);
     void setParameters(QPixmap &pix, Traverse t, QVector<QPointF>);
-    void setSampleRate(float SR);
-    void setSamples(int nsamples);
+    void setSampleRate(float SR) noexcept;
+    void setSamples(int nsamples) noexcept;
     void LeftToRight();
     void RightToLeft();
     void TopToBottom();
@@ -47,6 +47,7 @@ public:
     void Sonify();
     void stopSonifying(bool state);
     bool hasStopped() { return m_stop_sonifying; }
+    void setMinMax(int &min, int &max) noexcept;
 
 signals:
     void sonificationDone(QVector<short>);

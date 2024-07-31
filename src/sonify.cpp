@@ -28,13 +28,12 @@ Sonify::Sonify(QWidget *parent)
     initConfigDir();
     initWidgets();
     initStatusbar();
-    initSidePanel();
+    initLuaBindings();
     initMenu();
     initConnections();
     this->show();
     m_recorder->setGraphicsView(gv);
 
-    initLuaBindings();
 }
 
 int MyFunc(lua_State *s)
@@ -86,9 +85,34 @@ void Sonify::initLuaBindings()
     {
         sol::table defaults_table = defaults_table_exists.value();
 
-        gv->setObjColor(defaults_table["object_color"].get_or<QString>("#FF5000"));
+        gv->setObjColor(QString::fromStdString(defaults_table["object_color"].get_or<std::string>("#FF5000")));
         m_num_samples_spinbox->setValue(defaults_table["samples"].get_or(1024));
         m_traverse_combo->setCurrentIndex(defaults_table["traverse_mode"].get_or(1) - 1);
+
+        auto side_panel_location = defaults_table["side_panel"].get_or<std::string>("left");
+
+        if (side_panel_location == "left")
+        {
+            initSidePanel();
+        }
+
+        else if (side_panel_location == "right")
+        {
+            // TODO: Handle side panel location change
+        }
+        else if (side_panel_location == "hidden")
+            m_side_panel->setHidden(true);
+
+        else if (side_panel_location == "bottom")
+        {
+            // TODO: Handle side panel location change
+        }
+
+        else if (side_panel_location == "top")
+        {
+            qDebug() << "DD";
+            initTopPanel();
+        }
 
         sol::optional<sol::table> res_table_exists = defaults_table["resolution"];
         if (res_table_exists)
@@ -98,28 +122,12 @@ void Sonify::initLuaBindings()
             m_def_height = res_table["height"].get_or(-1);
             m_def_keep_aspect = res_table["keep_aspect"].get_or(true);
             m_def_ask_for_resize = res_table["ask_for_resize"].get_or(true);
-            
-            auto side_panel_location = res_table["side_panel"].get_or<QString>("left");
-            if (side_panel_location == "right")
-            {
-                // TODO: Handle side panel location change
-            }
-            else if (side_panel_location == "hidden")
-                m_side_panel->setHidden(true);
-            else if (side_panel_location == "bottom")
-            {
-                // TODO: Handle side panel location change
-            }
-
-            else if (side_panel_location == "top")
-            {
-                // TODO: Handle side panel location change
-            }
-
         }
+            
+
     }
 
-    // Get defaults table
+    // Get maps table
     sol::optional<sol::table> maps_table_exists = m_lua_state["Maps"];
 
     if (maps_table_exists)
@@ -143,6 +151,8 @@ void Sonify::initLuaBindings()
 
 void Sonify::initSidePanel()
 {
+    m_side_panel = new QWidget();
+    m_side_panel_layout = new QGridLayout();
     m_side_panel->setFixedWidth(300);
     m_side_panel->setLayout(m_side_panel_layout);
     m_side_panel_layout->addWidget(m_sonify_btn, 0, 0, 1, 2);
@@ -156,11 +166,47 @@ void Sonify::initSidePanel()
     m_side_panel_layout->addWidget(m_min_freq_sb, 4, 1);
     m_side_panel_layout->addWidget(m_max_freq_label, 5, 0);
     m_side_panel_layout->addWidget(m_max_freq_sb, 5, 1);
-
-
+    m_splitter->addWidget(m_side_panel);
+    m_splitter->addWidget(gv);
+    m_layout->addWidget(m_splitter);
+    m_layout->addWidget(m_status_bar);
 
     QLabel *m_separator = new QLabel();
     m_side_panel_layout->addWidget(m_separator, 6, 0, 1, 1, Qt::AlignCenter);
+
+    /*delete m_top_panel;*/
+    /*m_top_panel = nullptr;*/
+    /*delete m_top_panel_layout;*/
+    /*m_top_panel_layout = nullptr;*/
+}
+
+void Sonify::initTopPanel()
+{
+    m_top_panel = new QWidget();
+    m_top_panel_layout = new QHBoxLayout();
+    m_top_panel->setLayout(m_top_panel_layout);
+    m_top_panel_layout->addWidget(m_sonify_btn);
+    m_top_panel_layout->addWidget(m_play_btn);
+    m_top_panel_layout->addWidget(m_reset_btn);
+    m_top_panel_layout->addWidget(m_traverse_label);
+    m_top_panel_layout->addWidget(m_traverse_combo);
+    m_top_panel_layout->addWidget(m_num_samples_label);
+    m_top_panel_layout->addWidget(m_num_samples_spinbox);
+    m_top_panel_layout->addWidget(m_min_freq_label);
+    m_top_panel_layout->addWidget(m_min_freq_sb);
+    m_top_panel_layout->addWidget(m_max_freq_label);
+    m_top_panel_layout->addWidget(m_max_freq_sb, 1);
+    m_top_panel->setFixedHeight(40);
+    m_layout->addWidget(m_top_panel);
+    m_layout->addWidget(m_splitter);
+    m_layout->addWidget(m_status_bar);
+    m_splitter->addWidget(gv);
+    m_layout->setStretchFactor(gv, 1);
+
+    /*delete m_side_panel;*/
+    /*m_side_panel = nullptr;*/
+    /*delete m_side_panel_layout;*/
+    /*m_side_panel_layout = nullptr;*/
 }
 
 void Sonify::initStatusbar()
@@ -176,12 +222,10 @@ void Sonify::initStatusbar()
 void Sonify::initWidgets()
 {
     m_widget = new QWidget();
-    m_side_panel = new QWidget();
-    m_side_panel_layout = new QGridLayout();
     m_layout = new QVBoxLayout();
-    m_sonify_btn = new QPushButton("Sonify");
-    m_play_btn = new QPushButton("Play");
-    m_reset_btn = new QPushButton("Reset");
+    m_sonify_btn = new QPushButton(QIcon(":/icons/sonify-button.svg"), "");
+    m_play_btn = new QPushButton(QIcon(":/icons/play-button.svg"), "");
+    m_reset_btn = new QPushButton(QIcon(":/icons/stop-button.svg"), "");
     m_traverse_combo = new QComboBox();
     m_duration_label = new QLabel("Duration: ");
     m_audio_progress_label = new QLabel("");
@@ -192,6 +236,11 @@ void Sonify::initWidgets()
     m_num_samples_spinbox->setMaximum(4000);
     m_max_freq_sb = new QSpinBox();
     m_min_freq_sb = new QSpinBox();
+
+    m_sonify_btn->setToolTip("Sonify");
+    m_reset_btn->setToolTip("Reset");
+    m_play_btn->setToolTip("Play");
+
 
     m_min_freq_sb->setValue(0);
     m_max_freq_sb->setValue(20000);
@@ -227,11 +276,9 @@ void Sonify::initWidgets()
 
     m_widget->setLayout(m_layout);
 
-    m_layout->addWidget(m_splitter);
-    m_splitter->addWidget(m_side_panel);
-    m_splitter->addWidget(gv);
+    m_splitter->setStretchFactor(1, 1);
 
-    m_layout->addWidget(m_status_bar);
+
     m_play_btn->setEnabled(false);
     m_reset_btn->setEnabled(false);
     m_progress_bar->setVisible(false);
@@ -349,6 +396,7 @@ void Sonify::initConnections()
     });
 
     connect(sonification, &Sonification::audioFinishedPlaying, gv, [&]() {
+        m_reset_btn->setEnabled(true);
         emit gv->animationFinished();
     });
 
@@ -499,14 +547,18 @@ void Sonify::viewWaveform(bool state)
         {
             m_wf_widget = new WaveformWidget();
             connect(m_wf_widget, &WaveformWidget::closed, this, [&]() {
-                m_tools__tone_generator->setChecked(false);
+                m_tools__waveform->setChecked(false);
+                disconnect(m_wf_widget, 0, 0, 0);
+                m_wf_widget->close();
+                delete m_wf_widget;
+                m_wf_widget = nullptr;
             });
         }
-        m_wf_widget->show();
-        auto data = readWAVFile("/home/neo/Downloads/gettysburg10.wav");
-        /*auto data = sonification->getAudioData();*/
-
+        auto data = sonification->getAudioData();
         m_wf_widget->setData(data);
+        m_wf_widget->show();
+        /*auto data = readWAVFile("/home/neo/Downloads/gettysburg10.wav");*/
+
     }
     else
         m_wf_widget->close();
@@ -566,13 +618,16 @@ void Sonify::doSonify()
     m_traverse_combo->setEnabled(false);
     m_num_samples_spinbox->setEnabled(false);
     sonification->setNumSamples(m_num_samples_spinbox->value());
+    auto min_freq = m_min_freq_sb->text().toInt();
+    auto max_freq = m_max_freq_sb->text().toInt();
+
 
     if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::LEFT_TO_RIGHT])
     {
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
         m_mode = Traverse::LEFT_TO_RIGHT;
-        sonification->Sonify(m_pix, gv, m_mode);
+        sonification->Sonify(m_pix, gv, m_mode, min_freq, max_freq);
     }
 
     else if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::RIGHT_TO_LEFT])
@@ -580,7 +635,7 @@ void Sonify::doSonify()
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
         m_mode = Traverse::RIGHT_TO_LEFT;
-        sonification->Sonify(m_pix, gv, m_mode);
+        sonification->Sonify(m_pix, gv, m_mode, min_freq, max_freq);
     }
 
     else if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::TOP_TO_BOTTOM])
@@ -588,7 +643,7 @@ void Sonify::doSonify()
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
         m_mode = Traverse::TOP_TO_BOTTOM;
-        sonification->Sonify(m_pix, gv, m_mode);
+        sonification->Sonify(m_pix, gv, m_mode, min_freq, max_freq);
     }
 
     else if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::BOTTOM_TO_TOP])
@@ -596,7 +651,7 @@ void Sonify::doSonify()
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
         m_mode = Traverse::BOTTOM_TO_TOP;
-        sonification->Sonify(m_pix, gv, m_mode);
+        sonification->Sonify(m_pix, gv, m_mode, min_freq, max_freq);
     }
 
     else if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::CIRCLE_OUTWARDS])
@@ -604,7 +659,7 @@ void Sonify::doSonify()
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
         m_mode = Traverse::CIRCLE_OUTWARDS;
-        sonification->Sonify(m_pix, gv, m_mode);
+        sonification->Sonify(m_pix, gv, m_mode, min_freq, max_freq);
     }
 
     else if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::CIRCLE_INWARDS])
@@ -612,7 +667,7 @@ void Sonify::doSonify()
         m_stop_sonification_btn->setVisible(true);
         m_progress_bar->setVisible(true);
         m_mode = Traverse::CIRCLE_INWARDS;
-        sonification->Sonify(m_pix, gv, m_mode);
+        sonification->Sonify(m_pix, gv, m_mode, min_freq, max_freq);
     }
 
     else if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::CLOCKWISE])
@@ -620,7 +675,7 @@ void Sonify::doSonify()
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
         m_mode = Traverse::CLOCKWISE;
-        sonification->Sonify(m_pix, gv, m_mode);
+        sonification->Sonify(m_pix, gv, m_mode, min_freq, max_freq);
     }
 
     else if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::ANTICLOCKWISE])
@@ -628,15 +683,16 @@ void Sonify::doSonify()
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
         m_mode = Traverse::ANTICLOCKWISE;
-        sonification->Sonify(m_pix, gv, m_mode);
+        sonification->Sonify(m_pix, gv, m_mode, min_freq, max_freq);
     }
 
     else if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::PATH])
     {
+        gv->clearDrawPath();
         gv->setDrawPathMode(true);
         connect(gv, &GV::drawPathFinished, this, [&]() {
             m_mode = Traverse::PATH;
-            sonification->Sonify(m_pix, gv, m_mode);
+        sonification->Sonify(m_pix, gv, m_mode, min_freq, max_freq);
         });
     }
 }
@@ -647,7 +703,8 @@ void Sonify::Reset()
     m_play_btn->setText("Play");
     m_isAudioPlaying = false;
     gv->reset();
-    m_wf_widget->resetVertLine();
+    if (m_wf_widget)
+        m_wf_widget->resetVertLine();
     sonification->reset();
     m_audio_progress_label->setText("");
 }

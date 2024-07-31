@@ -5,6 +5,7 @@
 #include <qt6/QtWidgets/QVBoxLayout>
 #include <qt6/QtWidgets/QHBoxLayout>
 #include <qt6/QtGui/QCloseEvent>
+#include <qt6/QtGui/QKeyEvent>
 #include "qcustomplot.h"
 
 class WaveformWidget : public QWidget

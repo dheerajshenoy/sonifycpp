@@ -9,7 +9,9 @@ OBJECTS_DIR = obj/
 MOC_DIR = moc/
 DESTDIR = bin/
 
-QT += gui core widgets printsupport
+RESOURCES = application.qrc
+
+QT += gui core widgets printsupport svg
 
 # INCLUDEPATH += /usr/include/opencv4/ -I/usr/include/libavutil -I/usr/include/libswscale
 # LIBS += -lsndfile -lSDL2 -lavcodec -lavformat -lavutil -lswscale -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -lopencv_video -lopencv_videoio 

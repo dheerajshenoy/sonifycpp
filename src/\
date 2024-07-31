@@ -1,7 +1,7 @@
 #include "waveformwidget.hpp"
 
 WaveformWidget::WaveformWidget(QWidget *parent)
-    : QWidget(parent)
+    : QDialog(parent)
 {
 
     m_wf_widget_layout->addWidget(m_wf_plot);
@@ -36,8 +36,6 @@ WaveformWidget::WaveformWidget(QWidget *parent)
     connect(m_wf_save_btn, &QPushButton::clicked, this, [&]() {
         /*Pause();*/
     });
-
-    this->setLayout(m_wf_widget_layout);
 }
 
 void WaveformWidget::setData(QVector<short> &data)
@@ -80,4 +78,12 @@ void WaveformWidget::resetVertLine()
     m_wf_vertline->point1->setCoords(0, 0);
     m_wf_vertline->point2->setCoords(0, 0);
     m_wf_vertline_layer->replot();
+}
+
+void WaveformWidget::keyPressEvent(QKeyEvent *e)
+{
+    if (e->key() != Qt::Key_Escape)
+        QDialog::keyPressEvent(e);
+    else
+    {}
 }

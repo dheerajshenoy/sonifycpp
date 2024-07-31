@@ -4,16 +4,21 @@
 
 #include "sonifier.hpp"
 
-void Sonifier::setSamples(int nsamples)
+void Sonifier::setSamples(int nsamples) noexcept
 {
     m_nsamples = nsamples;
     m_mapping->setSamples(nsamples);
 }
 
-void Sonifier::setSampleRate(float SR)
+void Sonifier::setSampleRate(float SR) noexcept
 {
     m_SampleRate = SR;
     m_mapping->setSampleRate(SR);
+}
+
+void Sonifier::setMinMax(int &min, int &max) noexcept
+{
+    m_mapping->setMinMax(min, max);
 }
 
 void Sonifier::processImageChunk__LeftToRight(int startX, int endX, void *s)
@@ -67,7 +72,7 @@ void Sonifier::processImageChunk__RightToLeft(int startX, int endX, void *s)
         for (int y = 0; y < son->m_img.height(); y++)
             pixcols[y] = PixelColumn { son->m_img.pixel(x, y), x, y };
 
-        temp = son->m_mapping->MapFull(pixcols);
+        temp = son->m_mapping->MapFull2(pixcols);
 
         int index = (totalsamples - 1 - x ) * nsamples;
 
@@ -101,7 +106,7 @@ void Sonifier::processImageChunk__TopToBottom(int startY, int endY, void *s)
         for (int x = 0; x < son->m_img.width(); x++)
             pixcols[x] = PixelColumn { son->m_img.pixel(x, y), x, y };
 
-        temp = son->m_mapping->MapFull(pixcols);
+        temp = son->m_mapping->MapFull2(pixcols);
 
         int index = startY + y * nsamples;
 
@@ -133,7 +138,7 @@ void Sonifier::processImageChunk__BottomToTop(int startY, int endY, void *s)
         for (int x = 0; x < son->m_img.width(); x++)
             pixcols[x] = PixelColumn { son->m_img.pixel(x, y), x, y };
 
-        temp = son->m_mapping->MapFull(pixcols);
+        temp = son->m_mapping->MapFull2(pixcols);
 
         int index = (totalsamples - 1 - y ) * nsamples;
 
@@ -181,7 +186,7 @@ void Sonifier::processImageChunk__CircleOutwards(int startRadius, int endRadius,
             }
         }
 
-        temp = son->m_mapping->MapFull(pixcols);
+        temp = son->m_mapping->MapFull2(pixcols);
         int index = r * nsamples;
 
         for(int i=0; i < temp.size(); i++)
@@ -230,7 +235,7 @@ void Sonifier::processImageChunk__CircleInwards(int startRadius, int endRadius, 
             }
         }
 
-        temp = son->m_mapping->MapFull(pixcols);
+        temp = son->m_mapping->MapFull2(pixcols);
         int index = (lastRadius - r) * nsamples;
 
         for(int i=0; i < temp.size(); i++)
@@ -281,7 +286,7 @@ void Sonifier::processImageChunk__Clockwise(int startAngle, int endAngle, void *
             }
         }
 
-        temp = son->m_mapping->MapFull(pixcols);
+        temp = son->m_mapping->MapFull2(pixcols);
         int index = startAngle + angle * nsamples;
 
         for(int i=0; i < temp.size(); i++)
@@ -329,7 +334,7 @@ void Sonifier::processImageChunk__AntiClockwise(int startAngle, int endAngle, vo
             }
         }
 
-        temp = son->m_mapping->MapFull(pixcols);
+        temp = son->m_mapping->MapFull2(pixcols);
         int index = (360 - angle ) * nsamples;
 
         for(int i=0; i < temp.size(); i++)
@@ -600,20 +605,21 @@ void Sonifier::PathDrawn()
     m_audioData.clear();
     /*m_audioData.resize(m_pixpos.size() * m_nsamples);*/
     QVector<PixelColumn> pixcols;
-    pixcols.resize(1000);
+    pixcols.resize(m_pixpos.size());
     QVector<short> temp;
     temp.resize(m_nsamples);
 
     for(int i=0; i < m_pixpos.size(); i++)
     {
+        temp.clear();
+        temp.resize(m_nsamples);
         if (m_stop_sonifying) return;
         auto pixelpos = m_pixpos[i];
         auto x = pixelpos.x();
         auto y = pixelpos.y();
 
-        pixcols[0] = PixelColumn { m_img.pixel(x, y), static_cast<int>(x), static_cast<int>(y) };
-
-        temp = m_mapping->MapFull(pixcols);
+        /*pixcols[0] = PixelColumn { m_img.pixel(x, y), static_cast<int>(x), static_cast<int>(y) };*/
+        temp = utils::addVectors(temp, m_mapping->Map1(m_img.pixel(x, y) * 200, x, y));
 
         for(int j=0; j < temp.size(); j++)
             m_audioData.push_back(temp[j]);

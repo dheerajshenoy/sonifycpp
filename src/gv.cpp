@@ -322,3 +322,18 @@ void GV::setObjColor(QString color)
     if (QColor::isValidColorName(color))
         m_obj_color = QColor(color);
 }
+
+void GV::clearDrawPath() noexcept
+{
+    if (m_path_item)
+    {
+        m_scene->removeItem(m_path_item);
+        delete m_path_item;
+        m_path_item = nullptr;
+
+        m_scene->removeItem(m_pathi);
+        delete m_pathi;
+        m_pathi = nullptr;
+        m_painter_path.clear();
+    }
+}

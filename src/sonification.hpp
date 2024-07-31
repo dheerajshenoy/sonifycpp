@@ -23,7 +23,7 @@ class Sonification : public QObject
 public:
     Sonification();
     ~Sonification();
-    void Sonify(QPixmap &pix, GV *gv, Traverse mode = Traverse::LEFT_TO_RIGHT);
+    void Sonify(QPixmap &pix, GV *gv, Traverse mode = Traverse::LEFT_TO_RIGHT, int min = 20, int max = 20000);
     void setNumSamples(int nsamples) noexcept;
     void play();
     void pause();

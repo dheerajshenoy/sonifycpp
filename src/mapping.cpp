@@ -6,34 +6,38 @@
 *
 *
 */
- 
+
 #include "mapping.hpp"
 #include <cmath>
 
-void Mapping::setSamples(int &samples)
+void Mapping::setSamples(int &samples) noexcept
 {
     m_nsamples = samples;
 }
 
-void Mapping::setSampleRate(float &samplerate)
+void Mapping::setSampleRate(float &samplerate) noexcept
 {
     m_samplerate = samplerate;
 }
 
-QVector<short> Mapping::Map1(QRgb pixel, int x, int y)
+void Mapping::setMinMax(int &min, int &max) noexcept
+{
+    m_freq_min = min;
+    m_freq_max = max;
+}
+
+QVector<short> Mapping::Map1(QRgb pixel, int x, int y) noexcept
 {
     double intensity = qGray(pixel) / 255.0;
 
     return generateSineWave(intensity, x, 1);
 }
 
-
-QVector<short> Mapping::Pentatonic(QRgb pixel, int x, int y)
+QVector<short> Mapping::Pentatonic(QRgb pixel, int x, int y) noexcept
 {
     QColor col = QColor(pixel).toHsv();
 
     double intensity = qGray(pixel) / 255.0;
-
 
     /*if (intensity < 40)*/
     /*    return generateSineWave(0, 0, 0);*/
@@ -48,7 +52,7 @@ QVector<short> Mapping::Pentatonic(QRgb pixel, int x, int y)
 }
 
 
-QVector<short> Mapping::generateBellSound(double _amplitude, double frequency, double time)
+QVector<short> Mapping::generateBellSound(double _amplitude, double frequency, double time) noexcept
 {
     QVector<short> fs;
     int N = m_samplerate * time;
@@ -67,7 +71,7 @@ QVector<short> Mapping::generateBellSound(double _amplitude, double frequency, d
 
 }
 
-QVector<short> Mapping::generateSineWave(double _amplitude, double frequency, double time)
+QVector<short> Mapping::generateSineWave(double _amplitude, double frequency, double time) noexcept
 {
     QVector<short> fs;
     int N = m_samplerate * time;
@@ -83,7 +87,7 @@ QVector<short> Mapping::generateSineWave(double _amplitude, double frequency, do
     return fs;
 }
 
-QVector<short> Mapping::MapFull(QVector<PixelColumn> &pixelCol)
+QVector<short> Mapping::MapFull(QVector<PixelColumn> &pixelCol) noexcept
 {
 
     QVector<short> fs;
@@ -101,7 +105,7 @@ QVector<short> Mapping::MapFull(QVector<PixelColumn> &pixelCol)
     return fs;
 }
 
-double Mapping::Hue2Freq(int H)
+double Mapping::Hue2Freq(int H) noexcept
 {
     double scale_freqs[] = { 220.00, 246.94 ,261.63, 293.66, 329.63, 349.23, 415.30 } ;
     int thresholds[] = { 26 , 52 , 78 , 104,  128 , 154 , 180 };
@@ -134,12 +138,12 @@ double Mapping::Hue2Freq(int H)
     return note;
 }
 
-short Mapping::LinearMap(double inp_min, double inp_max, double out_min, double out_max, double val)
+short Mapping::LinearMap(double inp_min, double inp_max, double out_min, double out_max, double val) noexcept
 {
     return out_min + (val - inp_min) * (out_max - out_min) / (inp_max - inp_min);
 }
 
-QVector<short> Mapping::MapFull2(QVector<PixelColumn> &pixelCol)
+QVector<short> Mapping::MapFull2(QVector<PixelColumn> &pixelCol) noexcept
 {
     QVector<short> fs;
     int N = pixelCol.size();
@@ -153,10 +157,10 @@ QVector<short> Mapping::MapFull2(QVector<PixelColumn> &pixelCol)
     {
         p = pixelCol[i];
         auto hsv = QColor(p.pixel).toHsv();
-        f = LinearMap(0, 360, 4000, 0, hsv.hue()) / static_cast<double>(N);
-        wave = generateSineWave(0.5, f, 1);
-        fs = utils::addVectors(fs, wave);
+        f += LinearMap(0, 360, m_freq_min, m_freq_max, hsv.hue()) / static_cast<double>(N);
     }
 
+    wave = generateSineWave(0.5, f, 1);
+    fs = utils::addVectors(fs, wave);
     return fs;
 }

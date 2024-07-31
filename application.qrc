@@ -1,0 +1,12 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="/">
+        <file>icons/play-button.svg</file>
+        <file>icons/sonify-button.svg</file>
+        <file>icons/stop-button.svg</file>
+    </qresource>
+</RCC>
+
+
+<!-- vim: set ft=xml: -->
+

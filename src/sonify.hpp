@@ -1,5 +1,5 @@
 /*
-*
+
 *   This the class that manages the other classes that handle the GUI, sonification process and audio playback. This represents the main window
 *
 */
@@ -78,12 +78,17 @@ private:
     void initWidgets();
     void initStatusbar();
     void initSidePanel();
+    void initTopPanel();
     void CaptureWindow();
     void AskForResize(QString filename);
     QWidget *m_widget;
     QSplitter *m_splitter;
-    QWidget *m_side_panel;
-    QGridLayout *m_side_panel_layout = new QGridLayout();
+
+    QWidget *m_side_panel, *m_top_panel;
+
+    QGridLayout *m_side_panel_layout;
+        
+    QHBoxLayout *m_top_panel_layout;
     QVBoxLayout *m_layout;
     Sonification *sonification = new Sonification();
     QPushButton *m_play_btn,
@@ -156,8 +161,6 @@ private:
     QString m_script_file_path, m_config_dir;
 
     sol::state m_lua_state;
-
 };
-
 
 #endif

@@ -41,6 +41,7 @@ public:
     void getOffset(size_t &offset);
     void setAudioIndex(int index);
     void setObjColor(QString);
+    void clearDrawPath() noexcept;
     QVector<QPointF> getPathDrawnPos();
     ~GV();
 

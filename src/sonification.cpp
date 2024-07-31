@@ -49,7 +49,7 @@ void Sonification::setNumSamples(int nsamples) noexcept
 }
 
 // Function to sonify an `image` provided by QImage and in mode `mode`
-void Sonification::Sonify(QPixmap &pix, GV *gv, Traverse mode)
+void Sonification::Sonify(QPixmap &pix, GV *gv, Traverse mode, int min, int max)
 {
     // Return if null
     if (pix.isNull()) return;
@@ -66,6 +66,7 @@ void Sonification::Sonify(QPixmap &pix, GV *gv, Traverse mode)
 
     sonifier->setSampleRate(m_SampleRate);
     sonifier->setSamples(m_NumSamples);
+    sonifier->setMinMax(min, max);
 
     if (m_audioDevice)
         SDL_CloseAudioDevice(m_audioDevice);
