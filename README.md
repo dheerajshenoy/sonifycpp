@@ -225,6 +225,10 @@ Since I use Arch Linux, the commands to install these packages is `sudo pacman -
 
 - 31 July 2024
 
+    - Bug fix
+
+        The multi-threading support has been added for the rest of the traversals which were previously mentioned as not working. (*NOTE*: Never pass anything by reference to thread calls)
+
     - New Feature
 
         1. *Multi-threading support*. The image traversal algorithm performance has been boosted through multithreading support. *NOTE* : Not all traversal support multi-threading for now. Only the following supports multi-threading

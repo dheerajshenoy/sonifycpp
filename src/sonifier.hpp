@@ -71,9 +71,10 @@ private:
     static void processImageChunk__RightToLeft(int startX, int endX, void *userData);
     static void processImageChunk__TopToBottom(int startY, int endY, void *userData);
     static void processImageChunk__BottomToTop(int startY, int endY, void *userData);
-    static void processImageChunk__CircleOutwards(int &startRadius, int &endRadius, int &lastRadius, void *userData);
-    static void processImageChunk__Clockwise(int &startAngle, int &endAngle, void *userData);
-    static void processImageChunk__AntiClockwise(int &startAngle, int &endAngle, void *userData);
+    static void processImageChunk__CircleOutwards(int startRadius, int endRadius, int &lastRadius, void *userData);
+    static void processImageChunk__CircleInwards(int startRadius, int endRadius, int &lastRadius, void *userData);
+    static void processImageChunk__Clockwise(int startAngle, int endAngle, void *userData);
+    static void processImageChunk__AntiClockwise(int startAngle, int endAngle, void *userData);
 
     QVector<short> m_audioData;
     std::atomic<int> m_progressCounter = 0;
