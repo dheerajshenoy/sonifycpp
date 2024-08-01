@@ -409,6 +409,8 @@ void Sonify::initWidgets()
     m_max_freq_sb = new QSpinBox();
     m_min_freq_sb = new QSpinBox();
 
+    m_duration_label->setVisible(false);
+
     m_sonify_btn->setToolTip("Sonify");
     m_reset_btn->setToolTip("Reset");
     m_play_btn->setToolTip("Play");
@@ -619,6 +621,7 @@ void Sonify::initConnections()
         m_audio__save->setEnabled(true);
         m_tools__waveform->setEnabled(true);
         m_tools__spectrum_analyzer->setEnabled(true);
+        m_duration_label->setVisible(true);
         gv->setDuration(sonification->getDuration());
         m_duration_label->setText("Duration: " + QString::number(sonification->getDuration()) + "s");
         m_sonify_btn->setEnabled(true);
