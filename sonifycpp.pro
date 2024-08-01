@@ -4,6 +4,7 @@
 
 TEMPLATE = app
 TARGET = sonifycpp
+CONFIG += qt release c++20
 
 OBJECTS_DIR = obj/
 MOC_DIR = moc/
@@ -11,7 +12,7 @@ DESTDIR = bin/
 
 RESOURCES = application.qrc
 
-QT += gui core widgets printsupport svg
+QT += gui core widgets printsupport
 
 # INCLUDEPATH += /usr/include/opencv4/ -I/usr/include/libavutil -I/usr/include/libswscale
 # LIBS += -lsndfile -lSDL2 -lavcodec -lavformat -lavutil -lswscale -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -lopencv_video -lopencv_videoio 
@@ -35,7 +36,7 @@ HEADERS +=  src/gv.hpp \
             src/screenRecorder.hpp \
             src/SpectrumAnalyzer.hpp \
             src/pixelColumn.hpp \
-            src/ReverbDialog.hpp
+            src/ReverbDialog.hpp \
 
 SOURCES +=  src/gv.cpp \
             src/main.cpp \
@@ -51,4 +52,4 @@ SOURCES +=  src/gv.cpp \
             src/aboutdialog.cpp \
             src/screenRecorder.cpp \
             src/SpectrumAnalyzer.cpp \
-            src/ReverbDialog.cpp
+            src/ReverbDialog.cpp \

@@ -322,7 +322,7 @@ void Sonify::initIcons()
 void Sonify::initTopPanel()
 {
     m_top_panel = new QWidget();
-    m_top_panel_layout = new QHBoxLayout();
+    m_top_panel_layout = new QBoxLayout(QBoxLayout::Direction::LeftToRight);
     m_top_panel->setLayout(m_top_panel_layout);
     m_top_panel_layout->addWidget(m_sonify_btn);
     m_top_panel_layout->addWidget(m_play_btn);
@@ -335,8 +335,7 @@ void Sonify::initTopPanel()
     m_top_panel_layout->addWidget(m_min_freq_sb);
     m_top_panel_layout->addWidget(m_max_freq_label);
     m_top_panel_layout->addWidget(m_max_freq_sb);
-    m_top_panel_layout->addWidget(new QLabel(), 1);
-
+    m_top_panel_layout->addStretch(1);
 
     m_top_panel->setFixedHeight(40);
     m_layout->addWidget(m_top_panel);
@@ -344,6 +343,7 @@ void Sonify::initTopPanel()
     m_layout->addWidget(m_status_bar);
     m_splitter->addWidget(gv);
     m_layout->setStretchFactor(gv, 1);
+    m_top_panel_layout->setSpacing(20);
 
     /*delete m_side_panel;*/
     /*m_side_panel = nullptr;*/
@@ -354,7 +354,7 @@ void Sonify::initTopPanel()
 void Sonify::initBottomPanel()
 {
     m_top_panel = new QWidget();
-    m_top_panel_layout = new QHBoxLayout();
+    m_top_panel_layout = new QBoxLayout(QBoxLayout::Direction::LeftToRight);
     m_top_panel->setLayout(m_top_panel_layout);
     m_top_panel_layout->addWidget(m_sonify_btn);
     m_top_panel_layout->addWidget(m_play_btn);
@@ -367,7 +367,8 @@ void Sonify::initBottomPanel()
     m_top_panel_layout->addWidget(m_min_freq_sb);
     m_top_panel_layout->addWidget(m_max_freq_label);
     m_top_panel_layout->addWidget(m_max_freq_sb);
-    m_top_panel_layout->addWidget(new QLabel(), 1);
+    m_top_panel_layout->setSpacing(20);
+    m_top_panel_layout->addStretch(1);
     m_top_panel->setFixedHeight(40);
     m_layout->addWidget(m_splitter);
     m_layout->addWidget(m_top_panel);

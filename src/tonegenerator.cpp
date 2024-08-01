@@ -35,16 +35,18 @@ ToneGenerator::ToneGenerator(QWidget *parent)
     m_side_panel_layout->addWidget(m_duration_sb, 3, 1);
     m_side_panel_layout->addWidget(m_color_label, 4, 0);
     m_side_panel_layout->addWidget(m_color_btn, 4, 1);
-    m_side_panel_layout->addWidget(m_play_btn, 5, 0, 1, 2);
-    m_side_panel_layout->addWidget(m_stop_btn, 5, 0, 1, 2);
-    m_side_panel_layout->addWidget(m_audio_progress, 6, 0, 1, 2);
+    m_side_panel_layout->addWidget(m_play_btn, 6, 0, 1, 2);
+    m_side_panel_layout->addWidget(m_stop_btn, 6, 0, 1, 2);
+    m_side_panel_layout->addWidget(m_audio_progress, 7, 0, 1, 2);
 
+
+    m_color_btn->setFixedSize(QSize(50, 10));
     m_stop_btn->setVisible(false);
 
     m_audio_progress->setVisible(false);
     QLabel *separator = new QLabel();
     separator->setAlignment(Qt::AlignmentFlag::AlignCenter);
-    m_side_panel_layout->addWidget(separator, 7, 0);
+    m_side_panel_layout->addWidget(separator, 8, 0);
 
     m_amplitude_sb->setRange(0, 1);
     m_amplitude_sb->setSingleStep(0.1);
@@ -195,7 +197,7 @@ void ToneGenerator::plotWave(int index)
     x.resize(duration * sampleRate);
     y.resize(duration * sampleRate);
     auto frequency = m_freq_sb->text().toFloat();
-    auto amplitude = m_amplitude_sb->text().toFloat();
+    auto amplitude = m_amplitude_sb->text().toDouble();
     switch(index)
     {
         case WaveType::SINE:
@@ -218,7 +220,7 @@ void ToneGenerator::plotWave(int index)
             for(int i=0; i < x.size(); i++)
             {
                 x[i] = i / static_cast<double>(sampleRate);
-                y[i] = amplitude * (std::sin(2 * M_PI * frequency * x[i]) >= 0) ? 1.0 : -1.0;
+                y[i] = (std::sin(2 * M_PI * frequency * x[i]) >= 0) ? amplitude : -amplitude;
             }
         break;
 
@@ -226,7 +228,7 @@ void ToneGenerator::plotWave(int index)
             for(int i=0; i < x.size(); i++)
             {
                 x[i] = i / static_cast<double>(sampleRate);
-                y[i] = amplitude * 2.0 * std::abs(2.0 * ((i * frequency / static_cast<double>(sampleRate)) - std::floor((i * frequency / static_cast<double>(sampleRate)) + 0.5))) - 1.0; 
+                y[i] = amplitude * 2.0 * std::abs(2.0 * ((i * frequency / static_cast<double>(sampleRate)) - std::floor((i * frequency / static_cast<double>(sampleRate)) + 0.5))) - amplitude;
             }
         break;
 

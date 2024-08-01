@@ -17,6 +17,7 @@
 #include <qt6/QtWidgets/QMenu>
 #include <qt6/QtWidgets/QMenuBar>
 #include <qt6/QtWidgets/QHBoxLayout>
+#include <qt6/QtWidgets/QBoxLayout>
 #include <qt6/QtWidgets/QGridLayout>
 #include <qt6/QtWidgets/QWidget>
 #include <qt6/QtWidgets/QPushButton>
@@ -102,7 +103,7 @@ private:
 
     QGridLayout *m_side_panel_layout;
         
-    QHBoxLayout *m_top_panel_layout;
+    QBoxLayout *m_top_panel_layout;
     QVBoxLayout *m_layout;
     Sonification *sonification = new Sonification();
     QPushButton *m_play_btn,

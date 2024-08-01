@@ -31,24 +31,31 @@ void SpectrumAnalyzer::setData(QVector<short> &data, int &SampleRate)
     fftw_execute(plan);
 
     QVector<double> spectrum(N / 2);
+    double maxAmp = 0.0;
     for (size_t i = 0; i < N / 2; ++i) {
-        spectrum[i] = sqrt(out[i][0] * out[i][0] + out[i][1] * out[i][1]) / N;
+        double amp = sqrt(out[i][0] * out[i][0] + out[i][1] * out[i][1]) / N;
+        spectrum[i] = amp;
+        if (amp > maxAmp)
+            maxAmp = amp;
     }
+
+    for(size_t i =0; i < N / 2; i++)
+        spectrum[i] = spectrum.at(i) / maxAmp;
+
     fftw_destroy_plan(plan);
     fftw_free(in);
     fftw_free(out);
 
     QVector<double> frequencies(N);
-    double maxFreq = 0.0;
-    for (size_t i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i)
+    {
         double freq = i * SampleRate / static_cast<double>(N);
         frequencies[i] = freq;
-        if (freq > maxFreq)
-            maxFreq = freq;
     }
 
     m_plot->graph(0)->setData(frequencies, spectrum);
-    m_plot->xAxis->setRange(0, maxFreq);
+    m_plot->xAxis->setRange(0, 22500);
+    m_plot->yAxis->setRange(0, 1);
     m_plot->replot();
 
 }
