@@ -28,12 +28,26 @@ Sonify::Sonify(QWidget *parent)
     initConfigDir();
     initWidgets();
     initStatusbar();
-    initLuaBindings();
     initMenu();
+    initLuaBindings();
     initConnections();
     this->show();
     m_recorder->setGraphicsView(gv);
 
+}
+
+void Sonify::initKeybinds()
+{
+    QShortcut *kb_menubar = new QShortcut(QKeySequence("Ctrl+M"), this);
+    QShortcut *kb_open = new QShortcut(QKeySequence("Ctrl+O"), this);
+
+    connect(kb_menubar, &QShortcut::activated, this, [&]() {
+        m_menu_bar->setVisible(!m_menu_bar->isVisible());
+    });
+
+    connect(kb_open, &QShortcut::activated, this, [&]() {
+        Open();
+    });
 }
 
 int MyFunc(lua_State *s)
@@ -87,31 +101,96 @@ void Sonify::initLuaBindings()
 
         gv->setObjColor(QString::fromStdString(defaults_table["object_color"].get_or<std::string>("#FF5000")));
         m_num_samples_spinbox->setValue(defaults_table["samples"].get_or(1024));
-        m_traverse_combo->setCurrentIndex(defaults_table["traverse_mode"].get_or(1) - 1);
 
-        auto side_panel_location = defaults_table["side_panel"].get_or<std::string>("left");
+        auto traverse_mode = defaults_table["traverse_mode"].get_or<std::string>("LeftToRight");
 
+        if (traverse_mode == "LeftToRight")
+            m_traverse_combo->setCurrentIndex(Traverse::LEFT_TO_RIGHT);
+
+        else if (traverse_mode == "RightToLeft")
+            m_traverse_combo->setCurrentIndex(Traverse::RIGHT_TO_LEFT);
+
+        else if (traverse_mode == "TopToBottom")
+            m_traverse_combo->setCurrentIndex(Traverse::TOP_TO_BOTTOM);
+
+        else if (traverse_mode == "BottomToTop")
+            m_traverse_combo->setCurrentIndex(Traverse::BOTTOM_TO_TOP);
+
+        else if (traverse_mode == "Clockwise")
+            m_traverse_combo->setCurrentIndex(Traverse::CLOCKWISE);
+
+        else if (traverse_mode == "Anticlockwise")
+            m_traverse_combo->setCurrentIndex(Traverse::ANTICLOCKWISE);
+
+        else if (traverse_mode == "CircleOutwards")
+            m_traverse_combo->setCurrentIndex(Traverse::CIRCLE_OUTWARDS);
+
+        else if (traverse_mode == "CircleInwards")
+            m_traverse_combo->setCurrentIndex(Traverse::CIRCLE_INWARDS);
+
+        else if (traverse_mode == "Path")
+            m_traverse_combo->setCurrentIndex(Traverse::PATH);
+
+        if (defaults_table["icons"].get_or(true))
+        {
+            initIcons();
+        }
+
+        if (!defaults_table["menubar"].get_or(true))
+        {
+            m_view__menubar->setChecked(false);
+            m_menu_bar->setVisible(false);
+        }
+
+        if (!defaults_table["statusbar"].get_or(true))
+        {
+            m_view__statusbar->setChecked(false);
+            m_status_bar->setVisible(false);
+        }
+
+        std::string side_panel_location = defaults_table["side_panel"].get_or<std::string>("left");
         if (side_panel_location == "left")
         {
-            initSidePanel();
+            initLeftPanel();
+            m_panel_location = PanelLocation::LEFT;
         }
 
         else if (side_panel_location == "right")
         {
+            initRightPanel();
             // TODO: Handle side panel location change
+            m_panel_location = PanelLocation::RIGHT;
         }
-        else if (side_panel_location == "hidden")
-            m_side_panel->setHidden(true);
 
         else if (side_panel_location == "bottom")
         {
             // TODO: Handle side panel location change
+            initBottomPanel();
+            m_panel_location = PanelLocation::BOTTOM;
         }
 
         else if (side_panel_location == "top")
         {
-            qDebug() << "DD";
+            m_panel_location = PanelLocation::TOP;
             initTopPanel();
+        }
+
+        if(!defaults_table["panel"].get_or(true))
+        {
+            switch(m_panel_location)
+            {
+                case PanelLocation::TOP:
+                case PanelLocation::BOTTOM:
+                    m_top_panel->setVisible(false);
+                break;
+
+                case PanelLocation::LEFT:
+                case PanelLocation::RIGHT:
+                    m_side_panel->setVisible(false);
+                break;
+            }
+
+            m_view__panel->setChecked(false);
         }
 
         sol::optional<sol::table> res_table_exists = defaults_table["resolution"];
@@ -123,7 +202,11 @@ void Sonify::initLuaBindings()
             m_def_keep_aspect = res_table["keep_aspect"].get_or(true);
             m_def_ask_for_resize = res_table["ask_for_resize"].get_or(true);
         }
-            
+
+        if (defaults_table["keybindings"].get_or(true))
+        {
+            initKeybinds();
+        }
 
     }
 
@@ -149,7 +232,7 @@ void Sonify::initLuaBindings()
 
 }
 
-void Sonify::initSidePanel()
+void Sonify::initLeftPanel()
 {
     m_side_panel = new QWidget();
     m_side_panel_layout = new QGridLayout();
@@ -166,6 +249,7 @@ void Sonify::initSidePanel()
     m_side_panel_layout->addWidget(m_min_freq_sb, 4, 1);
     m_side_panel_layout->addWidget(m_max_freq_label, 5, 0);
     m_side_panel_layout->addWidget(m_max_freq_sb, 5, 1);
+
     m_splitter->addWidget(m_side_panel);
     m_splitter->addWidget(gv);
     m_layout->addWidget(m_splitter);
@@ -178,6 +262,61 @@ void Sonify::initSidePanel()
     /*m_top_panel = nullptr;*/
     /*delete m_top_panel_layout;*/
     /*m_top_panel_layout = nullptr;*/
+}
+
+void Sonify::initRightPanel()
+{
+    m_side_panel = new QWidget();
+    m_side_panel_layout = new QGridLayout();
+    m_side_panel->setFixedWidth(300);
+    m_side_panel->setLayout(m_side_panel_layout);
+    m_side_panel_layout->addWidget(m_sonify_btn, 0, 0, 1, 2);
+    m_side_panel_layout->addWidget(m_play_btn, 1, 0);
+    m_side_panel_layout->addWidget(m_reset_btn, 1, 1);
+    m_side_panel_layout->addWidget(m_traverse_label, 2, 0);
+    m_side_panel_layout->addWidget(m_traverse_combo, 2, 1);
+    m_side_panel_layout->addWidget(m_num_samples_label, 3, 0);
+    m_side_panel_layout->addWidget(m_num_samples_spinbox, 3, 1);
+    m_side_panel_layout->addWidget(m_min_freq_label, 4, 0);
+    m_side_panel_layout->addWidget(m_min_freq_sb, 4, 1);
+    m_side_panel_layout->addWidget(m_max_freq_label, 5, 0);
+    m_side_panel_layout->addWidget(m_max_freq_sb, 5, 1);
+
+    m_splitter->addWidget(gv);
+    m_splitter->addWidget(m_side_panel);
+    m_layout->addWidget(m_splitter);
+    m_layout->addWidget(m_status_bar);
+
+    QLabel *m_separator = new QLabel();
+    m_side_panel_layout->addWidget(m_separator, 6, 0, 1, 1, Qt::AlignCenter);
+
+    /*delete m_top_panel;*/
+    /*m_top_panel = nullptr;*/
+    /*delete m_top_panel_layout;*/
+    /*m_top_panel_layout = nullptr;*/
+}
+
+void Sonify::initIcons()
+{
+
+    m_sonify_btn->setText("");
+    m_sonify_btn->setIcon(QIcon(":/icons/sonify-button.svg"));
+    m_play_btn->setText("");
+    m_play_btn->setIcon(QIcon(":/icons/play-button.svg"));
+    m_reset_btn->setText("");
+    m_reset_btn->setIcon(QIcon(":/icons/stop-button.svg"));
+
+    m_file__open->setIcon(QIcon(":/icons/open-file.svg"));
+    m_file__exit->setIcon(QIcon(":/icons/exit.svg"));
+
+    m_tools__waveform->setIcon(QIcon(":/icons/waveform.svg"));
+    m_tools__screen_record->setIcon(QIcon(":/icons/screen-record.svg"));
+    m_tools__tone_generator->setIcon(QIcon(":/icons/note.svg"));
+    m_tools__spectrum_analyzer->setIcon(QIcon(":/icons/tuning-fork.svg"));
+
+    m_effects__wah_wah->setIcon(QIcon(":/icons/wah-wah.svg"));
+    m_effects__distortion->setIcon(QIcon(":/icons/distortion.svg"));
+
 }
 
 void Sonify::initTopPanel()
@@ -195,13 +334,46 @@ void Sonify::initTopPanel()
     m_top_panel_layout->addWidget(m_min_freq_label);
     m_top_panel_layout->addWidget(m_min_freq_sb);
     m_top_panel_layout->addWidget(m_max_freq_label);
-    m_top_panel_layout->addWidget(m_max_freq_sb, 1);
+    m_top_panel_layout->addWidget(m_max_freq_sb);
+    m_top_panel_layout->addWidget(new QLabel(), 1);
+
+
     m_top_panel->setFixedHeight(40);
     m_layout->addWidget(m_top_panel);
     m_layout->addWidget(m_splitter);
     m_layout->addWidget(m_status_bar);
     m_splitter->addWidget(gv);
     m_layout->setStretchFactor(gv, 1);
+
+    /*delete m_side_panel;*/
+    /*m_side_panel = nullptr;*/
+    /*delete m_side_panel_layout;*/
+    /*m_side_panel_layout = nullptr;*/
+}
+
+void Sonify::initBottomPanel()
+{
+    m_top_panel = new QWidget();
+    m_top_panel_layout = new QHBoxLayout();
+    m_top_panel->setLayout(m_top_panel_layout);
+    m_top_panel_layout->addWidget(m_sonify_btn);
+    m_top_panel_layout->addWidget(m_play_btn);
+    m_top_panel_layout->addWidget(m_reset_btn);
+    m_top_panel_layout->addWidget(m_traverse_label);
+    m_top_panel_layout->addWidget(m_traverse_combo);
+    m_top_panel_layout->addWidget(m_num_samples_label);
+    m_top_panel_layout->addWidget(m_num_samples_spinbox);
+    m_top_panel_layout->addWidget(m_min_freq_label);
+    m_top_panel_layout->addWidget(m_min_freq_sb);
+    m_top_panel_layout->addWidget(m_max_freq_label);
+    m_top_panel_layout->addWidget(m_max_freq_sb);
+    m_top_panel_layout->addWidget(new QLabel(), 1);
+    m_top_panel->setFixedHeight(40);
+    m_layout->addWidget(m_splitter);
+    m_layout->addWidget(m_top_panel);
+    m_layout->addWidget(m_status_bar);
+    m_splitter->addWidget(gv);
+    m_layout->setStretchFactor(m_top_panel, 1);
 
     /*delete m_side_panel;*/
     /*m_side_panel = nullptr;*/
@@ -223,9 +395,9 @@ void Sonify::initWidgets()
 {
     m_widget = new QWidget();
     m_layout = new QVBoxLayout();
-    m_sonify_btn = new QPushButton(QIcon(":/icons/sonify-button.svg"), "");
-    m_play_btn = new QPushButton(QIcon(":/icons/play-button.svg"), "");
-    m_reset_btn = new QPushButton(QIcon(":/icons/stop-button.svg"), "");
+    m_sonify_btn = new QPushButton("Sonify");
+    m_play_btn = new QPushButton("Play");
+    m_reset_btn = new QPushButton("Reset");
     m_traverse_combo = new QComboBox();
     m_duration_label = new QLabel("Duration: ");
     m_audio_progress_label = new QLabel("");
@@ -266,7 +438,6 @@ void Sonify::initWidgets()
         "Clockwise",
         "Anti-Clockwise",
         "Draw Path",
-        "Select Region",
     };
 
     for(const QString &t : m_traversal_name_list)
@@ -338,6 +509,23 @@ void Sonify::initMenu()
     m_tools_menu->addAction(m_tools__waveform);
 
     m_audio_menu->addAction(m_audio__save);
+
+    m_view__panel = new QAction("Panel");
+    m_view__statusbar = new QAction("Statusbar");
+    m_view__menubar = new QAction("Menubar");
+
+    m_view__panel->setCheckable(true);
+    m_view__statusbar->setCheckable(true);
+    m_view__menubar->setCheckable(true);
+
+    m_view__menubar->setChecked(true);
+    m_view__panel->setChecked(true);
+    m_view__statusbar->setChecked(true);
+
+    m_view_menu->addAction(m_view__panel);
+    m_view_menu->addAction(m_view__statusbar);
+    m_view_menu->addAction(m_view__menubar);
+
 
 
     m_effects__reverb = new QAction("Reverb");
@@ -512,6 +700,31 @@ void Sonify::initConnections()
         reverbDialog->exec();
 
     });
+
+    connect(m_view__menubar, &QAction::triggered, this, [&](bool state) {
+        m_menu_bar->setVisible(state);
+    });
+
+
+    connect(m_view__statusbar, &QAction::triggered, this, [&](bool state) {
+        m_status_bar->setVisible(state);
+    });
+
+    connect(m_view__panel, &QAction::triggered, this, [&](bool state) {
+        switch(m_panel_location)
+        {
+            case PanelLocation::LEFT:
+            case PanelLocation::RIGHT:
+                m_side_panel->setVisible(state);
+            break;
+
+            case PanelLocation::TOP:
+            case PanelLocation::BOTTOM:
+                m_top_panel->setVisible(state);
+
+        }
+    });
+
 }
 
 
@@ -709,9 +922,6 @@ void Sonify::Reset()
     m_audio_progress_label->setText("");
 }
 
-Sonify::~Sonify()
-{}
-
 // TODO: Screen record
 void Sonify::CaptureWindow()
 {
@@ -846,3 +1056,6 @@ void Sonify::Pause()
 /*    video.release();*/
 /*    std::cout << "Video created successfully!" << std::endl;*/
 /*}*/
+
+Sonify::~Sonify()
+{}

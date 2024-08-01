@@ -9,6 +9,8 @@
 
 #include <qt6/QtWidgets/QMainWindow>
 #include <qt6/QtGui/QGuiApplication>
+#include <qt6/QtGui/QShortcut>
+#include <qt6/QtGui/QKeySequence>
 #include <qt6/QtWidgets/QApplication>
 #include <qt6/QtWidgets/QVBoxLayout>
 #include <qt6/QtWidgets/QFileDialog>
@@ -53,6 +55,14 @@
 /*#include <libswscale/swscale.h>*/
 /*}*/
 
+enum PanelLocation
+{
+    LEFT = 0,
+    RIGHT,
+    TOP,
+    BOTTOM,
+};
+
 class Sonify : public QMainWindow
 {
 
@@ -77,8 +87,12 @@ private:
     void initMenu();
     void initWidgets();
     void initStatusbar();
-    void initSidePanel();
+    void initLeftPanel();
+    void initRightPanel();
     void initTopPanel();
+    void initBottomPanel();
+    void initKeybinds();
+    void initIcons();
     void CaptureWindow();
     void AskForResize(QString filename);
     QWidget *m_widget;
@@ -122,9 +136,11 @@ private:
             *m_tools__waveform,
             *m_tools__screen_record;
 
-    QAction *m_view__waveform;
-
     QAction *m_help__about;
+    
+    QAction *m_view__panel,
+            *m_view__statusbar,
+            *m_view__menubar;
 
     QComboBox *m_traverse_combo;
 
@@ -161,6 +177,8 @@ private:
     QString m_script_file_path, m_config_dir;
 
     sol::state m_lua_state;
+
+    PanelLocation m_panel_location = PanelLocation::LEFT;
 };
 
 #endif

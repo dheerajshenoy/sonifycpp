@@ -54,29 +54,29 @@ Apart from sonifying the images, sonifyCPP ships with few features.
     Able to set options of the program in a script file. For now, only defaults can be set. In the future, I am planning to add the ability to create mapping functions from within lua to call in the C++ code for sonifying. Script file should be placed at `/home/<USER>/.config/sonifycpp/` on linux and `C:/Users/<USER>/AppData/Local/sonifycpp/`, The file can look something like this.
 
     ```lua
-
     -- default settings
     Defaults = {
         object_color = "#FFFFFF", -- set the curve color
-        samples = 3000, -- default samples
-        traversal = 2, -- default traversal mode number. As given in the traversal section of the github README. This will set it to Right to Left.
-        resolution = { height = 480, width = 720, keep_aspect = true; ask_for_resize = false; } -- default image loading resolution
+        samples = 1024, -- default samples
+
+        --
+        -- The traverse mode can be one of the following strings:
+        -- "LeftToRight", "RightToLeft", "TopToBottom", "BottomToTop", "Clockwise", "Anticlockwise", "CircleOutwards", "CircleInwards", "Path"
+        --
+
+        traverse_mode = "Anticlockwise",
+        side_panel = "top", -- "left", "right", "top", "bottom"
+        resolution = { height = 480, width = 720, keep_aspect = false; ask_for_resize = false; }, -- default image loading resolution
+        icons = true, -- show menu and button icons or not ("true", "false")
+        menubar = true, -- show menubar
+        panel = true, -- show panel
+        statusbar = true, -- show statusbar
     }
 
-    -- The code given hereafter is just a proof of concept. It doesn't work even if it's in the script.lua file
-    -- Mapping function. This will be called if chosen at the GUI and for sonifying
-    local mapping1 = function (data)
-        -- logic for mapping
-        if (data.intensity < 100)
-            ...
-        else if (data.intensity < 200)
-            ...
-        else
-            ...
-        end
+    local mapping1 = function ()
+        print("HELLO WORLD FROM LUA")
     end
 
-    -- Future feature
     -- Custom mapping
     Maps = {
         { name = "Mapping1", func = mapping1 },
@@ -223,11 +223,23 @@ Since I use Arch Linux, the commands to install these packages is `sudo pacman -
 
 # Chanegelogs and Bug fixes
 
+- 1 Aug 2024
+
+    - Visual overhaul
+
+        - *Added icon support for menu items*
+
+        - *Support for four different panel positions* - Left, Right, Top or Bottom
+        
+    - Shortcuts
+
+    - New options exposed to the lua script to toggle icons, default keybindings, menubar, statusbar, panel position.
+
 - 31 July 2024
 
     - Bug fix
 
-        The multi-threading support has been added for the rest of the traversals which were previously mentioned as not working. (*NOTE*: Never pass anything by reference to thread calls)
+        The multi-threading support has been added for the rest of the traversals which were previously mentioned as not working. (*NOTE TO THE PROGRAMMER*: Never pass anything by reference to thread calls)
 
     - New Feature
 

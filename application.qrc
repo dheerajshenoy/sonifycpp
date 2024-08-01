@@ -1,9 +1,18 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
     <qresource prefix="/">
-        <file>icons/play-button.svg</file>
-        <file>icons/sonify-button.svg</file>
-        <file>icons/stop-button.svg</file>
+        <file compress="1">icons/play-button.svg</file>
+        <file compress="1">icons/sonify-button.svg</file>
+        <file compress="1">icons/stop-button.svg</file>
+        <file compress="1">icons/exit.svg</file>
+        <file compress="1">icons/open-file.svg</file>
+        <file compress="1">icons/note.svg</file>
+        <file compress="1">icons/screen-record.svg</file>
+        <file compress="1">icons/waveform.svg</file>
+        <file compress="1">icons/tuning-fork.svg</file>
+        <file compress="1">icons/wah-wah.svg</file>
+        <file compress="1">icons/distortion.svg</file>
+        <file compress="1">icons/traversal.svg</file>
     </qresource>
 </RCC>
 
