@@ -41,13 +41,20 @@ Apart from sonifying the images, sonifyCPP ships with few features.
 
     Just generate single frequency tones. It's fun
 
+https://github.com/user-attachments/assets/d00d3c65-ccbb-42d5-90e7-c1b127f9cfe9
+
+
 * Waveform visualizer
 
     Visualize the sonified sound waveform
 
+  ![image](https://github.com/user-attachments/assets/65f23858-88f9-4ceb-85d1-e3f13ff9b572)
+
 * Frequency Spectrum Analyzer
 
     Visualize the frequency vs amplitude plot
+
+  ![image](https://github.com/user-attachments/assets/1c8997f1-b2d4-45cf-b50e-67f18348cc62)
 
 * Lua scripting
 
@@ -168,7 +175,7 @@ Credit: [Link](https://www.seeingwithsound.com/im2sound.htm)
 9. [ ] **Reverse audio to produce image**
 10. [x] Path-based Sonification: Draw a path on the image and sonify along that path.
 11. [ ] Sonify specific regions or objects within the image.
-12. [ ] Color Mapping: Map different colors to different sounds or musical notes.
+12. [x] Color Mapping: Map different colors to different sounds or musical notes.
 13. [ ] Map textures or patterns within the image to different sound effects.
 14. [ ] Effect Processing: Add reverb, echo, or other audio effects to enhance the sonification experience.
 15. [ ] Dynamic Range Compression: Ensure that the sound levels are balanced and not too harsh or too quiet.
@@ -177,21 +184,23 @@ Credit: [Link](https://www.seeingwithsound.com/im2sound.htm)
 18. [ ] Spectrogram: Display a spectrogram that shows the frequency content of the sonified sound over time.
 19. [ ] 3D Visualization: Provide a 3D view of the image and its corresponding soundscape.
 20. [ ] **Handle Large Images**
-21. [ ] Frequency Analyzer
+21. [x] Frequency Analyzer
+22. [x] Implement multi-threading
 
 <a name="demo"/>
 
 # Demo
 
 *WARNING*: Lower your volume when listening to the video.
+These are demo from when the software was in version 0.1. Have to update the videos.
 
 https://github.com/user-attachments/assets/8486dbb2-789e-456c-ac6e-8df99d13e622
 
 https://github.com/user-attachments/assets/5749613d-6004-4d84-90ae-adaa8904268f
 
-# NOTE: The new GUI looks cool and it's not the same as shown in the demo videos
+**The new GUI looks like this**
 
-![2024-07-25_11-04](https://github.com/user-attachments/assets/ddd37fa0-c448-4d0a-992a-6850777874fb)
+![image](https://github.com/user-attachments/assets/95d032fa-a642-4063-bbde-a555baa6b47d)
 
 <a name="installation" />
 
