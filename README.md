@@ -231,6 +231,13 @@ Since I use Arch Linux, the commands to install these packages is `sudo pacman -
 
 # Chanegelogs and Bug fixes
 
+- 4 Aug 2024
+
+    - New Feature
+
+        - *Image Editor*. Change Brightness, Saturation, Contrast, Gamma, Invert colors, Grayscale.
+    
+
 - 1 Aug 2024
 
     - Visual overhaul
