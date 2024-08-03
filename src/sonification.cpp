@@ -80,6 +80,9 @@ void Sonification::Sonify(QPixmap &pix, GV *gv, Traverse mode, int min, int max)
     {
         sonifier->setParameters(pix, mode, gv->getPathDrawnPos());
     }
+    else if (mode == Traverse::INSPECT)
+    {
+    }
     else
         sonifier->setParameters(pix, mode);
 
@@ -232,3 +235,7 @@ void Sonification::stopSonification(bool state) noexcept
     emit sonificationStopped();
 }
 
+void Sonification::setFreqMap(FreqMap f) noexcept
+{
+    sonifier->setFreqMap(f);
+}

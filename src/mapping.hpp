@@ -12,6 +12,7 @@
 #include <qt6/QtCore/QDebug>
 #include <qt6/QtGui/QRgb>
 #include <qt6/QtGui/QColor>
+#include "freqmap.hpp"
 #include "utils.hpp"
 #include "notes.hpp"
 #include "pixelColumn.hpp"
@@ -42,6 +43,7 @@ public:
     void setSampleRate(float &samplerate) noexcept;
     void setSamples(int &samples) noexcept;
     void setMinMax(int &min, int &max) noexcept;
+    void setFreqMap(FreqMap &f) noexcept;
 
     QVector<short> MapFull(QVector<PixelColumn> &) noexcept;
     QVector<short> MapFull2(QVector<PixelColumn> &) noexcept;
@@ -50,6 +52,8 @@ public:
 
 private:
     short LinearMap(double inp_min, double inp_max, double out_min, double out_max, double val) noexcept;
+    short ExpMap(double inp_min, double inp_max, double out_min, double out_max, double val) noexcept;
+    short LogMap(double inp_min, double inp_max, double out_min, double out_max, double val) noexcept;
     QVector<short> Pentatonic(QRgb pixel, int x, int y) noexcept;
     QVector<short> generateSineWave(double amplitude, double frequency, double time) noexcept;
     QVector<short> generateBellSound(double amplitude, double frequency, double time) noexcept;
@@ -60,6 +64,7 @@ private:
     Notes m_notes;
 
     int m_freq_min, m_freq_max;
+    FreqMap m_freq_map = FreqMap::Linear;
 };
 
 #endif

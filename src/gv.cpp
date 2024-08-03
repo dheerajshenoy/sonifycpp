@@ -243,7 +243,7 @@ void GV::mousePressEvent(QMouseEvent *e)
 {
     if(e->button() == Qt::MouseButton::LeftButton)
     {
-        if(m_draw_path_mode)
+        if (m_draw_path_mode)
         {
             auto pos = mapToScene(e->pos());
 
@@ -251,7 +251,9 @@ void GV::mousePressEvent(QMouseEvent *e)
                 m_painter_path.moveTo(s);
                 m_path_item->setPath(m_painter_path);
                 m_pathDrawnPixelsPos.push_back(s);
+            return;
         }
+        emit pixelClick(mapToScene(e->pos()));
     }
     QGraphicsView::mousePressEvent(e);
 }

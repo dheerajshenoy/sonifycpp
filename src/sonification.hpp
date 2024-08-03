@@ -36,6 +36,7 @@ public:
     int& getSampleRate() noexcept;
     void AddReverb();
     void setAudioData(QVector<short> &data) noexcept;
+    void setFreqMap(FreqMap f) noexcept;
 
 signals:
     void audioprogress(double);

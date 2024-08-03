@@ -15,6 +15,11 @@ void Mapping::setSamples(int &samples) noexcept
     m_nsamples = samples;
 }
 
+void Mapping::setFreqMap(FreqMap &f) noexcept
+{
+    m_freq_map = f;
+}
+
 void Mapping::setSampleRate(float &samplerate) noexcept
 {
     m_samplerate = samplerate;
@@ -143,6 +148,20 @@ short Mapping::LinearMap(double inp_min, double inp_max, double out_min, double 
     return out_min + (val - inp_min) * (out_max - out_min) / (inp_max - inp_min);
 }
 
+short Mapping::ExpMap(double inp_min, double inp_max, double out_min, double out_max, double val) noexcept
+{
+    double x_norm = (val - inp_min) / (inp_max - inp_min);
+    double y_norm = std::pow(x_norm, 2);
+    return y_norm * (out_max - out_min) + out_min;
+}
+
+short Mapping::LogMap(double inp_min, double inp_max, double out_min, double out_max, double val) noexcept
+{
+    double x_norm = (val - inp_min) / (inp_max - inp_min);
+    double y_norm = std::log(x_norm + 1) / std::log(10.0);
+    return y_norm * (out_max - out_min) + out_min;
+}
+
 QVector<short> Mapping::MapFull2(QVector<PixelColumn> &pixelCol) noexcept
 {
     QVector<short> fs;
@@ -151,16 +170,40 @@ QVector<short> Mapping::MapFull2(QVector<PixelColumn> &pixelCol) noexcept
     PixelColumn p;
     QVector<short> wave;
     double f=0;
-    double intensity = 0.f;
 
-    for(int i=0; i < N; i++)
+    switch(m_freq_map)
     {
-        p = pixelCol[i];
-        auto hsv = QColor(p.pixel).toHsv();
-        f += LinearMap(0, 360, m_freq_min, m_freq_max, hsv.hue()) / static_cast<double>(N);
+        case FreqMap::Linear:
+            for(int i=0; i < N; i++)
+            {
+                p = pixelCol[i];
+                auto hsv = QColor(p.pixel).toHsv();
+                f += LinearMap(0, 360, m_freq_min, m_freq_max, hsv.hue()) / static_cast<double>(N);
+            }
+            break;
+
+        case FreqMap::Exp:
+            for(int i=0; i < N; i++)
+            {
+                p = pixelCol[i];
+                auto hsv = QColor(p.pixel).toHsv();
+                f += ExpMap(0, 360, m_freq_min, m_freq_max, hsv.hue()) / static_cast<double>(N);
+            }
+            break;
+
+        case FreqMap::Log:
+            for(int i=0; i < N; i++)
+            {
+                p = pixelCol[i];
+                auto hsv = QColor(p.pixel).toHsv();
+                f += LogMap(0, 360, m_freq_min, m_freq_max, hsv.hue()) / static_cast<double>(N);
+            }
+            break;
     }
 
-    wave = generateSineWave(0.5, f, 1);
+    std::vector<double> list = { 0, 0.2, 0.4, 0.6, 0.8, 1.0 };
+    auto s = list.at(rand() % list.size());
+    wave = generateSineWave(0.5, f * s, 1);
     fs = utils::addVectors(fs, wave);
     return fs;
 }

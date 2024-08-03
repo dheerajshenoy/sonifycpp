@@ -164,28 +164,27 @@ Credit: [Link](https://www.seeingwithsound.com/im2sound.htm)
 
 ## TODO
 
-1. [x] Nice GUI
-2. [x] Save resulting audio
-3. [ ] Option for mapping selection
-4. [ ] Support for custom mapping user functions (maybe add lua scripting support ?)
-5. [x] Waveform visualizer
-6. [ ] Export audio to various formats like MP4, AAC etc.
-7. [ ] Pixel audio visualiser (inpsecting each column or row of pixel from the image and producing the audio instantly).
-8. [ ] Video Export: Create a video file that combines the image and the sonification, showing the progression over time.
-9. [ ] **Reverse audio to produce image**
-10. [x] Path-based Sonification: Draw a path on the image and sonify along that path.
-11. [ ] Sonify specific regions or objects within the image.
-12. [x] Color Mapping: Map different colors to different sounds or musical notes.
-13. [ ] Map textures or patterns within the image to different sound effects.
-14. [ ] Effect Processing: Add reverb, echo, or other audio effects to enhance the sonification experience.
-15. [ ] Dynamic Range Compression: Ensure that the sound levels are balanced and not too harsh or too quiet.
-16. [ ] Adjustable Speed: Allow users to slow down or speed up the sonification process.
-17. [ ] MIDI Support: Allow users to export sonification data as MIDI files for further musical manipulation.
-18. [ ] Spectrogram: Display a spectrogram that shows the frequency content of the sonified sound over time.
-19. [ ] 3D Visualization: Provide a 3D view of the image and its corresponding soundscape.
-20. [ ] **Handle Large Images**
-21. [x] Frequency Analyzer
-22. [x] Implement multi-threading
+* [x] Nice GUI
+* [x] Save resulting audio
+* [x] Waveform visualizer
+* [x] Path-based Sonification: Draw a path on the image and sonify along that path.
+* [x] Color Mapping: Map different colors to different sounds or musical notes.
+* [x] Frequency Analyzer
+* [x] Implement multi-threading
+* [ ] Option for mapping selection
+* [ ] Support for custom mapping user functions (maybe add lua scripting support ?)
+* [ ] Pixel audio visualiser (inpsecting each column or row of pixel from the image and producing the audio instantly).
+* [ ] Video Export: Create a video file that combines the image and the sonification, showing the progression over time.
+* [ ] **Reverse audio to produce image**
+* [ ] Sonify specific regions or objects within the image.
+* [ ] Map textures or patterns within the image to different sound effects.
+* [ ] Effect Processing: Add reverb, echo, or other audio effects to enhance the sonification experience.
+* [ ] Dynamic Range Compression: Ensure that the sound levels are balanced and not too harsh or too quiet.
+* [ ] Adjustable Speed: Allow users to slow down or speed up the sonification process.
+* [ ] MIDI Support: Allow users to export sonification data as MIDI files for further musical manipulation.
+* [ ] Spectrogram: Display a spectrogram that shows the frequency content of the sonified sound over time.
+* [ ] 3D Visualization: Provide a 3D view of the image and its corresponding soundscape.
+* [ ] **Handle Large Images**
 
 <a name="demo"/>
 

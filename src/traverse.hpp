@@ -13,6 +13,7 @@ enum Traverse
     ANTICLOCKWISE,
     PATH,
     REGION,
+    INSPECT,
 };
 
 #endif

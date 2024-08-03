@@ -45,6 +45,7 @@
 #include "SpectrumAnalyzer.hpp"
 #include "sol/sol.hpp"
 #include "ReverbDialog.hpp"
+#include "ImageEditorDialog.hpp"
 
 /*#include <opencv4/opencv2/opencv.hpp>*/
 /**/
@@ -66,11 +67,15 @@ enum PanelLocation
 
 class Sonify : public QMainWindow
 {
-
+    Q_OBJECT
 public:
     Sonify(QWidget *parent = nullptr);
     ~Sonify();
     void Open(QString filename = "");
+
+
+signals:
+    void fileOpened();
 
 private:
 
@@ -109,6 +114,7 @@ private:
     QPushButton *m_play_btn,
                 *m_sonify_btn,
                 *m_reset_btn;
+
     GV *gv = new GV();
     bool m_isAudioPlaying = false;
 
@@ -134,8 +140,10 @@ private:
 
     QAction *m_tools__tone_generator,
             *m_tools__spectrum_analyzer,
+            *m_tools__pixel_analyzer,
             *m_tools__waveform,
-            *m_tools__screen_record;
+            *m_tools__screen_record,
+            *m_tools__image_settings;
 
     QAction *m_help__about;
     
@@ -143,10 +151,11 @@ private:
             *m_view__statusbar,
             *m_view__menubar;
 
-    QComboBox *m_traverse_combo;
+    QComboBox   *m_traverse_combo,
+                *m_mapping_combo; 
 
     QLabel *m_duration_label, *m_audio_progress_label, *m_traverse_label, *m_num_samples_label, *m_statusbar_msg_label,
-            *m_min_freq_label, *m_max_freq_label;
+            *m_min_freq_label, *m_max_freq_label, *m_mapping_label;
 
     QSpinBox *m_num_samples_spinbox, *m_min_freq_sb, *m_max_freq_sb;
 

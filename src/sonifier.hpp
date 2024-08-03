@@ -11,6 +11,7 @@
 #include <qt6/QtConcurrent/QtConcurrent>
 #include "traverse.hpp"
 #include "pixelColumn.hpp"
+#include "freqmap.hpp"
 
 /*
 #ifdef __linux__
@@ -48,6 +49,7 @@ public:
     void stopSonifying(bool state);
     bool hasStopped() { return m_stop_sonifying; }
     void setMinMax(int &min, int &max) noexcept;
+    void setFreqMap(FreqMap &f) noexcept;
 
 signals:
     void sonificationDone(QVector<short>);

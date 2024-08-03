@@ -4,6 +4,7 @@ WaveformWidget::WaveformWidget(QWidget *parent)
     : QWidget(parent)
 {
 
+    this->setWindowModality(Qt::WindowModality::ApplicationModal);
     m_wf_widget_layout->addWidget(m_wf_plot);
     m_wf_plot->addGraph();
     m_wf_plot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables);

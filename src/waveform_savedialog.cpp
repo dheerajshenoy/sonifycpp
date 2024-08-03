@@ -5,6 +5,7 @@ WaveformSaveDialog::WaveformSaveDialog(QWidget *parent)
 {
     this->setLayout(m_layout);
 
+    this->setWindowModality(Qt::WindowModality::ApplicationModal);
     m_resolution_unit_combo->addItem("Dots per Inch");
     m_resolution_unit_combo->addItem("Dots per Meter");
     m_resolution_unit_combo->addItem("Dots per Centimeter");

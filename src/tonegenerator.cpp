@@ -6,6 +6,7 @@ ToneGenerator::ToneGenerator(QWidget *parent)
     : QDialog(parent)
 {
 
+    this->setWindowModality(Qt::WindowModality::ApplicationModal);
     this->setLayout(m_layout);
     m_layout->addWidget(m_splitter);
     m_splitter->addWidget(m_side_panel);

@@ -249,6 +249,8 @@ void Sonify::initLeftPanel()
     m_side_panel_layout->addWidget(m_min_freq_sb, 4, 1);
     m_side_panel_layout->addWidget(m_max_freq_label, 5, 0);
     m_side_panel_layout->addWidget(m_max_freq_sb, 5, 1);
+    m_side_panel_layout->addWidget(m_mapping_label, 6, 0);
+    m_side_panel_layout->addWidget(m_mapping_combo, 6, 1);
 
     m_splitter->addWidget(m_side_panel);
     m_splitter->addWidget(gv);
@@ -256,7 +258,7 @@ void Sonify::initLeftPanel()
     m_layout->addWidget(m_status_bar);
 
     QLabel *m_separator = new QLabel();
-    m_side_panel_layout->addWidget(m_separator, 6, 0, 1, 1, Qt::AlignCenter);
+    m_side_panel_layout->addWidget(m_separator, 7, 0, 1, 1, Qt::AlignCenter);
 
     /*delete m_top_panel;*/
     /*m_top_panel = nullptr;*/
@@ -281,6 +283,8 @@ void Sonify::initRightPanel()
     m_side_panel_layout->addWidget(m_min_freq_sb, 4, 1);
     m_side_panel_layout->addWidget(m_max_freq_label, 5, 0);
     m_side_panel_layout->addWidget(m_max_freq_sb, 5, 1);
+    m_side_panel_layout->addWidget(m_mapping_label, 6, 0);
+    m_side_panel_layout->addWidget(m_mapping_combo, 6, 1);
 
     m_splitter->addWidget(gv);
     m_splitter->addWidget(m_side_panel);
@@ -288,7 +292,7 @@ void Sonify::initRightPanel()
     m_layout->addWidget(m_status_bar);
 
     QLabel *m_separator = new QLabel();
-    m_side_panel_layout->addWidget(m_separator, 6, 0, 1, 1, Qt::AlignCenter);
+    m_side_panel_layout->addWidget(m_separator, 7, 0, 1, 1, Qt::AlignCenter);
 
     /*delete m_top_panel;*/
     /*m_top_panel = nullptr;*/
@@ -300,11 +304,11 @@ void Sonify::initIcons()
 {
 
     m_sonify_btn->setText("");
-    m_sonify_btn->setIcon(QIcon(":/icons/sonify-button.svg"));
+    m_sonify_btn->setIcon(QIcon(":/icons/sonify.svg"));
     m_play_btn->setText("");
-    m_play_btn->setIcon(QIcon(":/icons/play-button.svg"));
+    m_play_btn->setIcon(QIcon(":/icons/play.svg"));
     m_reset_btn->setText("");
-    m_reset_btn->setIcon(QIcon(":/icons/stop-button.svg"));
+    m_reset_btn->setIcon(QIcon(":/icons/stop.svg"));
 
     m_file__open->setIcon(QIcon(":/icons/open-file.svg"));
     m_file__exit->setIcon(QIcon(":/icons/exit.svg"));
@@ -335,6 +339,8 @@ void Sonify::initTopPanel()
     m_top_panel_layout->addWidget(m_min_freq_sb);
     m_top_panel_layout->addWidget(m_max_freq_label);
     m_top_panel_layout->addWidget(m_max_freq_sb);
+    m_top_panel_layout->addWidget(m_mapping_label);
+    m_top_panel_layout->addWidget(m_mapping_combo);
     m_top_panel_layout->addStretch(1);
 
     m_top_panel->setFixedHeight(40);
@@ -367,6 +373,8 @@ void Sonify::initBottomPanel()
     m_top_panel_layout->addWidget(m_min_freq_sb);
     m_top_panel_layout->addWidget(m_max_freq_label);
     m_top_panel_layout->addWidget(m_max_freq_sb);
+    m_top_panel_layout->addWidget(m_mapping_label);
+    m_top_panel_layout->addWidget(m_mapping_combo);
     m_top_panel_layout->setSpacing(20);
     m_top_panel_layout->addStretch(1);
     m_top_panel->setFixedHeight(40);
@@ -400,7 +408,9 @@ void Sonify::initWidgets()
     m_play_btn = new QPushButton("Play");
     m_reset_btn = new QPushButton("Reset");
     m_traverse_combo = new QComboBox();
+    m_mapping_combo = new QComboBox();
     m_duration_label = new QLabel("Duration: ");
+    m_mapping_label = new QLabel("Map: ");
     m_audio_progress_label = new QLabel("");
     m_traverse_label = new QLabel("Traversal Mode: ");
     m_num_samples_label = new QLabel("Samples: ");
@@ -411,11 +421,13 @@ void Sonify::initWidgets()
     m_min_freq_sb = new QSpinBox();
 
     m_duration_label->setVisible(false);
+    m_mapping_combo->addItem("Linear");
+    m_mapping_combo->addItem("Logarithmic");
+    m_mapping_combo->addItem("Exponential");
 
     m_sonify_btn->setToolTip("Sonify");
     m_reset_btn->setToolTip("Reset");
     m_play_btn->setToolTip("Play");
-
 
     m_min_freq_sb->setValue(0);
     m_max_freq_sb->setValue(20000);
@@ -441,6 +453,7 @@ void Sonify::initWidgets()
         "Clockwise",
         "Anti-Clockwise",
         "Draw Path",
+        "Inspect",
     };
 
     for(const QString &t : m_traversal_name_list)
@@ -498,6 +511,11 @@ void Sonify::initMenu()
     m_tools__spectrum_analyzer->setCheckable(true);
     m_tools__spectrum_analyzer->setEnabled(false);
 
+    m_tools__pixel_analyzer = new QAction("Pixel Analyzer");
+    m_tools__pixel_analyzer->setCheckable(true);
+    m_tools__pixel_analyzer->setChecked(false);
+    m_tools__pixel_analyzer->setEnabled(false);
+
     m_tools__tone_generator = new QAction("Tone Generator");
     m_tools__tone_generator->setCheckable(true);
     m_tools__screen_record = new QAction("Screen Record");
@@ -505,11 +523,15 @@ void Sonify::initMenu()
     m_tools__waveform = new QAction("Waveform");
     m_tools__waveform->setCheckable(true);
     m_tools__waveform->setEnabled(false);
+    m_tools__image_settings = new QAction("Image Settings");
+    m_tools__image_settings->setIcon(QIcon(":/icons/image.svg"));
+    m_tools__image_settings->setEnabled(false);
 
     m_tools_menu->addAction(m_tools__tone_generator);
     m_tools_menu->addAction(m_tools__spectrum_analyzer);
     m_tools_menu->addAction(m_tools__screen_record);
     m_tools_menu->addAction(m_tools__waveform);
+    m_tools_menu->addAction(m_tools__image_settings);
 
     m_audio_menu->addAction(m_audio__save);
 
@@ -580,6 +602,10 @@ void Sonify::initConnections()
         QApplication::exit();
     });
 
+    connect(this, &Sonify::fileOpened, this, [&]() {
+        m_tools__image_settings->setEnabled(true);
+    });
+
     connect(m_file__open, &QAction::triggered, this, [&]() { Sonify::Open(); });
     connect(m_audio__save, &QAction::triggered, this, [&]() { Sonify::Save(); });
     connect(sonification, &Sonification::audioindex, gv, [&](int index) {
@@ -606,13 +632,38 @@ void Sonify::initConnections()
     });
 
     connect(gv, &GV::animationFinished, this, [&]() {
-        m_play_btn->setText("Play");
+        m_play_btn->setIcon(QIcon(":/icons/play.svg"));
+        /*m_play_btn->setText("Play");*/
         m_isAudioPlaying = false;
         sonification->reset();
         m_traverse_combo->setEnabled(true);
     });
 
     connect(m_tools__waveform, &QAction::triggered, this, &Sonify::viewWaveform);
+
+    connect(m_tools__image_settings, &QAction::triggered, this, [&]() {
+        ImageEditorDialog *e = new ImageEditorDialog(this);
+        e->setPixmap(m_pix);
+        connect(e, &ImageEditorDialog::optionsApplied, this, [&](ImageOptions options) {
+    int Contrast;
+    int Gamma;
+    bool Grayscale;
+    bool Invert;
+            QImage img = m_pix.toImage();
+            img = utils::changeBrightness(img, options.Brightness, m_pix.height(), m_pix.width());
+            img = utils::changeSaturation(img, options.Saturation, m_pix.height(), m_pix.width());
+            img = utils::changeContrast(img, options.Contrast, m_pix.height(), m_pix.width());
+            img = utils::changeGamma(img, options.Gamma, m_pix.height(), m_pix.width());
+            if (options.Grayscale)
+                img = utils::convertToGrayscale(img, m_pix.height(), m_pix.width());
+            if (options.Invert)
+                img = utils::invertColor(img, m_pix.height(), m_pix.width());
+            m_pix = QPixmap::fromImage(img);
+            gv->setPixmap(m_pix);
+        });
+        e->setAttribute(Qt::WA_DeleteOnClose);
+        e->open();
+    });
 
     connect(sonification, &Sonification::sonificationStopped, this, [&]() {
         m_sonify_btn->setEnabled(true);
@@ -654,7 +705,7 @@ void Sonify::initConnections()
             auto data = sonification->getAudioData();
             auto sr = sonification->getSampleRate();
             m_sp->setData(data, sr);
-            m_sp->exec();
+            m_sp->open();
         }
     });
 
@@ -671,7 +722,7 @@ void Sonify::initConnections()
                     delete m_tg;
                     m_tg = nullptr;
                 });
-                m_tg->exec();
+                m_tg->open();
             }
         }
     });
@@ -691,7 +742,7 @@ void Sonify::initConnections()
 
     connect(m_help__about, &QAction::triggered, this, [&]() {
         AboutDialog *aboutDialog = new AboutDialog(this);
-        aboutDialog->exec();
+        aboutDialog->open();
     });
 
     connect(m_effects__reverb, &QAction::triggered, this, [&]() {
@@ -701,7 +752,7 @@ void Sonify::initConnections()
             sonification->setAudioData(reverbedOutput);
             qDebug() << "REVERBED";
         });
-        reverbDialog->exec();
+        reverbDialog->open();
 
     });
 
@@ -824,6 +875,7 @@ void Sonify::Open(QString filename)
 
     gv->setPixmap(m_pix);
     m_sonify_btn->setEnabled(true);
+    emit fileOpened();
 }
 
 // Function that handles action of sonification
@@ -835,9 +887,25 @@ void Sonify::doSonify()
     m_traverse_combo->setEnabled(false);
     m_num_samples_spinbox->setEnabled(false);
     sonification->setNumSamples(m_num_samples_spinbox->value());
+
+    switch(m_mapping_combo->currentIndex())
+    {
+
+        case 0:
+            sonification->setFreqMap(FreqMap::Linear);
+        break;
+
+        case 1:
+            sonification->setFreqMap(FreqMap::Log);
+        break;
+
+        case 2:
+            sonification->setFreqMap(FreqMap::Exp);
+        break;
+    }
+
     auto min_freq = m_min_freq_sb->text().toInt();
     auto max_freq = m_max_freq_sb->text().toInt();
-
 
     if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::LEFT_TO_RIGHT])
     {
@@ -912,13 +980,21 @@ void Sonify::doSonify()
         sonification->Sonify(m_pix, gv, m_mode, min_freq, max_freq);
         });
     }
+
+    else if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::INSPECT])
+    {
+        /*gv->setPixelAnalyserMode(true);*/
+        m_mode = Traverse::INSPECT;
+        sonification->Sonify(m_pix, gv, m_mode, min_freq, max_freq);
+    }
 }
 
 // Reset btn function
 void Sonify::Reset()
 {
-    m_play_btn->setText("Play");
+    /*m_play_btn->setText("Play");*/
     m_isAudioPlaying = false;
+
     gv->reset();
     if (m_wf_widget)
         m_wf_widget->resetVertLine();
@@ -934,7 +1010,7 @@ void Sonify::CaptureWindow()
 // Function to ask for image resize when opening
 void Sonify::AskForResize(QString filename)
 {
-    QDialog *ask_widget = new QDialog();
+    QDialog *ask_widget = new QDialog(this);
     QGridLayout *ask_layout = new QGridLayout();
 
     m_pix = QPixmap(filename);
@@ -994,7 +1070,7 @@ void Sonify::AskForResize(QString filename)
     ask_layout->addWidget(keep_original_btn, 4, 0);
     ask_layout->addWidget(ok_btn, 4, 1);
 
-    ask_widget->exec();
+    ask_widget->open();
 
 }
 
@@ -1002,7 +1078,8 @@ void Sonify::AskForResize(QString filename)
 void Sonify::Play()
 {
     sonification->play();
-    m_play_btn->setText("Pause");
+    /*m_play_btn->setText("Pause");*/
+    m_play_btn->setIcon(QIcon(":/icons/pause.svg"));
     m_reset_btn->setEnabled(false);
     m_num_samples_spinbox->setEnabled(false);
     m_traverse_combo->setEnabled(false);
@@ -1013,53 +1090,13 @@ void Sonify::Pause()
 {
 
     sonification->pause();
-    m_play_btn->setText("Play");
+    /*m_play_btn->setText("Play");*/
+    m_play_btn->setIcon(QIcon(":/icons/play.svg"));
     m_reset_btn->setEnabled(true);
     m_num_samples_spinbox->setEnabled(true);
     m_traverse_combo->setEnabled(true);
 
 }
-
-/*void Sonify::ConvertToVideo()*/
-/*{*/
-/*    std::vector<std::string> imagePaths = {*/
-/*        "temp/0.png",*/
-/*        "temp/1.png",*/
-/*        "temp/2.png"*/
-/*        // Add more image paths as needed*/
-/*    };*/
-/**/
-/*    std::vector<cv::Mat> images;*/
-/**/
-/*    for (const auto& path : imagePaths) {*/
-/*        cv::Mat img = cv::imread(path);*/
-/*        if (img.empty()) {*/
-/*            std::cerr << "Could not read image: " << path << std::endl;*/
-/*            continue;*/
-/*        }*/
-/*        images.push_back(img);*/
-/*    }*/
-/**/
-/*    if (images.empty()) {*/
-/*        std::cerr << "No images were loaded." << std::endl;*/
-/*        return;*/
-/*    }*/
-/**/
-/*    // Define the codec and create VideoWriter object*/
-/*    cv::VideoWriter video("output.avi", cv::VideoWriter::fourcc('M','J','P','G'), 10, cv::Size(images[0].cols, images[0].rows));*/
-/**/
-/*    if (!video.isOpened()) {*/
-/*        std::cerr << "Could not open the output video file for write." << std::endl;*/
-/*        return;*/
-/*    }*/
-/**/
-/*    for (const auto& img : images) {*/
-/*        video.write(img);*/
-/*    }*/
-/**/
-/*    video.release();*/
-/*    std::cout << "Video created successfully!" << std::endl;*/
-/*}*/
 
 Sonify::~Sonify()
 {}

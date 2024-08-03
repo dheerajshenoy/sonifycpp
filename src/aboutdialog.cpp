@@ -6,6 +6,7 @@ AboutDialog::AboutDialog(QWidget *parent)
     this->setLayout(m_layout);
     m_layout->addWidget(m_name_label);
 
+    this->setWindowModality(Qt::WindowModality::ApplicationModal);
     m_name_label->setFont(QFont("ShureTechMono Nerd Font Mono", 18));
     m_name_label->setAlignment(Qt::AlignmentFlag::AlignCenter);
     m_layout->addWidget(m_done_btn);

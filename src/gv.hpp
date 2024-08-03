@@ -50,6 +50,7 @@ signals:
     void drawPathFinished();
     void audioIndexSet();
     void dropFile(QString filepath);
+    void pixelClick(QPointF pixelLocation);
 
 protected:
     void mousePressEvent(QMouseEvent *) override; 
@@ -75,6 +76,7 @@ private:
     int m_width, m_height, m_audio_index;
     double m_sqrt;
 
+    bool m_pixel_analyser_mode = false;
     QColor m_obj_color = QColor("#FF5000");
 };
 

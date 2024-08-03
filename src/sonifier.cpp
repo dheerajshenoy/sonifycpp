@@ -16,6 +16,11 @@ void Sonifier::setSampleRate(float SR) noexcept
     m_mapping->setSampleRate(SR);
 }
 
+void Sonifier::setFreqMap(FreqMap &m) noexcept
+{
+    m_mapping->setFreqMap(m);
+}
+
 void Sonifier::setMinMax(int &min, int &max) noexcept
 {
     m_mapping->setMinMax(min, max);

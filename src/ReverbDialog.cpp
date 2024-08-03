@@ -4,6 +4,7 @@ ReverbDialog::ReverbDialog(QWidget *parent)
     : QDialog(parent)
 {
 
+    this->setWindowModality(Qt::WindowModality::ApplicationModal);
     m_delay_sb->setRange(0, 10000);
     m_feedback_sb->setRange(0, 1000);
     m_layout->addWidget(m_delay_label, 0, 0);
