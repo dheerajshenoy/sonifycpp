@@ -10,6 +10,30 @@
 #include "mapping.hpp"
 #include <cmath>
 
+
+template<typename T, typename... Args>
+QVector<T> addVectors(const QVector<T>& first, const QVector<T>& second, const Args&... args)
+{
+    if (first.isEmpty())
+        return second;
+
+    if (second.isEmpty())
+        return first;
+
+    size_t size = first.size();
+    QVector<T> result(size, T{});
+
+    for (size_t i = 0; i < size; ++i) {
+        result[i] = first[i] + second[i];
+    }
+
+    if constexpr (sizeof...(args) > 0) {
+        result = addVectors<T>(result, args...);
+    }
+
+    return result;
+}
+
 void Mapping::setSamples(int &samples) noexcept
 {
     m_nsamples = samples;
@@ -52,7 +76,7 @@ QVector<short> Mapping::Pentatonic(QRgb pixel, int x, int y) noexcept
     /*auto s3 = generateSineWave(intensity, m_notes.getFrequency("E3"), 1);*/
     /*auto s4 = generateSineWave(intensity, m_notes.getFrequency("G4"), 1);*/
     /*auto s5 = generateSineWave(intensity, m_notes.getFrequency("A5"), 1);*/
-    return utils::addVectors(s1, s2);
+    return addVectors(s1, s2);
 
 }
 
@@ -104,7 +128,7 @@ QVector<short> Mapping::MapFull(QVector<PixelColumn> &pixelCol) noexcept
     {
         p = pixelCol[i];
         auto tmp = generateSineWave(qGray(p.pixel) / 255.0, p.y, 1);
-        fs = utils::addVectors(fs, tmp);
+        fs = addVectors(fs, tmp);
     }
 
     return fs;
@@ -202,8 +226,8 @@ QVector<short> Mapping::MapFull2(QVector<PixelColumn> &pixelCol) noexcept
     }
 
     std::vector<double> list = { 0, 0.2, 0.4, 0.6, 0.8, 1.0 };
-    auto s = list.at(rand() % list.size());
-    wave = generateSineWave(0.5, f * s, 1);
-    fs = utils::addVectors(fs, wave);
+    /*auto s = list.at(rand() % list.size());*/
+    wave = generateSineWave(0.5, f, 1);
+    fs = addVectors(fs, wave);
     return fs;
 }

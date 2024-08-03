@@ -36,6 +36,7 @@ public:
 signals:
     void closed();
     void optionsApplied(ImageOptions);
+    void resetImage();
 
 protected:
     void keyPressEvent(QKeyEvent *e) override;
@@ -64,6 +65,7 @@ private:
 
     QPushButton *m_cancel_btn = new QPushButton("Cancel");
     QPushButton *m_apply_btn = new QPushButton("Apply");
+    QPushButton *m_reset_btn = new QPushButton("Reset");
     QImage m_img, m_edited_img;
     int m_width, m_height;
 

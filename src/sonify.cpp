@@ -643,22 +643,22 @@ void Sonify::initConnections()
 
     connect(m_tools__image_settings, &QAction::triggered, this, [&]() {
         ImageEditorDialog *e = new ImageEditorDialog(this);
-        e->setPixmap(m_pix);
+        auto pix = gv->getPixmap();
+        e->setPixmap(pix);
         connect(e, &ImageEditorDialog::optionsApplied, this, [&](ImageOptions options) {
-    int Contrast;
-    int Gamma;
-    bool Grayscale;
-    bool Invert;
             QImage img = m_pix.toImage();
-            img = utils::changeBrightness(img, options.Brightness, m_pix.height(), m_pix.width());
-            img = utils::changeSaturation(img, options.Saturation, m_pix.height(), m_pix.width());
-            img = utils::changeContrast(img, options.Contrast, m_pix.height(), m_pix.width());
-            img = utils::changeGamma(img, options.Gamma, m_pix.height(), m_pix.width());
+            img = Utils::changeBrightness(img, options.Brightness, m_pix.height(), m_pix.width());
+            img = Utils::changeSaturation(img, options.Saturation, m_pix.height(), m_pix.width());
+            img = Utils::changeContrast(img, options.Contrast, m_pix.height(), m_pix.width());
+            img = Utils::changeGamma(img, options.Gamma, m_pix.height(), m_pix.width());
             if (options.Grayscale)
-                img = utils::convertToGrayscale(img, m_pix.height(), m_pix.width());
+                img = Utils::convertToGrayscale(img, m_pix.height(), m_pix.width());
             if (options.Invert)
-                img = utils::invertColor(img, m_pix.height(), m_pix.width());
-            m_pix = QPixmap::fromImage(img);
+                img = Utils::invertColor(img, m_pix.height(), m_pix.width());
+            pix = QPixmap::fromImage(img);
+            gv->setPixmap(pix);
+        });
+        connect(e, &ImageEditorDialog::resetImage, this, [&]() {
             gv->setPixmap(m_pix);
         });
         e->setAttribute(Qt::WA_DeleteOnClose);

@@ -4,6 +4,30 @@
 
 #include "sonifier.hpp"
 
+
+template<typename T, typename... Args>
+QVector<T> addVectors(const QVector<T>& first, const QVector<T>& second, const Args&... args)
+{
+    if (first.isEmpty())
+        return second;
+
+    if (second.isEmpty())
+        return first;
+
+    size_t size = first.size();
+    QVector<T> result(size, T{});
+
+    for (size_t i = 0; i < size; ++i) {
+        result[i] = first[i] + second[i];
+    }
+
+    if constexpr (sizeof...(args) > 0) {
+        result = addVectors<T>(result, args...);
+    }
+
+    return result;
+}
+
 void Sonifier::setSamples(int nsamples) noexcept
 {
     m_nsamples = nsamples;
@@ -624,7 +648,7 @@ void Sonifier::PathDrawn()
         auto y = pixelpos.y();
 
         /*pixcols[0] = PixelColumn { m_img.pixel(x, y), static_cast<int>(x), static_cast<int>(y) };*/
-        temp = utils::addVectors(temp, m_mapping->Map1(m_img.pixel(x, y) * 200, x, y));
+        QVector<short> temp = addVectors(temp, m_mapping->Map1(m_img.pixel(x, y) * 200, x, y));
 
         for(int j=0; j < temp.size(); j++)
             m_audioData.push_back(temp[j]);

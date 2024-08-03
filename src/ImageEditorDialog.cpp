@@ -47,7 +47,9 @@ ImageEditorDialog::ImageEditorDialog(QWidget *parent)
     m_side_panel_layout->addWidget(m_cancel_btn, 7, 0, 1, 2);
     m_side_panel_layout->addWidget(m_apply_btn, 8, 0, 1, 2);
 
-    m_side_panel_layout->setRowStretch(9, 1);
+    m_side_panel_layout->addWidget(m_reset_btn, 9, 0, 1, 2);
+
+    m_side_panel_layout->setRowStretch(10, 1);
 
     m_side_panel->setLayout(m_side_panel_layout);
     m_splitter->setStretchFactor(0, 1);
@@ -59,6 +61,10 @@ ImageEditorDialog::ImageEditorDialog(QWidget *parent)
     connect(m_contrast_slider, &QSlider::valueChanged, this, &ImageEditorDialog::applyImageOptions);
     connect(m_gamma_slider, &QSlider::valueChanged, this, &ImageEditorDialog::applyImageOptions);
     connect(m_saturation_slider, &QSlider::valueChanged, this, &ImageEditorDialog::applyImageOptions);
+    connect(m_reset_btn, &QPushButton::clicked, this, [&]() {
+        emit resetImage();
+        this->close();
+    });
 
     connect(m_apply_btn, &QPushButton::clicked, this, [&]() {
         auto brightness = m_brightness_slider->value();
@@ -69,6 +75,7 @@ ImageEditorDialog::ImageEditorDialog(QWidget *parent)
         auto invert = m_invert_cb->isChecked();
 
         emit optionsApplied(ImageOptions { brightness, saturation, contrast, gamma, grayscale, invert });
+        this->close();
     });
 
     connect(m_cancel_btn, &QPushButton::clicked, this, [&]() {

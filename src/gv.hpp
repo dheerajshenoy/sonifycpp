@@ -6,8 +6,6 @@
 #ifndef GV_HPP
 #define GV_HPP
 
-#include "qevent.h"
-#include "qgraphicsview.h"
 #include <qt6/QtWidgets/QGraphicsView>
 #include <qt6/QtWidgets/QGraphicsScene>
 #include <qt6/QtWidgets/QGraphicsLineItem>
@@ -34,6 +32,7 @@ public:
     GV(QWidget *parent = nullptr);
 
     void setPixmap(QPixmap &img);
+    QPixmap getPixmap();
     void reset();
     void setDuration(double s);
     void setTraverse(Traverse t);

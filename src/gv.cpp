@@ -229,6 +229,11 @@ void GV::setPixmap(QPixmap &pix)
     m_sqrt = sqrt(m_width * m_width / 4.0 + m_height * m_height / 4.0);
 }
 
+QPixmap GV::getPixmap()
+{
+    return m_pi->pixmap();
+}
+
 // Reset the positions of the object drawn on the graphicsview
 void GV::reset()
 {
