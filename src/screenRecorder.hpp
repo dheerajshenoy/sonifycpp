@@ -1,30 +1,28 @@
-#ifndef SCREENRECORDER_HPP
-#define SCREENRECORDER_HPP
+#pragma once
 
-#include <qt6/QtWidgets/QGraphicsView>
-#include <qt6/QtCore/QObject>
-#include <qt6/QtCore/QTimer>
+#include <QGraphicsView>
+#include <QObject>
+#include <QTimer>
 
 class ScreenRecorder : public QObject
 {
     Q_OBJECT
 public:
-    ScreenRecorder();
-    ~ScreenRecorder();
-    void setGraphicsView(QGraphicsView *gv);
-    void Start();
-    void Stop();
+    ScreenRecorder() noexcept;
+    ~ScreenRecorder() noexcept;
+    void setGraphicsView(QGraphicsView *gv) noexcept;
+    void Start() noexcept;
+    void Stop() noexcept;
 
 signals:
     void finished();
 
 private:
-    QGraphicsView *m_gv;
+    void callback() noexcept;
+
+    QGraphicsView *m_gv = nullptr;
     bool m_recording = false;
     QTimer m_timer;
     int m_counter = 0;
 
-    void callback();
 };
-
-#endif

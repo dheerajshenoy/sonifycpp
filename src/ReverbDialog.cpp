@@ -1,6 +1,6 @@
 #include "ReverbDialog.hpp"
 
-ReverbDialog::ReverbDialog(QWidget *parent)
+ReverbDialog::ReverbDialog(QWidget *parent) noexcept
     : QDialog(parent)
 {
 
@@ -18,17 +18,13 @@ ReverbDialog::ReverbDialog(QWidget *parent)
 
 }
 
-ReverbDialog::~ReverbDialog()
-{}
-
-void ReverbDialog::setData(QVector<short> &audioData, int &sampleRate)
+void ReverbDialog::setData(const QVector<short> &audioData, const int &sampleRate) noexcept
 {
-    
     m_audioData = audioData;
     m_sampleRate = sampleRate;
 }
 
-void ReverbDialog::process()
+void ReverbDialog::process() noexcept
 {
     auto delay = m_delay_sb->text().toDouble();
     auto feedback = m_feedback_sb->text().toDouble();
@@ -46,7 +42,6 @@ void ReverbDialog::process()
     // Variables for delay line management
     int index = 0;
 
-    qDebug() << m_audioData.size();
     for (int i = 0; i < m_audioData.size(); ++i)
     {
         float inSample = static_cast<float>(m_audioData[i]);
@@ -60,7 +55,6 @@ void ReverbDialog::process()
         delayLine[index] = outSample;
         index = (index + 1) % delaySize; // Circular buffer
     }
-
 
     emit outputReady(output);
 }

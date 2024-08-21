@@ -1,10 +1,7 @@
-#ifndef FORMAT_HPP
-#define FORMAT_HPP
+#pragma once
 
-enum Format
+enum class Format
 {
     WAV,
     MP3,
 };
-
-#endif

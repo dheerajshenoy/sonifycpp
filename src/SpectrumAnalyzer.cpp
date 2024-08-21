@@ -1,6 +1,6 @@
 #include "SpectrumAnalyzer.hpp"
 
-SpectrumAnalyzer::SpectrumAnalyzer(QWidget *parent)
+SpectrumAnalyzer::SpectrumAnalyzer(QWidget *parent) noexcept
     : QDialog(parent)
 {
     
@@ -14,7 +14,7 @@ SpectrumAnalyzer::SpectrumAnalyzer(QWidget *parent)
     m_plot->yAxis->setLabel("Amplitude");
 }
 
-void SpectrumAnalyzer::setData(QVector<short> &data, int &SampleRate)
+void SpectrumAnalyzer::setData(const QVector<short> &data, const int &SampleRate) noexcept
 {
    // Perform FFT
     int N = data.size();
@@ -57,20 +57,15 @@ void SpectrumAnalyzer::setData(QVector<short> &data, int &SampleRate)
     m_plot->xAxis->setRange(0, 22500);
     m_plot->yAxis->setRange(0, 1);
     m_plot->replot();
-
 }
 
-SpectrumAnalyzer::~SpectrumAnalyzer()
-{}
-
-void SpectrumAnalyzer::closeEvent(QCloseEvent *e)
+void SpectrumAnalyzer::closeEvent(QCloseEvent *e) noexcept
 {
     emit closed();
 }
 
-void SpectrumAnalyzer::keyPressEvent(QKeyEvent *e)
+void SpectrumAnalyzer::keyPressEvent(QKeyEvent *e) noexcept
 {
     if (e->key() != Qt::Key_Escape)
         QDialog::keyPressEvent(e);
-    else {}
 }

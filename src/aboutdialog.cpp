@@ -1,6 +1,6 @@
 #include "aboutdialog.hpp"
 
-AboutDialog::AboutDialog(QWidget *parent)
+AboutDialog::AboutDialog(QWidget *parent) noexcept
     : QDialog(parent)
 {
     this->setLayout(m_layout);
@@ -20,8 +20,4 @@ AboutDialog::AboutDialog(QWidget *parent)
 
     connect(m_git_btn, &QPushButton::clicked, this, [&]() {
     });
-
 }
-
-AboutDialog::~AboutDialog()
-{}

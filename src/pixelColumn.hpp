@@ -1,13 +1,10 @@
-#ifndef PIXEL_COLUMN_HPP
-#define PIXEL_COLUMN_HPP
+#pragma once
 
-#include <qt6/QtCore/QVector>
-#include <qt6/QtGui/QRgb>
+#include <QVector>
+#include <QRgb>
 
 struct PixelColumn
 {
     QRgb pixel;
     int x, y;
 };
-
-#endif

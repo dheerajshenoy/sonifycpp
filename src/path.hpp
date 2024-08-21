@@ -1,16 +1,15 @@
-#ifndef PATH_HPP
-#define PATH_HPP
+#pragma once
 
-#include <qt6/QtGui/QPainterPath>
-#include <qt6/QtGui/QPen>
-#include <qt6/QtGui/QColor>
-#include <qt6/QtWidgets/QGraphicsEllipseItem>
+#include <QPainterPath>
+#include <QPen>
+#include <QColor>
+#include <QGraphicsEllipseItem>
 
 class AnimatedPathItem : public QObject, public QGraphicsEllipseItem
 {
     Q_OBJECT
 public:
-    AnimatedPathItem(QColor color)
+    AnimatedPathItem(QColor color) noexcept
     {
         this->setPen(QPen(color, 2));
         this->setBrush(QBrush(color));
@@ -19,5 +18,3 @@ public:
     using QGraphicsEllipseItem::QGraphicsEllipseItem;
 
 };
-
-#endif

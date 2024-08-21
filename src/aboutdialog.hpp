@@ -1,18 +1,16 @@
-#ifndef ABOUTDIALOG_HPP
-#define ABOUTDIALOG_HPP
+#pragma once
 
-#include <qt6/QtWidgets/QDialog>
-#include <qt6/QtWidgets/QVBoxLayout>
-#include <qt6/QtWidgets/QLabel>
-#include <qt6/QtWidgets/QPushButton>
-#include <qt6/QtGui/QFont>
+#include <QDialog>
+#include <QVBoxLayout>
+#include <QLabel>
+#include <QPushButton>
+#include <QFont>
 
 class AboutDialog : public QDialog
 {
 
 public:
-    AboutDialog(QWidget *parent = nullptr);
-    ~AboutDialog();
+    AboutDialog(QWidget *parent = nullptr) noexcept;
 
 private:
     QVBoxLayout *m_layout = new QVBoxLayout();
@@ -21,5 +19,3 @@ private:
     QLabel *m_info_label = new QLabel("Convert images to audio");
     QPushButton *m_git_btn = new QPushButton("Git");
 };
-
-#endif

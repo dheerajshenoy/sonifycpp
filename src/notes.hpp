@@ -1,20 +1,16 @@
-#ifndef NOTES_HPP
-#define NOTES_HPP
+#pragma once
 
-
-#include <qt6/QtCore/QPair>
-#include <qt6/QtCore/QMap>
-#include <qt6/QtCore/QString>
+#include <QPair>
+#include <QMap>
+#include <QString>
 
 class Notes
 {
 public:
-    Notes();
-    ~Notes() {}
-    qreal getFrequency(QString key);
+    Notes() noexcept;
+    qreal getFrequency(const QString& key) noexcept;
 
 private:
     QMap<QString, qreal>frequencies;
 
 };
-#endif

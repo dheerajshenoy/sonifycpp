@@ -1,27 +1,5 @@
 #include "sonify.hpp"
 
-// Read in a WAV file. This was used just to check if the Waveform visualizer worked
-QVector<short> readWAVFile(const QString filename)
-{
-    SF_INFO sfinfo;
-
-    SNDFILE *file = sf_open(filename.toStdString().c_str(), SFM_READ, &sfinfo);
-
-    if(!file)
-    {
-        fprintf(stderr, "Could not open the file");
-        return {};
-    }
-
-    QVector<short> data;
-    data.resize(sfinfo.frames);
-
-    sf_read_short(file, data.data(), sfinfo.frames);
-    sf_close(file);
-
-    return data;
-}
-
 Sonify::Sonify(QWidget *parent)
 : QMainWindow(parent)
 {
@@ -33,36 +11,25 @@ Sonify::Sonify(QWidget *parent)
     initConnections();
     this->show();
     m_recorder->setGraphicsView(gv);
-
 }
 
-void Sonify::initKeybinds()
+// Set the keybindings
+void Sonify::initKeybinds() noexcept
 {
     QShortcut *kb_menubar = new QShortcut(QKeySequence("Ctrl+M"), this);
     QShortcut *kb_open = new QShortcut(QKeySequence("Ctrl+O"), this);
 
-    connect(kb_menubar, &QShortcut::activated, this, [&]() {
+    connect(kb_menubar, &QShortcut::activated, [&]() {
         m_menu_bar->setVisible(!m_menu_bar->isVisible());
     });
 
-    connect(kb_open, &QShortcut::activated, this, [&]() {
+    connect(kb_open, &QShortcut::activated, [&]() {
         Open();
     });
 }
 
-int MyFunc(lua_State *s)
-{
-    int a = lua_tointeger(s, 1);
-    int b = lua_tointeger(s, 2);
-
-    int result = a + b;
-
-    lua_pushinteger(s, result);
-
-    return 1;
-}
-
-void Sonify::initConfigDir()
+// Read the configuration file, if it exists
+void Sonify::initConfigDir() noexcept
 {
     m_config_dir = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
     QDir dir = QDir(m_config_dir);
@@ -73,7 +40,7 @@ void Sonify::initConfigDir()
 }
 
 // Handle lua script file content
-void Sonify::initLuaBindings()
+void Sonify::initLuaBindings() noexcept
 {
 
     QFile file = QFile(m_script_file_path);
@@ -105,36 +72,34 @@ void Sonify::initLuaBindings()
         auto traverse_mode = defaults_table["traverse_mode"].get_or<std::string>("LeftToRight");
 
         if (traverse_mode == "LeftToRight")
-            m_traverse_combo->setCurrentIndex(Traverse::LEFT_TO_RIGHT);
+            m_traverse_combo->setCurrentIndex(static_cast<int>(Traverse::LEFT_TO_RIGHT));
 
         else if (traverse_mode == "RightToLeft")
-            m_traverse_combo->setCurrentIndex(Traverse::RIGHT_TO_LEFT);
+            m_traverse_combo->setCurrentIndex(static_cast<int>(Traverse::RIGHT_TO_LEFT));
 
         else if (traverse_mode == "TopToBottom")
-            m_traverse_combo->setCurrentIndex(Traverse::TOP_TO_BOTTOM);
+            m_traverse_combo->setCurrentIndex(static_cast<int>(Traverse::TOP_TO_BOTTOM));
 
         else if (traverse_mode == "BottomToTop")
-            m_traverse_combo->setCurrentIndex(Traverse::BOTTOM_TO_TOP);
+            m_traverse_combo->setCurrentIndex(static_cast<int>(Traverse::BOTTOM_TO_TOP));
 
         else if (traverse_mode == "Clockwise")
-            m_traverse_combo->setCurrentIndex(Traverse::CLOCKWISE);
+            m_traverse_combo->setCurrentIndex(static_cast<int>(Traverse::CLOCKWISE));
 
         else if (traverse_mode == "Anticlockwise")
-            m_traverse_combo->setCurrentIndex(Traverse::ANTICLOCKWISE);
+            m_traverse_combo->setCurrentIndex(static_cast<int>(Traverse::ANTICLOCKWISE));
 
         else if (traverse_mode == "CircleOutwards")
-            m_traverse_combo->setCurrentIndex(Traverse::CIRCLE_OUTWARDS);
+            m_traverse_combo->setCurrentIndex(static_cast<int>(Traverse::CIRCLE_OUTWARDS));
 
         else if (traverse_mode == "CircleInwards")
-            m_traverse_combo->setCurrentIndex(Traverse::CIRCLE_INWARDS);
+            m_traverse_combo->setCurrentIndex(static_cast<int>(Traverse::CIRCLE_INWARDS));
 
         else if (traverse_mode == "Path")
-            m_traverse_combo->setCurrentIndex(Traverse::PATH);
+            m_traverse_combo->setCurrentIndex(static_cast<int>(Traverse::PATH));
 
         if (defaults_table["icons"].get_or(true))
-        {
             initIcons();
-        }
 
         if (!defaults_table["menubar"].get_or(true))
         {
@@ -148,28 +113,26 @@ void Sonify::initLuaBindings()
             m_status_bar->setVisible(false);
         }
 
-        std::string side_panel_location = defaults_table["side_panel"].get_or<std::string>("left");
-        if (side_panel_location == "left")
+        std::string panel_location = defaults_table["panel_location"].get_or<std::string>("left");
+        if (panel_location == "left")
         {
             initLeftPanel();
             m_panel_location = PanelLocation::LEFT;
         }
 
-        else if (side_panel_location == "right")
+        else if (panel_location == "right")
         {
             initRightPanel();
-            // TODO: Handle side panel location change
             m_panel_location = PanelLocation::RIGHT;
         }
 
-        else if (side_panel_location == "bottom")
+        else if (panel_location == "bottom")
         {
-            // TODO: Handle side panel location change
             initBottomPanel();
             m_panel_location = PanelLocation::BOTTOM;
         }
 
-        else if (side_panel_location == "top")
+        else if (panel_location == "top")
         {
             m_panel_location = PanelLocation::TOP;
             initTopPanel();
@@ -204,10 +167,7 @@ void Sonify::initLuaBindings()
         }
 
         if (defaults_table["keybindings"].get_or(true))
-        {
             initKeybinds();
-        }
-
     }
 
     // Get maps table
@@ -223,16 +183,13 @@ void Sonify::initLuaBindings()
             if (value.is<sol::table>())
             {
                 sol::table maps_table = value.as<sol::table>();
-
-                qDebug() << QString::fromStdString(maps_table["name"]);
                 maps_table["func"]();
             }
         }
     }
-
 }
 
-void Sonify::initLeftPanel()
+void Sonify::initLeftPanel() noexcept
 {
     m_side_panel = new QWidget();
     m_side_panel_layout = new QGridLayout();
@@ -259,14 +216,9 @@ void Sonify::initLeftPanel()
 
     QLabel *m_separator = new QLabel();
     m_side_panel_layout->addWidget(m_separator, 7, 0, 1, 1, Qt::AlignCenter);
-
-    /*delete m_top_panel;*/
-    /*m_top_panel = nullptr;*/
-    /*delete m_top_panel_layout;*/
-    /*m_top_panel_layout = nullptr;*/
 }
 
-void Sonify::initRightPanel()
+void Sonify::initRightPanel() noexcept
 {
     m_side_panel = new QWidget();
     m_side_panel_layout = new QGridLayout();
@@ -290,43 +242,31 @@ void Sonify::initRightPanel()
     m_splitter->addWidget(m_side_panel);
     m_layout->addWidget(m_splitter);
     m_layout->addWidget(m_status_bar);
+    m_side_panel_layout->setRowStretch(7, 1);
 
-    QLabel *m_separator = new QLabel();
-    m_side_panel_layout->addWidget(m_separator, 7, 0, 1, 1, Qt::AlignCenter);
-
-    /*delete m_top_panel;*/
-    /*m_top_panel = nullptr;*/
-    /*delete m_top_panel_layout;*/
-    /*m_top_panel_layout = nullptr;*/
 }
 
-void Sonify::initIcons()
+void Sonify::initIcons() noexcept
 {
-
     m_sonify_btn->setText("");
-    m_sonify_btn->setIcon(QIcon(":/icons/sonify.svg"));
+    m_sonify_btn->setIcon(QIcon(":/resources/icons/sonify.svg"));
     m_play_btn->setText("");
-    m_play_btn->setIcon(QIcon(":/icons/play.svg"));
+    m_play_btn->setIcon(QIcon(":/resources/icons/play.svg"));
     m_reset_btn->setText("");
-    m_reset_btn->setIcon(QIcon(":/icons/stop.svg"));
-
-    m_file__open->setIcon(QIcon(":/icons/open-file.svg"));
-    m_file__exit->setIcon(QIcon(":/icons/exit.svg"));
-
-    m_tools__waveform->setIcon(QIcon(":/icons/waveform.svg"));
-    m_tools__screen_record->setIcon(QIcon(":/icons/screen-record.svg"));
-    m_tools__tone_generator->setIcon(QIcon(":/icons/note.svg"));
-    m_tools__spectrum_analyzer->setIcon(QIcon(":/icons/tuning-fork.svg"));
-
-    m_effects__wah_wah->setIcon(QIcon(":/icons/wah-wah.svg"));
-    m_effects__distortion->setIcon(QIcon(":/icons/distortion.svg"));
-
+    m_reset_btn->setIcon(QIcon(":/resources/icons/stop.svg"));
+    m_file__open->setIcon(QIcon(":/resources/icons/open-file.svg"));
+    m_file__exit->setIcon(QIcon(":/resources/icons/exit.svg"));
+    m_tools__waveform->setIcon(QIcon(":/resources/icons/waveform.svg"));
+    m_tools__screen_record->setIcon(QIcon(":/resources/icons/screen-record.svg"));
+    m_tools__tone_generator->setIcon(QIcon(":/resources/icons/note.svg"));
+    m_tools__spectrum_analyzer->setIcon(QIcon(":/resources/icons/tuning-fork.svg"));
+    m_effects__wah_wah->setIcon(QIcon(":/resources/icons/wah-wah.svg"));
+    m_effects__distortion->setIcon(QIcon(":/resources/icons/distortion.svg"));
 }
 
-void Sonify::initTopPanel()
+void Sonify::initTopPanel() noexcept
 {
     m_top_panel = new QWidget();
-    m_top_panel_layout = new QBoxLayout(QBoxLayout::Direction::LeftToRight);
     m_top_panel->setLayout(m_top_panel_layout);
     m_top_panel_layout->addWidget(m_sonify_btn);
     m_top_panel_layout->addWidget(m_play_btn);
@@ -357,10 +297,9 @@ void Sonify::initTopPanel()
     /*m_side_panel_layout = nullptr;*/
 }
 
-void Sonify::initBottomPanel()
+void Sonify::initBottomPanel() noexcept
 {
     m_top_panel = new QWidget();
-    m_top_panel_layout = new QBoxLayout(QBoxLayout::Direction::LeftToRight);
     m_top_panel->setLayout(m_top_panel_layout);
     m_top_panel_layout->addWidget(m_sonify_btn);
     m_top_panel_layout->addWidget(m_play_btn);
@@ -390,7 +329,7 @@ void Sonify::initBottomPanel()
     /*m_side_panel_layout = nullptr;*/
 }
 
-void Sonify::initStatusbar()
+void Sonify::initStatusbar() noexcept
 {
     m_status_bar_layout->addWidget(m_statusbar_msg_label);
     m_status_bar_layout->addWidget(m_progress_bar);
@@ -400,26 +339,20 @@ void Sonify::initStatusbar()
     m_status_bar->setLayout(m_status_bar_layout);
 }
 
-void Sonify::initWidgets()
+void Sonify::initWidgets() noexcept
 {
-    m_widget = new QWidget();
-    m_layout = new QVBoxLayout();
+
+    m_statusbar_msg_label = new QLabel();
     m_sonify_btn = new QPushButton("Sonify");
     m_play_btn = new QPushButton("Play");
     m_reset_btn = new QPushButton("Reset");
-    m_traverse_combo = new QComboBox();
-    m_mapping_combo = new QComboBox();
     m_duration_label = new QLabel("Duration: ");
     m_mapping_label = new QLabel("Map: ");
     m_audio_progress_label = new QLabel("");
     m_traverse_label = new QLabel("Traversal Mode: ");
     m_num_samples_label = new QLabel("Samples: ");
-    m_num_samples_spinbox = new QSpinBox();
     m_num_samples_spinbox->setMinimum(1);
     m_num_samples_spinbox->setMaximum(4000);
-    m_max_freq_sb = new QSpinBox();
-    m_min_freq_sb = new QSpinBox();
-
     m_duration_label->setVisible(false);
     m_mapping_combo->addItem("Linear");
     m_mapping_combo->addItem("Logarithmic");
@@ -429,19 +362,17 @@ void Sonify::initWidgets()
     m_reset_btn->setToolTip("Reset");
     m_play_btn->setToolTip("Play");
 
+    m_min_freq_sb->setRange(0, 50000);
+    m_max_freq_sb->setRange(0, 50000);
+
     m_min_freq_sb->setValue(0);
     m_max_freq_sb->setValue(20000);
 
     m_min_freq_label = new QLabel("Min Freq");
     m_max_freq_label = new QLabel("Max Freq");
-    m_splitter = new QSplitter();
-    m_progress_bar = new QProgressBar();
     m_stop_sonification_btn = new QPushButton("Stop");
 
-    m_status_bar = new QWidget();
     m_status_bar->setMaximumHeight(30);
-    m_status_bar_layout = new QHBoxLayout();
-    m_statusbar_msg_label = new QLabel();
 
     m_traversal_name_list = {
         "Left to Right",
@@ -457,14 +388,11 @@ void Sonify::initWidgets()
     };
 
     for(const QString &t : m_traversal_name_list)
-    {
         m_traverse_combo->addItem(t);
-    }
 
     m_widget->setLayout(m_layout);
 
     m_splitter->setStretchFactor(1, 1);
-
 
     m_play_btn->setEnabled(false);
     m_reset_btn->setEnabled(false);
@@ -479,10 +407,8 @@ void Sonify::initWidgets()
     this->setCentralWidget(m_widget);
 }
 
-void Sonify::initMenu()
+void Sonify::initMenu() noexcept
 {
-    m_menu_bar = new QMenuBar();
-
     m_file_menu = new QMenu("File");
     m_audio_menu = new QMenu("Audio");
     m_tools_menu = new QMenu("Tools");
@@ -503,7 +429,6 @@ void Sonify::initMenu()
     m_effects_menu = new QMenu("Effects");
 
     m_audio_menu->addMenu(m_effects_menu);
-
     m_file_menu->addAction(m_file__open);
     m_file_menu->addAction(m_file__exit);
 
@@ -524,7 +449,7 @@ void Sonify::initMenu()
     m_tools__waveform->setCheckable(true);
     m_tools__waveform->setEnabled(false);
     m_tools__image_settings = new QAction("Image Settings");
-    m_tools__image_settings->setIcon(QIcon(":/icons/image.svg"));
+    m_tools__image_settings->setIcon(QIcon(":/resources/icons/image.svg"));
     m_tools__image_settings->setEnabled(false);
 
     m_tools_menu->addAction(m_tools__tone_generator);
@@ -551,8 +476,6 @@ void Sonify::initMenu()
     m_view_menu->addAction(m_view__statusbar);
     m_view_menu->addAction(m_view__menubar);
 
-
-
     m_effects__reverb = new QAction("Reverb");
     m_effects__phaser = new QAction("Phaser");
     m_effects__distortion = new QAction("Distortion");
@@ -573,7 +496,7 @@ void Sonify::initMenu()
 }
 
 // This is used to show statusbar message for specified seconds `s` or indefinetely if set equal to -1
-void Sonify::setMsg(QString msg, int s)
+void Sonify::setMsg(QString&& msg, const int& s) noexcept
 {
     if (!msg.isEmpty())
     {
@@ -593,7 +516,7 @@ void Sonify::setMsg(QString msg, int s)
     }
 }
 
-void Sonify::initConnections()
+void Sonify::initConnections() noexcept
 {
     connect(m_sonify_btn, &QPushButton::clicked, this, &Sonify::doSonify);
     connect(m_play_btn, &QPushButton::clicked, this, &Sonify::PlayAudio);
@@ -602,27 +525,27 @@ void Sonify::initConnections()
         QApplication::exit();
     });
 
-    connect(this, &Sonify::fileOpened, this, [&]() {
+    connect(this, &Sonify::fileOpened, this, [this]() {
         m_tools__image_settings->setEnabled(true);
     });
 
-    connect(m_file__open, &QAction::triggered, this, [&]() { Sonify::Open(); });
-    connect(m_audio__save, &QAction::triggered, this, [&]() { Sonify::Save(); });
-    connect(sonification, &Sonification::audioindex, gv, [&](int index) {
+    connect(m_file__open, &QAction::triggered, this, [this]() { Sonify::Open(); });
+    connect(m_audio__save, &QAction::triggered, this, [this]() { Sonify::Save(); });
+    connect(sonification, &Sonification::audioindex, gv, [this](int index) {
         gv->setAudioIndex(index);
     });
 
-    connect(sonification, &Sonification::audioFinishedPlaying, gv, [&]() {
+    connect(sonification, &Sonification::audioFinishedPlaying, gv, [this]() {
         m_reset_btn->setEnabled(true);
         emit gv->animationFinished();
     });
 
-    connect(sonification, &Sonification::audioprogress, gv, [&](double location) {
+    connect(sonification, &Sonification::audioprogress, gv, [this](double location) {
         m_audio_progress_label->setText(QString::number(location / static_cast<double>(sonification->getSampleRate())));
         /*m_wf_widget->setVertLinePosition(location);*/
     });
 
-    connect(m_stop_sonification_btn, &QPushButton::clicked, this, [&]() {
+    connect(m_stop_sonification_btn, &QPushButton::clicked, this, [this]() {
         sonification->stopSonification(true);
         m_progress_bar->setVisible(false);
         m_stop_sonification_btn->setVisible(false);
@@ -631,8 +554,8 @@ void Sonify::initConnections()
         setMsg("Sonification Stopped", 5);
     });
 
-    connect(gv, &GV::animationFinished, this, [&]() {
-        m_play_btn->setIcon(QIcon(":/icons/play.svg"));
+    connect(gv, &GV::animationFinished, this, [this]() {
+        m_play_btn->setIcon(QIcon(":/resources/icons/play.svg"));
         /*m_play_btn->setText("Play");*/
         m_isAudioPlaying = false;
         sonification->reset();
@@ -641,11 +564,11 @@ void Sonify::initConnections()
 
     connect(m_tools__waveform, &QAction::triggered, this, &Sonify::viewWaveform);
 
-    connect(m_tools__image_settings, &QAction::triggered, this, [&]() {
+    connect(m_tools__image_settings, &QAction::triggered, this, [this]() {
         ImageEditorDialog *e = new ImageEditorDialog(this);
         auto pix = gv->getPixmap();
         e->setPixmap(pix);
-        connect(e, &ImageEditorDialog::optionsApplied, this, [&](ImageOptions options) {
+        connect(e, &ImageEditorDialog::optionsApplied, this, [this, &pix](ImageOptions options) {
             QImage img = m_pix.toImage();
             img = Utils::changeBrightness(img, options.Brightness, m_pix.height(), m_pix.width());
             img = Utils::changeSaturation(img, options.Saturation, m_pix.height(), m_pix.width());
@@ -658,18 +581,18 @@ void Sonify::initConnections()
             pix = QPixmap::fromImage(img);
             gv->setPixmap(pix);
         });
-        connect(e, &ImageEditorDialog::resetImage, this, [&]() {
+        connect(e, &ImageEditorDialog::resetImage, this, [this]() {
             gv->setPixmap(m_pix);
         });
         e->setAttribute(Qt::WA_DeleteOnClose);
         e->open();
     });
 
-    connect(sonification, &Sonification::sonificationStopped, this, [&]() {
+    connect(sonification, &Sonification::sonificationStopped, this, [this]() {
         m_sonify_btn->setEnabled(true);
     });
 
-    connect(sonification, &Sonification::sonificationDone, this, [&]() {
+    connect(sonification, &Sonification::sonificationDone, this, [this]() {
         m_audio__save->setEnabled(true);
         m_tools__waveform->setEnabled(true);
         m_tools__spectrum_analyzer->setEnabled(true);
@@ -684,19 +607,19 @@ void Sonify::initConnections()
         gv->setTraverse(m_mode);
     });
 
-    connect(sonification, &Sonification::sonificationProgress, this, [&](int progress) {
+    connect(sonification, &Sonification::sonificationProgress, this, [this](int progress) {
         m_progress_bar->setValue(progress);
     });
 
-    connect(gv, &GV::dropFile, this, [&](QString droppedFilePath) {
+    connect(gv, &GV::dropFile, this, [this](QString droppedFilePath) {
         Open(droppedFilePath);
     });
 
-    connect(m_tools__spectrum_analyzer, &QAction::triggered, this, [&](bool state) {
+    connect(m_tools__spectrum_analyzer, &QAction::triggered, this, [this](bool state) {
         if (state)
         {
             m_sp = new SpectrumAnalyzer(this);
-            connect(m_sp, &SpectrumAnalyzer::closed, this, [&]() {
+            connect(m_sp, &SpectrumAnalyzer::closed, this, [this]() {
                 m_sp->close();
                 delete m_sp;
                 m_sp = nullptr;
@@ -709,13 +632,13 @@ void Sonify::initConnections()
         }
     });
 
-    connect(m_tools__tone_generator, &QAction::triggered, this, [&](bool state) {
+    connect(m_tools__tone_generator, &QAction::triggered, this, [this](bool state) {
         if (state)
         {
             if (!m_tg)
             {
                 m_tg = new ToneGenerator(this);
-                connect(m_tg, &ToneGenerator::closed, this, [&]() {
+                connect(m_tg, &ToneGenerator::closed, this, [this]() {
                     m_tools__tone_generator->setChecked(false);
                     m_tg->close();
                     disconnect(m_tg, 0, 0, 0);
@@ -727,12 +650,12 @@ void Sonify::initConnections()
         }
     });
 
-    connect(m_tools__screen_record, &QAction::triggered, this, [&](bool state)
+    connect(m_tools__screen_record, &QAction::triggered, this, [this](bool state)
     {
         if (state)
         {
-            connect(m_recorder, &ScreenRecorder::finished, this, [&]() {
-            qDebug() << "Screen recording finished";
+            connect(m_recorder, &ScreenRecorder::finished, this, [this]() {
+                qDebug() << "Screen recording finished";
             });
             m_recorder->Start();
         }
@@ -740,32 +663,31 @@ void Sonify::initConnections()
             m_recorder->Stop();
     });
 
-    connect(m_help__about, &QAction::triggered, this, [&]() {
+    connect(m_help__about, &QAction::triggered, this, [this]() {
         AboutDialog *aboutDialog = new AboutDialog(this);
         aboutDialog->open();
     });
 
-    connect(m_effects__reverb, &QAction::triggered, this, [&]() {
+    connect(m_effects__reverb, &QAction::triggered, this, [this]() {
         ReverbDialog *reverbDialog = new ReverbDialog(this);
         reverbDialog->setData(sonification->getAudioData(), sonification->getSampleRate());
         connect(reverbDialog, &ReverbDialog::outputReady, this, [&](QVector<short> reverbedOutput) {
             sonification->setAudioData(reverbedOutput);
-            qDebug() << "REVERBED";
         });
         reverbDialog->open();
 
     });
 
-    connect(m_view__menubar, &QAction::triggered, this, [&](bool state) {
+    connect(m_view__menubar, &QAction::triggered, this, [this](bool state) {
         m_menu_bar->setVisible(state);
     });
 
 
-    connect(m_view__statusbar, &QAction::triggered, this, [&](bool state) {
+    connect(m_view__statusbar, &QAction::triggered, this, [this](bool state) {
         m_status_bar->setVisible(state);
     });
 
-    connect(m_view__panel, &QAction::triggered, this, [&](bool state) {
+    connect(m_view__panel, &QAction::triggered, this, [this](bool state) {
         switch(m_panel_location)
         {
             case PanelLocation::LEFT:
@@ -782,10 +704,9 @@ void Sonify::initConnections()
 
 }
 
-
 // This is used to set the state of the audio playback. Call Play() if we have to play the audio
 // or call Pause() if we want to pause.
-void Sonify::PlayAudio()
+void Sonify::PlayAudio() noexcept
 {
 
     m_isAudioPlaying = !m_isAudioPlaying;
@@ -796,7 +717,8 @@ void Sonify::PlayAudio()
 }
 
 // Function that is similar to numpy linspace.
-QVector<double> linspace(double start, double stop, int num) {
+QVector<double> linspace(double start, double stop, int num) noexcept
+{
     QVector<double> result;
     result.reserve(num);
     double step = (stop - start) / (num - 1);
@@ -807,7 +729,7 @@ QVector<double> linspace(double start, double stop, int num) {
 }
 
 // Function that handles the waveform widget viewing
-void Sonify::viewWaveform(bool state)
+void Sonify::viewWaveform(const bool& state) noexcept
 {
     if (state)
     {
@@ -833,7 +755,7 @@ void Sonify::viewWaveform(bool state)
 }
 
 // Function that handles saving the WAV audio file
-bool Sonify::Save(QString filename)
+bool Sonify::Save(const QString& filename) noexcept
 {
     if (filename.isEmpty())
     {
@@ -849,7 +771,7 @@ bool Sonify::Save(QString filename)
 }
 
 // Function that handles Opening an image. If filename is specified, image will be opened, otherwise a file dialog will ask for the file.
-void Sonify::Open(QString filename)
+void Sonify::Open(QString filename) noexcept
 {
 
     if (filename.isEmpty())
@@ -879,7 +801,7 @@ void Sonify::Open(QString filename)
 }
 
 // Function that handles action of sonification
-void Sonify::doSonify()
+void Sonify::doSonify() noexcept
 {
     m_sonify_btn->setEnabled(false);
     sonification->stopSonification(false);
@@ -907,7 +829,7 @@ void Sonify::doSonify()
     auto min_freq = m_min_freq_sb->text().toInt();
     auto max_freq = m_max_freq_sb->text().toInt();
 
-    if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::LEFT_TO_RIGHT])
+    if (m_traverse_combo->currentText() == m_traversal_name_list[static_cast<int>(Traverse::LEFT_TO_RIGHT)])
     {
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
@@ -915,7 +837,7 @@ void Sonify::doSonify()
         sonification->Sonify(m_pix, gv, m_mode, min_freq, max_freq);
     }
 
-    else if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::RIGHT_TO_LEFT])
+    else if (m_traverse_combo->currentText() == m_traversal_name_list[static_cast<int>(Traverse::RIGHT_TO_LEFT)])
     {
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
@@ -923,7 +845,7 @@ void Sonify::doSonify()
         sonification->Sonify(m_pix, gv, m_mode, min_freq, max_freq);
     }
 
-    else if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::TOP_TO_BOTTOM])
+    else if (m_traverse_combo->currentText() == m_traversal_name_list[static_cast<int>(Traverse::TOP_TO_BOTTOM)])
     {
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
@@ -931,7 +853,7 @@ void Sonify::doSonify()
         sonification->Sonify(m_pix, gv, m_mode, min_freq, max_freq);
     }
 
-    else if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::BOTTOM_TO_TOP])
+    else if (m_traverse_combo->currentText() == m_traversal_name_list[static_cast<int>(Traverse::BOTTOM_TO_TOP)])
     {
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
@@ -939,7 +861,7 @@ void Sonify::doSonify()
         sonification->Sonify(m_pix, gv, m_mode, min_freq, max_freq);
     }
 
-    else if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::CIRCLE_OUTWARDS])
+    else if (m_traverse_combo->currentText() == m_traversal_name_list[static_cast<int>(Traverse::CIRCLE_OUTWARDS)])
     {
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
@@ -947,7 +869,7 @@ void Sonify::doSonify()
         sonification->Sonify(m_pix, gv, m_mode, min_freq, max_freq);
     }
 
-    else if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::CIRCLE_INWARDS])
+    else if (m_traverse_combo->currentText() == m_traversal_name_list[static_cast<int>(Traverse::CIRCLE_INWARDS)])
     {
         m_stop_sonification_btn->setVisible(true);
         m_progress_bar->setVisible(true);
@@ -955,7 +877,7 @@ void Sonify::doSonify()
         sonification->Sonify(m_pix, gv, m_mode, min_freq, max_freq);
     }
 
-    else if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::CLOCKWISE])
+    else if (m_traverse_combo->currentText() == m_traversal_name_list[static_cast<int>(Traverse::CLOCKWISE)])
     {
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
@@ -963,7 +885,7 @@ void Sonify::doSonify()
         sonification->Sonify(m_pix, gv, m_mode, min_freq, max_freq);
     }
 
-    else if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::ANTICLOCKWISE])
+    else if (m_traverse_combo->currentText() == m_traversal_name_list[static_cast<int>(Traverse::ANTICLOCKWISE)])
     {
         m_progress_bar->setVisible(true);
         m_stop_sonification_btn->setVisible(true);
@@ -971,7 +893,7 @@ void Sonify::doSonify()
         sonification->Sonify(m_pix, gv, m_mode, min_freq, max_freq);
     }
 
-    else if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::PATH])
+    else if (m_traverse_combo->currentText() == m_traversal_name_list[static_cast<int>(Traverse::PATH)])
     {
         gv->clearDrawPath();
         gv->setDrawPathMode(true);
@@ -981,7 +903,7 @@ void Sonify::doSonify()
         });
     }
 
-    else if (m_traverse_combo->currentText() == m_traversal_name_list[Traverse::INSPECT])
+    else if (m_traverse_combo->currentText() == m_traversal_name_list[static_cast<int>(Traverse::INSPECT)])
     {
         /*gv->setPixelAnalyserMode(true);*/
         m_mode = Traverse::INSPECT;
@@ -990,7 +912,7 @@ void Sonify::doSonify()
 }
 
 // Reset btn function
-void Sonify::Reset()
+void Sonify::Reset() noexcept
 {
     /*m_play_btn->setText("Play");*/
     m_isAudioPlaying = false;
@@ -1003,12 +925,12 @@ void Sonify::Reset()
 }
 
 // TODO: Screen record
-void Sonify::CaptureWindow()
+void Sonify::CaptureWindow() noexcept
 {
 }
 
 // Function to ask for image resize when opening
-void Sonify::AskForResize(QString filename)
+void Sonify::AskForResize(const QString& filename) noexcept
 {
     QDialog *ask_widget = new QDialog(this);
     QGridLayout *ask_layout = new QGridLayout();
@@ -1075,28 +997,45 @@ void Sonify::AskForResize(QString filename)
 }
 
 // Function that handles 'play' state
-void Sonify::Play()
+void Sonify::Play() noexcept
 {
     sonification->play();
     /*m_play_btn->setText("Pause");*/
-    m_play_btn->setIcon(QIcon(":/icons/pause.svg"));
+    m_play_btn->setIcon(QIcon(":/resources/icons/pause.svg"));
     m_reset_btn->setEnabled(false);
     m_num_samples_spinbox->setEnabled(false);
     m_traverse_combo->setEnabled(false);
 }
 
 // Function that handles 'pause' state
-void Sonify::Pause()
+void Sonify::Pause() noexcept
 {
-
     sonification->pause();
     /*m_play_btn->setText("Play");*/
-    m_play_btn->setIcon(QIcon(":/icons/play.svg"));
+    m_play_btn->setIcon(QIcon(":/resources/icons/play.svg"));
     m_reset_btn->setEnabled(true);
     m_num_samples_spinbox->setEnabled(true);
     m_traverse_combo->setEnabled(true);
-
 }
 
-Sonify::~Sonify()
-{}
+// Read in a WAV file. This was used just to check if the Waveform visualizer worked
+QVector<short> readWAVFile(const QString filename) noexcept
+{
+    SF_INFO sfinfo;
+
+    SNDFILE *file = sf_open(filename.toStdString().c_str(), SFM_READ, &sfinfo);
+
+    if(!file)
+    {
+        fprintf(stderr, "Could not open the file");
+        return {};
+    }
+
+    QVector<short> data;
+    data.resize(sfinfo.frames);
+
+    sf_read_short(file, data.data(), sfinfo.frames);
+    sf_close(file);
+
+    return data;
+}

@@ -1,9 +1,8 @@
-#ifndef TRAVERSE_HPP
-#define TRAVERSE_HPP
+#pragma once
 
-enum Traverse
+enum class Traverse : int
 {
-    LEFT_TO_RIGHT,
+    LEFT_TO_RIGHT = 0,
     RIGHT_TO_LEFT,
     TOP_TO_BOTTOM,
     BOTTOM_TO_TOP,
@@ -15,5 +14,3 @@ enum Traverse
     REGION,
     INSPECT,
 };
-
-#endif

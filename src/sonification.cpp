@@ -7,7 +7,7 @@
 #include "sonification.hpp"
 #include <cmath>
 
-Sonification::Sonification()
+Sonification::Sonification() noexcept
 {
     m_val = M_PI2 * m_NumSamples / m_SampleRate;
 
@@ -22,12 +22,13 @@ Sonification::Sonification()
         m_audioData = audioData;
         emit sonificationDone();
     });
+
     connect(sonifier, &Sonifier::sonificationProgress, this, [&](int progress) {
         emit sonificationProgress(progress);
     });
 }
 
-Sonification::~Sonification()
+Sonification::~Sonification() noexcept
 {
     if (m_audioDevice) {
         SDL_CloseAudioDevice(m_audioDevice);
@@ -42,14 +43,15 @@ Sonification::~Sonification()
     }
 }
 
-void Sonification::setNumSamples(int nsamples) noexcept
+void Sonification::setNumSamples(const int& nsamples) noexcept
 {
     m_NumSamples = nsamples; 
     m_val = M_PI2 * m_NumSamples / m_SampleRate;
 }
 
 // Function to sonify an `image` provided by QImage and in mode `mode`
-void Sonification::Sonify(QPixmap &pix, GV *gv, Traverse mode, int min, int max)
+void Sonification::Sonify(const QPixmap &pix, GV *gv, const Traverse& mode, const int& min,
+                          const int& max) noexcept
 {
     // Return if null
     if (pix.isNull()) return;
@@ -77,9 +79,7 @@ void Sonification::Sonify(QPixmap &pix, GV *gv, Traverse mode, int min, int max)
     }
 
     if (mode == Traverse::PATH)
-    {
         sonifier->setParameters(pix, mode, gv->getPathDrawnPos());
-    }
     else if (mode == Traverse::INSPECT)
     {
     }
@@ -100,17 +100,17 @@ void Sonification::Sonify(QPixmap &pix, GV *gv, Traverse mode, int min, int max)
     m_thread->start();
 }
 
-void Sonification::pause()
+void Sonification::pause() noexcept
 {
     SDL_PauseAudioDevice(m_audioDevice, 1);
 }
 
-void Sonification::play()
+void Sonification::play() noexcept
 {
     SDL_PauseAudioDevice(m_audioDevice, 0);
 }
 
-void Sonification::reset()
+void Sonification::reset() noexcept
 {
     SDL_LockAudioDevice(m_audioDevice); // Lock the audio device to avoid race conditions
     m_audioOffset = 0; // Reset the audio offset
@@ -119,7 +119,7 @@ void Sonification::reset()
 }
 
 // Save the audio data to file
-bool Sonification::save(QString filename, Format f) noexcept
+bool Sonification::save(const QString& filename, const Format& f) noexcept
 {
     switch(f)
     {
@@ -129,7 +129,6 @@ bool Sonification::save(QString filename, Format f) noexcept
             break;
 
         case Format::MP3:
-            // TODO: Handle MP3 saving
             break;
     }
 
@@ -137,7 +136,7 @@ bool Sonification::save(QString filename, Format f) noexcept
 }
 
 // Helper function to generate WAV file
-bool Sonification::m_GenerateWavFile(QString filename)
+bool Sonification::m_GenerateWavFile(const QString& filename) noexcept
 {
     SF_INFO sfinfo;
     sfinfo.samplerate = m_SampleRate;
@@ -173,7 +172,7 @@ double Sonification::getDuration() noexcept
     return m_audioData.size() / m_SampleRate;
 }
 
-void Sonification::sdlAudioCallback(void* userdata, Uint8* _stream, int len)
+void Sonification::sdlAudioCallback(void* userdata, Uint8* _stream, int len) noexcept
 {
 
     Sonification *s = static_cast<Sonification*>(userdata);
@@ -205,7 +204,7 @@ int Sonification::getNumSamples() noexcept
     return m_NumSamples;
 }
 
-void Sonification::setAudioData(QVector<short> &audioData) noexcept
+void Sonification::setAudioData(const QVector<short> &audioData) noexcept
 {
     m_audioData = audioData;
 }
@@ -220,7 +219,7 @@ QVector<short>& Sonification::getAudioData() noexcept
     return m_audioData;
 }
 
-void Sonification::stopSonification(bool state) noexcept
+void Sonification::stopSonification(const bool& state) noexcept
 {
     sonifier->stopSonifying(state);
     if (state)
@@ -235,7 +234,7 @@ void Sonification::stopSonification(bool state) noexcept
     emit sonificationStopped();
 }
 
-void Sonification::setFreqMap(FreqMap f) noexcept
+void Sonification::setFreqMap(const FreqMap& f) noexcept
 {
     sonifier->setFreqMap(f);
 }

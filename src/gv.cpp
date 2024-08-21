@@ -7,7 +7,8 @@
 
 #include "gv.hpp"
 
-GV::GV(QWidget *parent) : QGraphicsView(parent)
+GV::GV(QWidget *parent) noexcept
+    : QGraphicsView(parent)
 {
     this->setScene(m_scene);
     m_scene->addItem(m_pi);
@@ -16,14 +17,14 @@ GV::GV(QWidget *parent) : QGraphicsView(parent)
 }
 
 // Get the current location in the audiodata array
-void GV::setAudioIndex(int index)
+void GV::setAudioIndex(const int& index) noexcept
 {
     m_audio_index = index;
     emit audioIndexSet();
 }
 
 // Function to handle draw path mode
-void GV::setDrawPathMode(bool t)
+void GV::setDrawPathMode(const bool& t) noexcept
 {
     m_draw_path_mode = t;
 
@@ -40,9 +41,10 @@ void GV::setDrawPathMode(bool t)
 }
 
 // Method to set the traverse mode, so as to prepare for the animation
-void GV::setTraverse(Traverse t)
+void GV::setTraverse(const Traverse& t) noexcept
 {
-    if (m_traverse == t) return;
+    if (m_traverse == t)
+        return;
 
     m_traverse = t;
 
@@ -210,13 +212,13 @@ void GV::setTraverse(Traverse t)
     }
 }
 
-void GV::setDuration(double s)
+void GV::setDuration(const double& s) noexcept
 {
     m_duration_s = s;
 }
 
 // Set the image onto the graphicsview
-void GV::setPixmap(QPixmap &pix)
+void GV::setPixmap(const QPixmap& pix) noexcept
 {
     if (!pix) return;
 
@@ -229,13 +231,13 @@ void GV::setPixmap(QPixmap &pix)
     m_sqrt = sqrt(m_width * m_width / 4.0 + m_height * m_height / 4.0);
 }
 
-QPixmap GV::getPixmap()
+QPixmap GV::getPixmap() noexcept
 {
     return m_pi->pixmap();
 }
 
 // Reset the positions of the object drawn on the graphicsview
-void GV::reset()
+void GV::reset() noexcept
 {
     if (m_li)
         m_li->reset();
@@ -244,7 +246,7 @@ void GV::reset()
 
 }
 
-void GV::mousePressEvent(QMouseEvent *e)
+void GV::mousePressEvent(QMouseEvent *e) noexcept
 {
     if(e->button() == Qt::MouseButton::LeftButton)
     {
@@ -263,7 +265,7 @@ void GV::mousePressEvent(QMouseEvent *e)
     QGraphicsView::mousePressEvent(e);
 }
 
-void GV::mouseReleaseEvent(QMouseEvent *e)
+void GV::mouseReleaseEvent(QMouseEvent *e) noexcept
 {
     if(e->button() == Qt::MouseButton::LeftButton)
     {
@@ -276,7 +278,7 @@ void GV::mouseReleaseEvent(QMouseEvent *e)
     QGraphicsView::mouseReleaseEvent(e);
 }
 
-void GV::mouseMoveEvent(QMouseEvent *e)
+void GV::mouseMoveEvent(QMouseEvent *e) noexcept
 {
     if(m_draw_path_mode)
     {
@@ -289,7 +291,7 @@ void GV::mouseMoveEvent(QMouseEvent *e)
             QPointF s = mapToScene(e->pos());
             m_painter_path.lineTo(s);
             m_path_item->setPath(m_painter_path);
-            m_pathDrawnPixelsPos.push_back(s);
+            m_pathDrawnPixelsPos.emplace_back(s);
         }
     }
     QGraphicsView::mouseMoveEvent(e);
@@ -298,20 +300,20 @@ void GV::mouseMoveEvent(QMouseEvent *e)
 GV::~GV()
 {}
 
-QVector<QPointF> GV::getPathDrawnPos()
+QVector<QPointF> GV::getPathDrawnPos() noexcept
 {
     return m_pathDrawnPixelsPos;
 }
 
 // Function to handle drag and drop event to open the file when it is dropped into the graphicsview
-void GV::dropEvent(QDropEvent *e)
+void GV::dropEvent(QDropEvent *e) noexcept
 {
     QString droppedFilePath = e->mimeData()->urls()[0].toLocalFile();
     e->acceptProposedAction();
     emit dropFile(droppedFilePath);
 }
 
-void GV::dragEnterEvent(QDragEnterEvent *e)
+void GV::dragEnterEvent(QDragEnterEvent *e) noexcept
 {
     if (e->mimeData()->hasUrls())
     {
@@ -320,11 +322,11 @@ void GV::dragEnterEvent(QDragEnterEvent *e)
     }
 }
 
-void GV::dragMoveEvent(QDragMoveEvent *e)
+void GV::dragMoveEvent(QDragMoveEvent *e) noexcept
 {}
 
 // Function to set the color of "object" (line or circle or path) drawn over the image
-void GV::setObjColor(QString color)
+void GV::setObjColor(const QString& color) noexcept
 {
     if (QColor::isValidColorName(color))
         m_obj_color = QColor(color);

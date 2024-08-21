@@ -1,6 +1,6 @@
 #include "waveformwidget.hpp"
 
-WaveformWidget::WaveformWidget(QWidget *parent)
+WaveformWidget::WaveformWidget(QWidget *parent) noexcept
     : QWidget(parent)
 {
 
@@ -41,7 +41,7 @@ WaveformWidget::WaveformWidget(QWidget *parent)
     this->setLayout(m_wf_widget_layout);
 }
 
-void WaveformWidget::setData(QVector<short> &data)
+void WaveformWidget::setData(const QVector<short> &data) noexcept
 {
 
     QVector<double> x, y;
@@ -61,22 +61,19 @@ void WaveformWidget::setData(QVector<short> &data)
 
 }
 
-void WaveformWidget::closeEvent(QCloseEvent *e)
+void WaveformWidget::closeEvent(QCloseEvent *e) noexcept
 {
     emit closed();
 }
 
-void WaveformWidget::setVertLinePosition(double location)
+void WaveformWidget::setVertLinePosition(const double& location) noexcept
 {
     m_wf_vertline->point1->setCoords(location, 0);
     m_wf_vertline->point2->setCoords(location, 1);
     m_wf_vertline_layer->replot();
 }
 
-WaveformWidget::~WaveformWidget()
-{}
-
-void WaveformWidget::resetVertLine()
+void WaveformWidget::resetVertLine() noexcept
 {
     m_wf_vertline->point1->setCoords(0, 0);
     m_wf_vertline->point2->setCoords(0, 0);

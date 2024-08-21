@@ -1,17 +1,17 @@
-#ifndef CIRCLE_HPP
-#define CIRCLE_HPP
+#pragma once
+
 #include "traverse.hpp"
-#include <qt6/QtWidgets/QGraphicsEllipseItem>
-#include <qt6/QtGui/QPen>
-#include <qt6/QtCore/QObject>
+#include <QGraphicsEllipseItem>
+#include <QPen>
+#include <QObject>
 
 // A custom QGraphicsLineItem to allow for animation
-class AnimatedCircleItem : public QObject, public QGraphicsEllipseItem {
+class AnimatedCircleItem : public QObject, public QGraphicsEllipseItem
+{
     Q_OBJECT
     Q_PROPERTY(qreal radius READ radius WRITE setRadius)
-
 public:
-    AnimatedCircleItem(QColor color)
+    AnimatedCircleItem(QColor color) noexcept
     {
         this->setPen(QPen(color, 2));
         this->setZValue(1);
@@ -19,19 +19,19 @@ public:
 
     using QGraphicsEllipseItem::QGraphicsEllipseItem;
 
-    void setImageWidth(qreal w)
+    inline void setImageWidth(const qreal& w) noexcept
     {
         m_imgw = w;
         m_rect = this->rect();
     }
 
-    void setImageHeight(qreal h)
+    inline void setImageHeight(const qreal& h) noexcept
     {
         m_imgh = h;
         m_rect = this->rect();
     }
     
-    void setCenter()
+    inline void setCenter() noexcept
     {
 
         centerX = m_imgw / 2.0;
@@ -40,18 +40,19 @@ public:
         setTransformOriginPoint(centerX, centerY);
     }
 
-    qreal radius()
+    inline qreal radius() noexcept
     {
         return m_w;
     }
 
-    void setRadius(qreal r)
+    inline void setRadius(const qreal& r) noexcept
     {
         prepareGeometryChange();
         setRect(this->x() - r - m_imgw / 2.0, this->y() - r - m_imgh / 2.0, r * 2, r * 2);
     }
 
-    void reset() {
+    inline void reset() noexcept
+    {
         this->setRect(m_rect);
     }
 
@@ -59,5 +60,3 @@ private:
     qreal m_x, m_y, m_h, m_w, m_imgh, m_imgw, centerX, centerY;
     QRectF m_rect;
 };
-
-#endif

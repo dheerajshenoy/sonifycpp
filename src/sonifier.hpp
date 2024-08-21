@@ -1,28 +1,16 @@
-#ifndef SONIFIER_HPP
-#define SONIFIER_HPP
+#pragma once
 
-#include <qt6/QtGui/QPixmap>
-#include <qt6/QtGui/QRgb>
-#include <qt6/QtCore/QObject>
-#include <qt6/QtCore/QVector>
-#include <qt6/QtCore/QMutex>
-#include <qt6/QtCore/QMutexLocker>
-#include <qt6/QtCore/QThreadPool>
-#include <qt6/QtConcurrent/QtConcurrent>
+#include <QPixmap>
+#include <QRgb>
+#include <QObject>
+#include <QVector>
+#include <QMutex>
+#include <QMutexLocker>
+#include <QThreadPool>
+#include <QtConcurrent/QtConcurrent>
 #include "traverse.hpp"
 #include "pixelColumn.hpp"
 #include "freqmap.hpp"
-
-/*
-#ifdef __linux__
-    #include <alsa/asoundlib.h>
-#elif __APPLE__
-    #include <CoreAudio/CoreAudio.h>
-#elif _WIN32
-    #include <windows.h>
-#endif
-*/
-
 #include "mapping.hpp"
 #include "utils.hpp"
 
@@ -30,26 +18,25 @@ class Sonifier : public QObject
 {
     Q_OBJECT
 public:
-    Sonifier() {}
-    ~Sonifier() {}
-    void setParameters(QPixmap &pix, Traverse t);
-    void setParameters(QPixmap &pix, Traverse t, QVector<QPointF>);
-    void setSampleRate(float SR) noexcept;
-    void setSamples(int nsamples) noexcept;
-    void LeftToRight();
-    void RightToLeft();
-    void TopToBottom();
-    void BottomToTop();
-    void CircleOutwards();
-    void CircleInwards();
-    void Clockwise();
-    void AntiClockwise();
-    void PathDrawn();
-    void Sonify();
-    void stopSonifying(bool state);
-    bool hasStopped() { return m_stop_sonifying; }
-    void setMinMax(int &min, int &max) noexcept;
-    void setFreqMap(FreqMap &f) noexcept;
+    Sonifier() = default;
+    void setParameters(const QPixmap& pix, const Traverse& t) noexcept;
+    void setParameters(const QPixmap& pix, const Traverse& t, const QVector<QPointF>&) noexcept;
+    void setSampleRate(const float& SR) noexcept;
+    void setSamples(const int& nsamples) noexcept;
+    void LeftToRight() noexcept;
+    void RightToLeft() noexcept;
+    void TopToBottom() noexcept;
+    void BottomToTop() noexcept;
+    void CircleOutwards() noexcept;
+    void CircleInwards() noexcept;
+    void Clockwise() noexcept;
+    void AntiClockwise() noexcept;
+    void PathDrawn() noexcept;
+    void Sonify() noexcept;
+    void stopSonifying(const bool& state) noexcept;
+    inline bool hasStopped() { return m_stop_sonifying; }
+    void setMinMax(const int &min, const int &max) noexcept;
+    void setFreqMap(const FreqMap &f) noexcept;
 
 signals:
     void sonificationDone(QVector<short>);
@@ -68,21 +55,17 @@ private:
     QThreadPool m_threadpool;
     QImage m_img;
 
-
-    /*static void processImageChunk__LeftToRight(QImage &img, int startX, int endX, Mapping *, QVector<short> &, QMutex &, std::atomic<int> &);*/
-    static void processImageChunk__LeftToRight(int startX, int endX, void *userData);
-    static void processImageChunk__RightToLeft(int startX, int endX, void *userData);
-    static void processImageChunk__TopToBottom(int startY, int endY, void *userData);
-    static void processImageChunk__BottomToTop(int startY, int endY, void *userData);
-    static void processImageChunk__CircleOutwards(int startRadius, int endRadius, int &lastRadius, void *userData);
-    static void processImageChunk__CircleInwards(int startRadius, int endRadius, int &lastRadius, void *userData);
-    static void processImageChunk__Clockwise(int startAngle, int endAngle, void *userData);
-    static void processImageChunk__AntiClockwise(int startAngle, int endAngle, void *userData);
+    static void processImageChunk__LeftToRight(int startX, int endX, void *userData) noexcept;
+    static void processImageChunk__RightToLeft(int startX, int endX, void *userData) noexcept;
+    static void processImageChunk__TopToBottom(int startY, int endY, void *userData) noexcept;
+    static void processImageChunk__BottomToTop(int startY, int endY, void *userData) noexcept;
+    static void processImageChunk__CircleOutwards(int startRadius, int endRadius, int &lastRadius, void *userData) noexcept;
+    static void processImageChunk__CircleInwards(int startRadius, int endRadius, int &lastRadius, void *userData) noexcept;
+    static void processImageChunk__Clockwise(int startAngle, int endAngle, void *userData) noexcept;
+    static void processImageChunk__AntiClockwise(int startAngle, int endAngle, void *userData) noexcept;
 
     QVector<short> m_audioData;
     std::atomic<int> m_progressCounter = 0;
 
     QMutex m_mutex;
 };
-
-#endif

@@ -1,6 +1,6 @@
 #include "ImageEditorDialog.hpp"
 
-ImageEditorDialog::ImageEditorDialog(QWidget *parent)
+ImageEditorDialog::ImageEditorDialog(QWidget *parent) noexcept
 : QDialog(parent)
 {
     this->setLayout(m_layout);
@@ -10,47 +10,34 @@ ImageEditorDialog::ImageEditorDialog(QWidget *parent)
 
     m_splitter->addWidget(m_side_panel);
     m_splitter->addWidget(m_img_label);
-
     m_brightness_slider->setOrientation(Qt::Orientation::Horizontal);
     m_saturation_slider->setOrientation(Qt::Orientation::Horizontal);
     m_contrast_slider->setOrientation(Qt::Orientation::Horizontal);
     m_gamma_slider->setOrientation(Qt::Orientation::Horizontal);
-
     m_contrast_slider->setRange(-100, 100); // 0.1 to 3.0
     m_gamma_slider->setRange(10, 300); // 0.1 to 3.0
     m_saturation_slider->setRange(-100, 100);
     m_brightness_slider->setRange(-100, 100);
-
     m_contrast_slider->setValue(0);
     m_gamma_slider->setValue(100);
     m_brightness_slider->setValue(0);
     m_saturation_slider->setValue(0);
-
     m_side_panel_layout->addWidget(m_brightness_label, 1, 0);
     m_side_panel_layout->addWidget(m_brightness_slider, 1, 1);
-
     m_side_panel_layout->addWidget(m_contrast_label, 2, 0);
     m_side_panel_layout->addWidget(m_contrast_slider, 2, 1);
-
     m_side_panel_layout->addWidget(m_saturation_label, 3, 0);
     m_side_panel_layout->addWidget(m_saturation_slider, 3, 1);
-
     m_side_panel_layout->addWidget(m_gamma_label, 4, 0);
     m_side_panel_layout->addWidget(m_gamma_slider, 4, 1);
-
     m_side_panel_layout->addWidget(m_gray_label, 5, 0);
     m_side_panel_layout->addWidget(m_gray_cb, 5, 1);
-
     m_side_panel_layout->addWidget(m_invert_label, 6, 0);
     m_side_panel_layout->addWidget(m_invert_cb, 6, 1);
-
     m_side_panel_layout->addWidget(m_cancel_btn, 7, 0, 1, 2);
     m_side_panel_layout->addWidget(m_apply_btn, 8, 0, 1, 2);
-
     m_side_panel_layout->addWidget(m_reset_btn, 9, 0, 1, 2);
-
     m_side_panel_layout->setRowStretch(10, 1);
-
     m_side_panel->setLayout(m_side_panel_layout);
     m_splitter->setStretchFactor(0, 1);
     m_img_label->setAlignment(Qt::AlignmentFlag::AlignCenter);
@@ -61,12 +48,12 @@ ImageEditorDialog::ImageEditorDialog(QWidget *parent)
     connect(m_contrast_slider, &QSlider::valueChanged, this, &ImageEditorDialog::applyImageOptions);
     connect(m_gamma_slider, &QSlider::valueChanged, this, &ImageEditorDialog::applyImageOptions);
     connect(m_saturation_slider, &QSlider::valueChanged, this, &ImageEditorDialog::applyImageOptions);
-    connect(m_reset_btn, &QPushButton::clicked, this, [&]() {
+    connect(m_reset_btn, &QPushButton::clicked, this, [this]() {
         emit resetImage();
         this->close();
     });
 
-    connect(m_apply_btn, &QPushButton::clicked, this, [&]() {
+    connect(m_apply_btn, &QPushButton::clicked, this, [this]() {
         auto brightness = m_brightness_slider->value();
         auto contrast = m_contrast_slider->value();
         auto saturation = m_saturation_slider->value();
@@ -78,14 +65,14 @@ ImageEditorDialog::ImageEditorDialog(QWidget *parent)
         this->close();
     });
 
-    connect(m_cancel_btn, &QPushButton::clicked, this, [&]() {
+    connect(m_cancel_btn, &QPushButton::clicked, this, [this]() {
         this->close();
     });
 
     this->show();
 }
 
-void ImageEditorDialog::applyImageOptions()
+void ImageEditorDialog::applyImageOptions() noexcept
 {
     auto brightness = m_brightness_slider->value();
     auto contrast = m_contrast_slider->value();
@@ -112,16 +99,13 @@ void ImageEditorDialog::applyImageOptions()
     m_img_label->setPixmap(QPixmap::fromImage(m_edited_img));
 }
 
-ImageEditorDialog::~ImageEditorDialog()
-{}
-
-void ImageEditorDialog::closeEvent(QCloseEvent *)
+void ImageEditorDialog::closeEvent(QCloseEvent *) noexcept
 {
     emit closed();
 }
 
 // gamma 0.1 to 300
-QImage ImageEditorDialog::changeGamma(QImage &image, int _value)
+QImage ImageEditorDialog::changeGamma(QImage &image, const int& _value) noexcept
 {
     double value = _value / 100.0;
     for (int y = 0; y < m_height; ++y) {
@@ -138,7 +122,7 @@ QImage ImageEditorDialog::changeGamma(QImage &image, int _value)
     return image;
 }
 
-QImage ImageEditorDialog::changeBrightness(QImage &image, int value)
+QImage ImageEditorDialog::changeBrightness(QImage &image, const int& value) noexcept
 {
     for (int y = 0; y < m_height; ++y)
     {
@@ -160,7 +144,7 @@ QImage ImageEditorDialog::changeBrightness(QImage &image, int value)
     return image;
 }
 
-QImage ImageEditorDialog::changeSaturation(QImage &image, int value)
+QImage ImageEditorDialog::changeSaturation(QImage &image, const int& value) noexcept
 {
     for (int y = 0; y < m_height; ++y) {
         for (int x = 0; x < m_width; ++x) {
@@ -177,7 +161,7 @@ QImage ImageEditorDialog::changeSaturation(QImage &image, int value)
     return image;
 }
 
-QImage ImageEditorDialog::invertColor(QImage &img)
+QImage ImageEditorDialog::invertColor(QImage &img) noexcept
 {
     for(int i=0; i < m_width; i++)
         for(int j=0; j < m_height; j++)
@@ -189,7 +173,7 @@ QImage ImageEditorDialog::invertColor(QImage &img)
     return img;
 }
 
-QImage ImageEditorDialog::convertToGrayscale(QImage &img)
+QImage ImageEditorDialog::convertToGrayscale(QImage &img) noexcept
 {
     for(int i=0; i < m_width; i++)
         for(int j=0; j < m_height; j++)
@@ -201,8 +185,7 @@ QImage ImageEditorDialog::convertToGrayscale(QImage &img)
     return img;
 }
 
-
-void ImageEditorDialog::keyPressEvent(QKeyEvent *e)
+void ImageEditorDialog::keyPressEvent(QKeyEvent *e) noexcept
 {
     if (e->key() != Qt::Key_Escape)
         QDialog::keyPressEvent(e);
@@ -211,7 +194,7 @@ void ImageEditorDialog::keyPressEvent(QKeyEvent *e)
 
 }
 
-void ImageEditorDialog::setPixmap(QPixmap &pix)
+void ImageEditorDialog::setPixmap(const QPixmap &pix) noexcept
 {
     m_img = pix.toImage();
     if (m_img.height() > 200 && m_img.width() > 200)
@@ -221,9 +204,8 @@ void ImageEditorDialog::setPixmap(QPixmap &pix)
     m_img_label->setPixmap(QPixmap::fromImage(m_img));
 }
 
-
 // contrast factor 0.0 to 2.0
-QImage ImageEditorDialog::changeContrast(QImage &image, int _value)
+QImage ImageEditorDialog::changeContrast(QImage &image, const int& _value) noexcept
 {
     double value = (259.0 * (_value + 255.0 )) / (255.0 * (259.0 - _value));
     for (int y = 0; y < m_height; ++y) {
@@ -237,6 +219,5 @@ QImage ImageEditorDialog::changeContrast(QImage &image, int _value)
             image.setPixelColor(x, y, QColor(red, green, blue));
         }
     }
-
     return image;
 }

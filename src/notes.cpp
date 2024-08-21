@@ -1,7 +1,6 @@
 #include "notes.hpp"
 
-
-Notes::Notes()
+Notes::Notes() noexcept
 {
 
     frequencies["C0"] = 16.35;
@@ -123,7 +122,7 @@ Notes::Notes()
 
 }
 
-qreal Notes::getFrequency(QString key)
+qreal Notes::getFrequency(const QString& key) noexcept
 {
     return frequencies.value(key, -1);
 }

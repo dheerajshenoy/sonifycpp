@@ -1,25 +1,23 @@
-#ifndef WAVEFORMWIDGET_HPP
-#define WAVEFORMWIDGET_HPP
+#pragma once
 
-#include <qt6/QtWidgets/QPushButton>
-#include <qt6/QtWidgets/QVBoxLayout>
-#include <qt6/QtWidgets/QHBoxLayout>
-#include <qt6/QtGui/QCloseEvent>
-#include <qt6/QtGui/QKeyEvent>
+#include <QPushButton>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QCloseEvent>
+#include <QKeyEvent>
 #include "qcustomplot.h"
 
 class WaveformWidget : public QWidget
 {
     Q_OBJECT
 public:
-    WaveformWidget(QWidget *parent = nullptr);
-    ~WaveformWidget();
-    void setData(QVector<short> &data);
-    void setVertLinePosition(double);
-    void resetVertLine();
+    WaveformWidget(QWidget *parent = nullptr) noexcept;
+    void setData(const QVector<short> &data) noexcept;
+    void setVertLinePosition(const double &) noexcept;
+    void resetVertLine() noexcept;
 
 protected:
-    void closeEvent(QCloseEvent *e);
+    void closeEvent(QCloseEvent *e) noexcept;
 
 signals:
     void closed();
@@ -30,11 +28,9 @@ private:
     QVBoxLayout *m_wf_widget_layout = new QVBoxLayout();
     QHBoxLayout *m_wf_btm_layout = new QHBoxLayout();
     QCustomPlot *m_wf_plot = new QCustomPlot();
-    QCPItemStraightLine *m_wf_vertline;
-    QCPLayer *m_wf_vertline_layer;
+    QCPItemStraightLine *m_wf_vertline = nullptr;
+    QCPLayer *m_wf_vertline_layer = nullptr;
 
     bool m_wf_show_vline = true;
 
 };
-
-#endif

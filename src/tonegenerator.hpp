@@ -1,29 +1,28 @@
-#ifndef TONEGENERATOR_HPP
-#define TONEGENERATOR_HPP
+#pragma once
 
 #include "notes.hpp"
 #include "qboxlayout.h"
 #include <sndfile.h>
-#include <qt6/QtCore/QVector>
-#include <qt6/QtWidgets/QVBoxLayout>
-#include <qt6/QtWidgets/QDialog>
-#include <qt6/QtWidgets/QComboBox>
-#include <qt6/QtWidgets/QPushButton>
-#include <qt6/QtWidgets/QDoubleSpinBox>
-#include <qt6/QtGui/QCloseEvent>
-#include <qt6/QtGui/QKeyEvent>
-#include <qt6/QtGui/QColor>
-#include <qt6/QtWidgets/QLabel>
-#include <qt6/QtWidgets/QSplitter>
-#include <qt6/QtWidgets/QProgressBar>
-#include <qt6/QtWidgets/QColorDialog>
+#include <QVector>
+#include <QVBoxLayout>
+#include <QDialog>
+#include <QComboBox>
+#include <QPushButton>
+#include <QDoubleSpinBox>
+#include <QCloseEvent>
+#include <QKeyEvent>
+#include <QColor>
+#include <QLabel>
+#include <QSplitter>
+#include <QProgressBar>
+#include <QColorDialog>
 #include <cmath>
 #include <SDL2/SDL.h>
 #include "qcustomplot.h"
 
-enum WaveType
+enum class WaveType : int
 {
-    SINE,
+    SINE = 0,
     TRAINGULAR,
     SAWTOOTH,
     SQUARE
@@ -33,13 +32,13 @@ class ToneGenerator : public QDialog
 {
     Q_OBJECT
 public:
-    ToneGenerator(QWidget *parent = nullptr);
+    ToneGenerator(QWidget *parent = nullptr) noexcept;
     ~ToneGenerator();
-    QVector<short> generateSineWave(double, double, double);
-    QVector<short> generateSawtoothWave(double, double, double);
-    QVector<short> generateTriangularWave(double, double, double);
-    QVector<short> generateSquareWave(double, double, double);
-    static void sdlAudioCallback(void* userdata, Uint8* stream, int len);
+    QVector<short> generateSineWave(const double&, const double&, const double&) noexcept;
+    QVector<short> generateSawtoothWave(const double& , const double&, const double&) noexcept;
+    QVector<short> generateTriangularWave(const double&, const double&, const double&) noexcept;
+    QVector<short> generateSquareWave(const double&, const double&, const double&) noexcept;
+    static void sdlAudioCallback(void* userdata, Uint8* stream, int len) noexcept;
 
 signals:
     void audioFinishedPlaying();
@@ -47,11 +46,11 @@ signals:
     void audioProgress(int);
 
 protected:
-    void closeEvent(QCloseEvent *e);
-    void keyPressEvent(QKeyEvent *e);
+    void closeEvent(QCloseEvent *e) noexcept;
+    void keyPressEvent(QKeyEvent *e) noexcept;
 
 private:
-    void plotWave(int index);
+    void plotWave(const WaveType&) noexcept;
     /*Notes *m_notes = new Notes();*/
     QVBoxLayout *m_layout = new QVBoxLayout();
     QWidget *m_side_panel = new QWidget();
@@ -91,5 +90,3 @@ private:
     WaveType m_wavetype = WaveType::SINE;
     QProgressBar *m_audio_progress = new QProgressBar();
 };
-
-#endif

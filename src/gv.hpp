@@ -3,23 +3,23 @@
 *   Class for the graphics view
 *
 */
-#ifndef GV_HPP
-#define GV_HPP
 
-#include <qt6/QtWidgets/QGraphicsView>
-#include <qt6/QtWidgets/QGraphicsScene>
-#include <qt6/QtWidgets/QGraphicsLineItem>
-#include <qt6/QtWidgets/QGraphicsPathItem>
-#include <qt6/QtGui/QPainterPath>
-#include <qt6/QtGui/QMouseEvent>
-#include <qt6/QtCore/QTimeLine>
-#include <qt6/QtCore/QTimer>
-#include <qt6/QtWidgets/QGraphicsItemAnimation>
-#include <qt6/QtCore/QObject>
-#include <qt6/QtCore/QMimeData>
-#include <qt6/QtGui/QDropEvent>
-#include <qt6/QtGui/QDragEnterEvent>
-#include <qt6/QtGui/QDragMoveEvent>
+#pragma once
+
+#include <QGraphicsView>
+#include <QGraphicsScene>
+#include <QGraphicsLineItem>
+#include <QGraphicsPathItem>
+#include <QPainterPath>
+#include <QMouseEvent>
+#include <QTimeLine>
+#include <QTimer>
+#include <QGraphicsItemAnimation>
+#include <QObject>
+#include <QMimeData>
+#include <QDropEvent>
+#include <QDragEnterEvent>
+#include <QDragMoveEvent>
 #include "traverse.hpp"
 #include "line.hpp"
 #include "circle.hpp"
@@ -29,19 +29,19 @@ class GV : public QGraphicsView
 {
     Q_OBJECT
 public:
-    GV(QWidget *parent = nullptr);
+    GV(QWidget *parent = nullptr) noexcept;
 
-    void setPixmap(QPixmap &img);
-    QPixmap getPixmap();
-    void reset();
-    void setDuration(double s);
-    void setTraverse(Traverse t);
-    void setDrawPathMode(bool t);
-    void getOffset(size_t &offset);
-    void setAudioIndex(int index);
-    void setObjColor(QString);
+    void setPixmap(const QPixmap &img) noexcept;
+    QPixmap getPixmap() noexcept;
+    void reset() noexcept;
+    void setDuration(const double& s) noexcept;
+    void setTraverse(const Traverse& t) noexcept;
+    void setDrawPathMode(const bool& t) noexcept;
+    void getOffset(const size_t& offset) noexcept;
+    void setAudioIndex(const int& index) noexcept;
+    void setObjColor(const QString&) noexcept;
     void clearDrawPath() noexcept;
-    QVector<QPointF> getPathDrawnPos();
+    QVector<QPointF> getPathDrawnPos() noexcept;
     ~GV();
 
 signals:
@@ -52,12 +52,12 @@ signals:
     void pixelClick(QPointF pixelLocation);
 
 protected:
-    void mousePressEvent(QMouseEvent *) override; 
-    void mouseReleaseEvent(QMouseEvent *) override;
-    void mouseMoveEvent(QMouseEvent *) override;
-    void dropEvent(QDropEvent *e) override;
-    void dragEnterEvent(QDragEnterEvent *e) override;
-    void dragMoveEvent(QDragMoveEvent *e) override;
+    void mousePressEvent(QMouseEvent *) noexcept override; 
+    void mouseReleaseEvent(QMouseEvent *) noexcept override;
+    void mouseMoveEvent(QMouseEvent *) noexcept override;
+    void dropEvent(QDropEvent *e) noexcept override;
+    void dragEnterEvent(QDragEnterEvent *e) noexcept override;
+    void dragMoveEvent(QDragMoveEvent *e) noexcept override;
 
 private:
 
@@ -78,5 +78,3 @@ private:
     bool m_pixel_analyser_mode = false;
     QColor m_obj_color = QColor("#FF5000");
 };
-
-#endif

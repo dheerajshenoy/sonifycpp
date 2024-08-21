@@ -1,18 +1,17 @@
-#ifndef SONIFICATION_HPP
-#define SONIFICATION_HPP
+#pragma once
 
-#include <qt6/QtGui/QPixmap>
+#include <QPixmap>
 #include <sndfile.h>
 #include <cmath>
 #include "traverse.hpp"
 #include "format.hpp"
 #include <SDL2/SDL.h>
-#include <qt6/QtCore/QtMath>
-#include <qt6/QtCore/QDebug>
-#include <qt6/QtCore/QObject>
-#include <qt6/QtCore/QThreadPool>
-#include <qt6/QtCore/QThread>
-#include <qt6/QtGui/QRgb>
+#include <QtMath>
+#include <QDebug>
+#include <QObject>
+#include <QThreadPool>
+#include <QThread>
+#include <QRgb>
 #include "gv.hpp"
 #include "sonifier.hpp"
 
@@ -21,22 +20,23 @@ class Sonification : public QObject
 
     Q_OBJECT
 public:
-    Sonification();
-    ~Sonification();
-    void Sonify(QPixmap &pix, GV *gv, Traverse mode = Traverse::LEFT_TO_RIGHT, int min = 20, int max = 20000);
-    void setNumSamples(int nsamples) noexcept;
-    void play();
-    void pause();
-    void reset();
-    bool save(QString filename, Format format = Format::WAV) noexcept;
+    Sonification() noexcept;
+    ~Sonification() noexcept;
+    void Sonify(const QPixmap &pix, GV *gv, const Traverse& mode = Traverse::LEFT_TO_RIGHT,
+                const int& min = 20, const int& max = 20000) noexcept;
+    void setNumSamples(const int& nsamples) noexcept;
+    void play() noexcept;
+    void pause() noexcept;
+    void reset() noexcept;
+    bool save(const QString& filename, const Format& format = Format::WAV) noexcept;
     double getDuration() noexcept;
     int getNumSamples() noexcept;
     QVector<short>& getAudioData() noexcept;
-    void stopSonification(bool state) noexcept;
+    void stopSonification(const bool& state) noexcept;
     int& getSampleRate() noexcept;
-    void AddReverb();
-    void setAudioData(QVector<short> &data) noexcept;
-    void setFreqMap(FreqMap f) noexcept;
+    void AddReverb() noexcept;
+    void setAudioData(const QVector<short>& data) noexcept;
+    void setFreqMap(const FreqMap& f) noexcept;
 
 signals:
     void audioprogress(double);
@@ -47,13 +47,14 @@ signals:
     void sonificationStopped();
 
 private:
-    void m_GenerateSound();
-    bool m_GenerateWavFile(QString filename);
-    QVector<short> applyReverb(int delayTimeMs, float feedback);
+    void m_GenerateSound() noexcept;
+    bool m_GenerateWavFile(const QString& filename) noexcept;
+    QVector<short> applyReverb(const int& delayTimeMs, const float& feedback) noexcept;
 
     template <typename T>
     QVector<T> addVectors(QVector<T> &, QVector<T> &) noexcept;
-    static void sdlAudioCallback(void* userdata, Uint8* stream, int len);
+    static void sdlAudioCallback(void* userdata, Uint8* stream, int len) noexcept;
+
     int m_SampleRate = 44100;
     int m_ChannelCount = 1;
     double m_Duration;
@@ -69,5 +70,3 @@ private:
     Sonifier *sonifier = nullptr;
     QThread *m_thread = nullptr;
 };
-
-#endif

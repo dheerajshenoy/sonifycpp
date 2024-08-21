@@ -221,15 +221,24 @@ Since I use Arch Linux, the commands to install these packages is `sudo pacman -
     
     `git clone https://github.com/dheerajshenoy/sonifycpp && cd sonifycpp`
 
-3. Run qmake to produce the makefile and make to build
+3. Create a build directory and run cmake`
 
-    `qmake6 . && make`
+    `mkdir build && cmake -Bbuild -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release`
 
-4. The binary will be in the `bin` folder. You can move this file to appropriate location like /usr/bin/ if you want system wide access.
+4. Run make inside the build directory
+
+    `make -j$(nproc)`
 
 <a name="changelogs_and_bug_fixes" />
 
 # Chanegelogs and Bug fixes
+
+- 21 Aug 2024
+
+    - Change build system from qmake to CMake.
+    - Remove #ifndef statments and replace with #pragma once
+    - Add `const` keyword to constant references to functions
+    - Add `noexcept` keyword to functions 
 
 - 4 Aug 2024
 

@@ -1,19 +1,18 @@
-#ifndef WAVEFORM_SAVEDIALOG_HPP
-#define WAVEFORM_SAVEDIALOG_HPP
+#pragma once
 
-#include <qt6/QtWidgets/QDialog>
-#include <qt6/QtWidgets/QLabel>
-#include <qt6/QtWidgets/QFileDialog>
-#include <qt6/QtWidgets/QGridLayout>
-#include <qt6/QtWidgets/QComboBox>
-#include <qt6/QtWidgets/QPushButton>
-#include <qt6/QtWidgets/QSpinBox>
-#include <qt6/QtWidgets/QLineEdit>
-#include <qt6/QtWidgets/QWidget>
+#include <QDialog>
+#include <QLabel>
+#include <QFileDialog>
+#include <QGridLayout>
+#include <QComboBox>
+#include <QPushButton>
+#include <QSpinBox>
+#include <QLineEdit>
+#include <QWidget>
 #include "qcustomplot.h"
 #include "qlabel.h"
 
-enum SaveFormat
+enum class SaveFormat : int
 {
     JPG,
     PNG,
@@ -26,9 +25,8 @@ class WaveformSaveDialog : public QDialog
 {
 
 public:
-    WaveformSaveDialog(QWidget *parent = nullptr);
-    ~WaveformSaveDialog(){}
-    void setPlot(QCustomPlot *c);
+    WaveformSaveDialog(QWidget *parent = nullptr) noexcept; 
+    void setPlot(QCustomPlot *c) noexcept;
 
 private:
     QGridLayout *m_pdflayout = new QGridLayout(),
@@ -73,5 +71,3 @@ private:
 
     SaveFormat m_save_format;
 };
-
-#endif

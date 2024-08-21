@@ -1,8 +1,6 @@
 #include "tonegenerator.hpp"
-#include <cmath>
-#include <cstring>
 
-ToneGenerator::ToneGenerator(QWidget *parent)
+ToneGenerator::ToneGenerator(QWidget *parent) noexcept
     : QDialog(parent)
 {
 
@@ -39,7 +37,6 @@ ToneGenerator::ToneGenerator(QWidget *parent)
     m_side_panel_layout->addWidget(m_play_btn, 6, 0, 1, 2);
     m_side_panel_layout->addWidget(m_stop_btn, 6, 0, 1, 2);
     m_side_panel_layout->addWidget(m_audio_progress, 7, 0, 1, 2);
-
 
     m_color_btn->setFixedSize(QSize(50, 10));
     m_stop_btn->setVisible(false);
@@ -131,7 +128,6 @@ ToneGenerator::ToneGenerator(QWidget *parent)
     this->show();
 
     connect(m_wave_type_combo, &QComboBox::currentIndexChanged, this, [&](int index) {
-        plotWave(index);
         switch(index)
         {
             case 0:
@@ -150,6 +146,7 @@ ToneGenerator::ToneGenerator(QWidget *parent)
                 m_wavetype = WaveType::SQUARE;
             break;
         }
+        plotWave(m_wavetype);
     });
 
     connect(this, &ToneGenerator::audioFinishedPlaying, this, [&]() {
@@ -185,12 +182,10 @@ ToneGenerator::ToneGenerator(QWidget *parent)
         m_audio_progress->setValue(progress);
     });
 
-
-
-    plotWave(0);
+    plotWave(WaveType::SINE);
 }
 
-void ToneGenerator::plotWave(int index)
+void ToneGenerator::plotWave(const WaveType &wave) noexcept
 {
     QVector<double> x, y;
     auto duration = m_duration_sb->text().toFloat();
@@ -199,7 +194,7 @@ void ToneGenerator::plotWave(int index)
     y.resize(duration * sampleRate);
     auto frequency = m_freq_sb->text().toFloat();
     auto amplitude = m_amplitude_sb->text().toDouble();
-    switch(index)
+    switch(wave)
     {
         case WaveType::SINE:
             for(int i=0; i < x.size(); i++)
@@ -238,7 +233,7 @@ void ToneGenerator::plotWave(int index)
     m_plot->replot();
 }
 
-void ToneGenerator::sdlAudioCallback(void *userData, Uint8* _stream, int len)
+void ToneGenerator::sdlAudioCallback(void *userData, Uint8* _stream, int len) noexcept
 {
     ToneGenerator* s = reinterpret_cast<ToneGenerator *>(userData);
     Sint16 *stream = reinterpret_cast<Sint16*>(_stream);
@@ -258,7 +253,8 @@ void ToneGenerator::sdlAudioCallback(void *userData, Uint8* _stream, int len)
     emit s->audioProgress(progress);
 }
 
-QVector<short> ToneGenerator::generateSineWave(double _amplitude, double frequency, double time)
+QVector<short> ToneGenerator::generateSineWave(const double& _amplitude, const double& frequency,
+                                               const double& time) noexcept
 {
     QVector<short> fs;
     int N = m_sampleRate * time;
@@ -274,7 +270,8 @@ QVector<short> ToneGenerator::generateSineWave(double _amplitude, double frequen
     return fs;
 }
 
-QVector<short> ToneGenerator::generateSquareWave(double _amplitude, double frequency, double time)
+QVector<short> ToneGenerator::generateSquareWave(const double& _amplitude, const double& frequency,
+                                                 const double& time) noexcept
 {
     QVector<short> fs;
     int N = m_sampleRate * time;
@@ -287,7 +284,8 @@ QVector<short> ToneGenerator::generateSquareWave(double _amplitude, double frequ
     return fs;
 }
 
-QVector<short> ToneGenerator::generateTriangularWave(double _amplitude, double frequency, double time)
+QVector<short> ToneGenerator::generateTriangularWave(const double& _amplitude, const double& frequency,
+                                                     const double& time) noexcept
 {
     QVector<short> fs;
     int N = m_sampleRate * time;
@@ -300,7 +298,8 @@ QVector<short> ToneGenerator::generateTriangularWave(double _amplitude, double f
     return fs;
 }
 
-QVector<short> ToneGenerator::generateSawtoothWave(double _amplitude, double frequency, double time)
+QVector<short> ToneGenerator::generateSawtoothWave(const double& _amplitude, const double& frequency,
+                                                   const double& time) noexcept
 {
     QVector<short> fs;
     int N = m_sampleRate * time;
@@ -321,12 +320,13 @@ ToneGenerator::~ToneGenerator()
     SDL_Quit();
 }
 
-void ToneGenerator::closeEvent(QCloseEvent *e)
+void ToneGenerator::closeEvent(QCloseEvent *e) noexcept
 {
     emit closed();
 }
 
-void ToneGenerator::keyPressEvent(QKeyEvent *e) {
+void ToneGenerator::keyPressEvent(QKeyEvent *e) noexcept
+{
     if(e->key() != Qt::Key_Escape)
         QDialog::keyPressEvent(e);
     else {/* minimize */}

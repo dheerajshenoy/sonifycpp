@@ -5,33 +5,16 @@
 *
 */
 
-#ifndef MAPPING_HPP
-#define MAPPING_HPP
+#pragma once
 
-#include <qt6/QtCore/QVector>
-#include <qt6/QtCore/QDebug>
-#include <qt6/QtGui/QRgb>
-#include <qt6/QtGui/QColor>
+#include <QVector>
+#include <QDebug>
+#include <QRgb>
+#include <QColor>
 #include "freqmap.hpp"
 #include "utils.hpp"
 #include "notes.hpp"
 #include "pixelColumn.hpp"
-
-/*
-* ####################################################################################################
-*
-* MAPPING FUNCTIONS
-*
-* ----------------------------------------------------------------------------------------------------
-* Map1 = Convert to grayscale image then map (x, y) coordinate of the pixel to (time, frequency) and intensity of the pixel to
-* amplitude
-* 
-* Map2 = take the (x, y) coordinate of the pixel 
-*
-*
-*
-*
-*/
 
 class Mapping
 {
@@ -40,23 +23,30 @@ public:
     Mapping() {}
     ~Mapping() {}
 
-    void setSampleRate(float &samplerate) noexcept;
-    void setSamples(int &samples) noexcept;
-    void setMinMax(int &min, int &max) noexcept;
-    void setFreqMap(FreqMap &f) noexcept;
+    void setSampleRate(const float& samplerate) noexcept;
+    void setSamples(const int& samples) noexcept;
+    void setMinMax(const int& min, const int& max) noexcept;
+    void setFreqMap(const FreqMap& f) noexcept;
 
-    QVector<short> MapFull(QVector<PixelColumn> &) noexcept;
-    QVector<short> MapFull2(QVector<PixelColumn> &) noexcept;
-    double Hue2Freq(int H) noexcept;
-    QVector<short> Map1(QRgb pixel, int x, int y) noexcept;
+    QVector<short> Map1(const double&, const int&, const int&) noexcept;
+    QVector<short> MapFull(const QVector<PixelColumn> &) noexcept;
+    QVector<short> MapFull2(const QVector<PixelColumn> &) noexcept;
+    double Hue2Freq(const int& H) noexcept;
+    QVector<short> add(const QVector<PixelColumn> &pix) noexcept;
 
 private:
-    short LinearMap(double inp_min, double inp_max, double out_min, double out_max, double val) noexcept;
-    short ExpMap(double inp_min, double inp_max, double out_min, double out_max, double val) noexcept;
-    short LogMap(double inp_min, double inp_max, double out_min, double out_max, double val) noexcept;
-    QVector<short> Pentatonic(QRgb pixel, int x, int y) noexcept;
-    QVector<short> generateSineWave(double amplitude, double frequency, double time) noexcept;
-    QVector<short> generateBellSound(double amplitude, double frequency, double time) noexcept;
+    short LinearMap(const double& inp_min, const double& inp_max, const double& out_min,
+                    const double& out_max, const double& val) noexcept;
+
+    short ExpMap(const double& inp_min, const double& inp_max, const double& out_min,
+                 const double& out_max, const double& val) noexcept;
+
+    short LogMap(const double& inp_min, const double& inp_max, const double& out_min,
+                 const double& out_max, const double& val) noexcept;
+    QVector<short> generateSineWave(const double& amplitude, const double& frequency,
+                                    const double& time) noexcept;
+
+    double sineWave(const double& _amplitude, const double& frequency, const double& time) noexcept;
 
 
     double m_samplerate;
@@ -65,6 +55,6 @@ private:
 
     int m_freq_min, m_freq_max;
     FreqMap m_freq_map = FreqMap::Linear;
-};
 
-#endif
+    QVector<double> m_harmonics = { 1.0, 0.8, 0.6, 0.4, 0.3, 0.2 };
+};

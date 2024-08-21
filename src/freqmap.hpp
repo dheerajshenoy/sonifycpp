@@ -1,11 +1,8 @@
-#ifndef FREQMAP_HPP
-#define FREQMAP_HPP
+#pragma once
 
-enum FreqMap
+enum class FreqMap
 {
     Linear = 0,
     Exp,
     Log
 };
-
-#endif

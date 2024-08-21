@@ -1,6 +1,6 @@
 #include "waveform_savedialog.hpp"
 
-WaveformSaveDialog::WaveformSaveDialog(QWidget *parent)
+WaveformSaveDialog::WaveformSaveDialog(QWidget *parent) noexcept
     : QDialog(parent)
 {
     this->setLayout(m_layout);
@@ -134,7 +134,7 @@ WaveformSaveDialog::WaveformSaveDialog(QWidget *parent)
 }
         
 
-void WaveformSaveDialog::setPlot(QCustomPlot *c)
+void WaveformSaveDialog::setPlot(QCustomPlot *c) noexcept
 {
     m_plot = c;
 }
