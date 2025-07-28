@@ -1,8 +1,11 @@
 # SonifyCPP
-Convert images to audio signals.
+
+SonifyCPP is a powerful program for transforming image data into sound. It provides a flexible framework to sonify visual information — enabling new ways to interpret, analyze, or experience images through audio.
+
+> [!WARNING]
+> This is still a work in progress
 
 ## Table of Contents
-
 
 1. [Introduction](#introduction)
 2. [Features](#features)
@@ -114,19 +117,19 @@ SonifyCPP is currently able to traverse images in the following manner:
 ### 3. Top to Bottom (Linear)
 
 ![Top to Bottom](https://github.com/user-attachments/assets/d0d54029-6cf5-43b9-a31d-cbf22b5f6ac2)
- 
+
 <a name="bottom_to_top" />
 
 ### 4. Bottom to Top (Linear)
 
 ![Bottom to Top](https://github.com/user-attachments/assets/7f4b1aef-1ea1-4208-874f-487adb1eb0ea)
-   
+
 <a name="circular_outwards" />
 
 ### 5. Circular Outwards
 
 ![Circular Outwards](https://github.com/user-attachments/assets/33dbc508-8a17-44b2-ac1c-2db59b249d1d)
-  
+
 <a name="circular_inwards" />
 
 ### 6. Circular Inwards
@@ -152,7 +155,7 @@ SonifyCPP is currently able to traverse images in the following manner:
 ![Draw Path](https://github.com/user-attachments/assets/7825fb6d-7b3e-4763-9604-b6b46677bdd7)
 
 <a name="pixel_mapping"/>
- 
+
 ### Pixel mapping
 Currently, I am taking the **grayscale** of the input image, mapping the pixel position (x, y) to (t, frequency) and pixel intensity to amplitude. In future, I'll add many more mapping schemes.
 
@@ -190,7 +193,9 @@ Credit: [Link](https://www.seeingwithsound.com/im2sound.htm)
 
 # Demo
 
-*WARNING*: Lower your volume when listening to the video.
+> [!WARNING]
+> Lower your volume when listening to the video.
+
 These are demo from when the software was in version 0.1. Have to update the videos.
 
 https://github.com/user-attachments/assets/8486dbb2-789e-456c-ac6e-8df99d13e622
@@ -205,25 +210,27 @@ https://github.com/user-attachments/assets/5749613d-6004-4d84-90ae-adaa8904268f
 
 # Installation
 
-**NOTE: I haven't tested this software on Windows, but it works on Linux.**
+> [!NOTE]
+> I haven't tested this software on Windows, but it works on Linux.
 
 1. Make sure you have the following dependencies
-    
+
     - `Qt6` (GUI)
     - `libsndfile` (reading and writing audio files)
     - `SDL2` (audio playback)
     - `lua` (scripting)
+    - `ninja` (build dependency)
     - `fftw3` (fast fourier transforms and inverse transforms)
 
-Since I use Arch Linux, the commands to install these packages is `sudo pacman -S qt6 libsndfile sdl2 fftw`
+Since I use Arch Linux, the commands to install these packages is `sudo pacman -S qt6 libsndfile sdl2 fftw ninja`
 
 2. Clone this repo and go to the directory
-    
+
     `git clone https://github.com/dheerajshenoy/sonifycpp && cd sonifycpp`
 
 3. Create a build directory and run cmake`
 
-    `mkdir build && cmake -Bbuild -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release`
+    `mkdir build && cmake -G Ninja -Bbuild -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release`
 
 4. Run make inside the build directory
 
@@ -231,93 +238,7 @@ Since I use Arch Linux, the commands to install these packages is `sudo pacman -
 
 <a name="changelogs_and_bug_fixes" />
 
-# Chanegelogs and Bug fixes
-
-- 21 Aug 2024
-
-    - Change build system from qmake to CMake.
-    - Remove #ifndef statments and replace with #pragma once
-    - Add `const` keyword to constant references to functions
-    - Add `noexcept` keyword to functions 
-
-- 4 Aug 2024
-
-    - New Feature
-
-        - *Image Editor*. Change Brightness, Saturation, Contrast, Gamma, Invert colors, Grayscale.
-    
-
-- 1 Aug 2024
-
-    - Visual overhaul
-
-        - *Added icon support for menu items*
-
-        - *Support for four different panel positions* - Left, Right, Top or Bottom
-        
-    - Shortcuts
-
-    - New options exposed to the lua script to toggle icons, default keybindings, menubar, statusbar, panel position.
-
-- 31 July 2024
-
-    - Bug fix
-
-        The multi-threading support has been added for the rest of the traversals which were previously mentioned as not working. (*NOTE TO THE PROGRAMMER*: Never pass anything by reference to thread calls)
-
-    - New Feature
-
-        1. *Multi-threading support*. The image traversal algorithm performance has been boosted through multithreading support. *NOTE* : Not all traversal support multi-threading for now. Only the following supports multi-threading
-            - Left to Right
-            - Right to Left
-            - Top to Bottom
-            - Bottom to Top
-            
-            The rest will still sadly be single-threaded until it's updated.
-
-        2. *Effecient pixel reading*. This is bit technical. Previously, pixels from image were read one by one and sine waves were generated. This is very memory and CPU intensive when the number of pixels are more. So, to increase the efficiency, pixels are read in groups, and the waves are produced for the group.
-
-        3. Tone generator
-            - *Wave visualizer for tone generator*. See realtime changes in frequency, amplitude and duration through plot of the tone being generated.
-            - *Progress of tone being played*.
-
-        4. Audio Effects in the works
-            - *Reverb*. This works perfectly. More effects are to be added like phaser, wah-wah, compressor etc.
-
-- 29 July 2024
-
-    - New feature
-
-        - *View frequency Spectrum*. Plot frequency vs amplitude of the produced sonified sound
-
-        - *Added lua scripting support*. For now, the defaults for sample rate, asking for resizing everytime you open an image, resolution when loading an image, object color can be set through lua which will be accessed at startup if the lua file exists.
-
-    - Bug fix
-
-        - Handle waveform, spectrum analyser button when no sonified audio was found.
-
-- 27 July 2024
-
-    - New feature
-
-        - Drag and Drop to open Image
-
-        - Waveform visualization
-
-      ![Waveform](https://github.com/user-attachments/assets/77632937-f965-4782-a547-1770e57b17fc)
-
-        - Ask for resizing image when opening
-
-    - Bug fix
-
-        - Back to back change in different traversal methods 
-        - Buffer size effect on the animation
-
-- 26 July 2024
-
-    - Bug fix
-
-        - Fix delay between animation and audio playback
+Please see [CHANGELOG.md](./CHANGELOG.md)
 
 <a name="inspirations"/>
 
@@ -326,5 +247,3 @@ Since I use Arch Linux, the commands to install these packages is `sudo pacman -
 * NASA has been a big inspiration for making me create this software. If you haven't checked out yet, they have good sonification videos on youtube.
 
 * Main reason why I started this is because of an earlier basic Python version I started on 2023 when I participated in the 2023 NASA Hackathon. It was slow and...it was python, and I love C++, so I thought I'll create this in C++.
-
-
