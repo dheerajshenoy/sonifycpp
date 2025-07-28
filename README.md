@@ -240,10 +240,21 @@ Since I use Arch Linux, the commands to install these packages is `sudo pacman -
 
 Please see [CHANGELOG.md](./CHANGELOG.md)
 
+<a name="faq" />
+
+# FAQ
+
+## Why ?
+
+Main reason why I started this is because of an earlier basic Python version I started on 2023
+when I participated in the 2023 NASA Hackathon. It was slow... it was python, and I love C++, so I thought I'll create this in C++.
+
+## Why the wierd name ?
+
+Because I already had a python project called sonify, and i wanted CPP in the name, hence sonifyCPP.
+
 <a name="inspirations"/>
 
 # Inspirations
 
 * NASA has been a big inspiration for making me create this software. If you haven't checked out yet, they have good sonification videos on youtube.
-
-* Main reason why I started this is because of an earlier basic Python version I started on 2023 when I participated in the 2023 NASA Hackathon. It was slow and...it was python, and I love C++, so I thought I'll create this in C++.
