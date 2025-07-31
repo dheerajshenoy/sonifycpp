@@ -1,7 +1,11 @@
 #include "tonegenerator.hpp"
 
-ToneGenerator::ToneGenerator(QWidget *parent) noexcept
-    : QDialog(parent)
+#include "sonification.hpp"
+
+#include <SDL3/SDL_audio.h>
+#include <SDL3/SDL_surface.h>
+
+ToneGenerator::ToneGenerator(QWidget *parent) noexcept : QDialog(parent)
 {
 
     this->setWindowModality(Qt::WindowModality::ApplicationModal);
@@ -17,11 +21,12 @@ ToneGenerator::ToneGenerator(QWidget *parent) noexcept
     m_plot->addGraph();
     m_plot->yAxis->setRange(-2, 2);
     m_plot->replot();
-    m_plot->setInteractions(QCP::Interaction::iRangeDrag | QCP::Interaction::iRangeZoom);
+    m_plot->setInteractions(QCP::Interaction::iRangeDrag
+                            | QCP::Interaction::iRangeZoom);
 
     m_side_panel->setLayout(m_side_panel_layout);
 
-    for(int i=0; i < m_wavetype_labels.size(); i++)
+    for (int i = 0; i < m_wavetype_labels.size(); i++)
         m_wave_type_combo->addItem(m_wavetype_labels[i]);
 
     m_side_panel_layout->addWidget(m_wave_type_label, 0, 0);
@@ -56,52 +61,65 @@ ToneGenerator::ToneGenerator(QWidget *parent) noexcept
     m_duration_sb->setRange(1, 100);
     m_duration_sb->setValue(10);
 
-
-    if (SDL_Init(SDL_INIT_AUDIO) < 0) {
+    if (SDL_Init(SDL_INIT_AUDIO) < 0)
+    {
         qDebug() << "SDL could not initialize! SDL_Error: " << SDL_GetError();
         return;
     }
 
-    SDL_zero(m_wavSpec);
-    m_wavSpec.format = AUDIO_S16LSB;
-    m_wavSpec.channels = 1;
-    m_wavSpec.callback = sdlAudioCallback;
-    m_wavSpec.userdata = this;
-    m_wavSpec.samples = 1024;
-    m_wavSpec.freq = 44100;
+    SDL_zero(m_audioSpec);
+    m_audioSpec.format   = SDL_AUDIO_S16;
+    m_audioSpec.channels = 1;
+    m_audioSpec.freq     = 44100;
 
-    m_audioDevice = SDL_OpenAudioDevice(nullptr, 0, &m_wavSpec, nullptr, 0);
-    if (m_audioDevice == 0) {
-        qDebug() << "Failed to open audio device: " << SDL_GetError();
+    m_audioStream = SDL_OpenAudioDeviceStream(
+        m_audioDevice, &m_audioSpec, &ToneGenerator::audioCallback, this);
+
+    if (!m_audioStream)
+    {
+        qDebug() << "Failed to open audio device stream: " << SDL_GetError();
         return;
     }
 
-    connect(m_play_btn, &QPushButton::clicked, this, [&]() {
+    connect(m_play_btn, &QPushButton::clicked, this, [&]()
+    {
         m_play_btn->setVisible(false);
         m_stop_btn->setVisible(true);
         m_audio_progress->setVisible(true);
         m_play_btn->setEnabled(false);
-        m_playing = true;
+        m_playing     = true;
         m_audioOffset = 0;
-        switch(m_wavetype)
+        switch (m_wavetype)
         {
             case WaveType::SINE:
-                m_audioData = generateSineWave(m_amplitude_sb->text().toFloat(), m_freq_sb->text().toDouble(), m_duration_sb->text().toFloat());
-            break;
+                m_audioData = generateSineWave(m_amplitude_sb->text().toFloat(),
+                                               m_freq_sb->text().toDouble(),
+                                               m_duration_sb->text().toFloat());
+                break;
 
             case WaveType::SAWTOOTH:
-                m_audioData = generateSawtoothWave(m_amplitude_sb->text().toFloat(), m_freq_sb->text().toDouble(), m_duration_sb->text().toFloat());
-            break;
+                m_audioData
+                    = generateSawtoothWave(m_amplitude_sb->text().toFloat(),
+                                           m_freq_sb->text().toDouble(),
+                                           m_duration_sb->text().toFloat());
+                break;
 
             case WaveType::SQUARE:
-                m_audioData = generateSquareWave(m_amplitude_sb->text().toFloat(), m_freq_sb->text().toDouble(), m_duration_sb->text().toFloat());
-            break;
+                m_audioData
+                    = generateSquareWave(m_amplitude_sb->text().toFloat(),
+                                         m_freq_sb->text().toDouble(),
+                                         m_duration_sb->text().toFloat());
+                break;
 
             case WaveType::TRAINGULAR:
-                m_audioData = generateTriangularWave(m_amplitude_sb->text().toFloat(), m_freq_sb->text().toDouble(), m_duration_sb->text().toFloat());
-            break;
+                m_audioData
+                    = generateTriangularWave(m_amplitude_sb->text().toFloat(),
+                                             m_freq_sb->text().toDouble(),
+                                             m_duration_sb->text().toFloat());
+                break;
         }
-        SDL_PauseAudioDevice(m_audioDevice, 0);
+        SDL_FlushAudioStream(m_audioStream);
+        SDL_ResumeAudioStreamDevice(m_audioStream);
     });
 
     QColor color = QColor::fromString("#FF5000");
@@ -113,43 +131,46 @@ ToneGenerator::ToneGenerator(QWidget *parent) noexcept
     m_plot->replot();
 
     m_color_btn->setAutoFillBackground(true);
-    connect(m_color_btn, &QPushButton::clicked, this, [&]() {
+    connect(m_color_btn, &QPushButton::clicked, this, [&]()
+    {
         QColorDialog cd;
-        QColor color = cd.getColor();
+        QColor color     = cd.getColor();
         QPalette palette = m_color_btn->palette();
         palette.setColor(QPalette::Button, color);
         m_color_btn->setPalette(palette);
         m_color_btn->update();
         m_plot->graph(0)->setPen(QPen(color, 1));
         m_plot->replot();
-
     });
 
     this->show();
 
-    connect(m_wave_type_combo, &QComboBox::currentIndexChanged, this, [&](int index) {
-        switch(index)
+    connect(m_wave_type_combo, &QComboBox::currentIndexChanged, this,
+            [&](int index)
+    {
+        switch (index)
         {
             case 0:
                 m_wavetype = WaveType::SINE;
-            break;
+                break;
 
             case 1:
                 m_wavetype = WaveType::TRAINGULAR;
-            break;
+                break;
 
             case 2:
                 m_wavetype = WaveType::SAWTOOTH;
-            break;
+                break;
 
             case 3:
                 m_wavetype = WaveType::SQUARE;
-            break;
+                break;
         }
         plotWave(m_wavetype);
     });
 
-    connect(this, &ToneGenerator::audioFinishedPlaying, this, [&]() {
+    connect(this, &ToneGenerator::audioFinishedPlaying, this, [&]()
+    {
         m_play_btn->setEnabled(true);
         m_playing = false;
         m_audio_progress->setVisible(false);
@@ -157,47 +178,44 @@ ToneGenerator::ToneGenerator(QWidget *parent) noexcept
         m_stop_btn->setVisible(false);
     });
 
-    connect(m_stop_btn, &QPushButton::clicked, this, [&]() {
-        SDL_PauseAudioDevice(m_audioDevice, 1);
+    connect(m_stop_btn, &QPushButton::clicked, this, [&]()
+    {
+        SDL_PauseAudioStreamDevice(m_audioStream);
         m_audio_progress->setVisible(false);
         m_play_btn->setVisible(true);
         m_stop_btn->setVisible(false);
         m_play_btn->setEnabled(true);
     });
 
-    connect(m_duration_sb, &QDoubleSpinBox::valueChanged, this, [&]() {
-        plotWave(m_wavetype);
-    });
+    connect(m_duration_sb, &QDoubleSpinBox::valueChanged, this,
+            [&]() { plotWave(m_wavetype); });
 
-    connect(m_freq_sb, &QDoubleSpinBox::valueChanged, this, [&]() {
-        plotWave(m_wavetype);
-    });
+    connect(m_freq_sb, &QDoubleSpinBox::valueChanged, this,
+            [&]() { plotWave(m_wavetype); });
 
-    connect(m_amplitude_sb, &QDoubleSpinBox::valueChanged, this, [&]() {
-        plotWave(m_wavetype);
-    });
+    connect(m_amplitude_sb, &QDoubleSpinBox::valueChanged, this,
+            [&]() { plotWave(m_wavetype); });
 
-
-    connect(this, &ToneGenerator::audioProgress, m_audio_progress, [&](int progress) {
-        m_audio_progress->setValue(progress);
-    });
+    connect(this, &ToneGenerator::audioProgress, m_audio_progress,
+            [&](int progress) { m_audio_progress->setValue(progress); });
 
     plotWave(WaveType::SINE);
 }
 
-void ToneGenerator::plotWave(const WaveType &wave) noexcept
+void
+ToneGenerator::plotWave(const WaveType &wave) noexcept
 {
     QVector<double> x, y;
-    auto duration = m_duration_sb->text().toFloat();
+    auto duration  = m_duration_sb->text().toFloat();
     int sampleRate = 44100;
     x.resize(duration * sampleRate);
     y.resize(duration * sampleRate);
     auto frequency = m_freq_sb->text().toFloat();
     auto amplitude = m_amplitude_sb->text().toDouble();
-    switch(wave)
+    switch (wave)
     {
         case WaveType::SINE:
-            for(int i=0; i < x.size(); i++)
+            for (int i = 0; i < x.size(); i++)
             {
                 x[i] = i / static_cast<double>(sampleRate);
                 y[i] = amplitude * qSin(x[i] * frequency * 2 * M_PI);
@@ -205,64 +223,113 @@ void ToneGenerator::plotWave(const WaveType &wave) noexcept
 
             break;
         case WaveType::SAWTOOTH:
-            for(int i=0; i < x.size(); i++)
+            for (int i = 0; i < x.size(); i++)
             {
                 x[i] = i / static_cast<double>(sampleRate);
-                y[i] = amplitude * 2.0 * (i * frequency / static_cast<double>(sampleRate) - floor(0.5 + i * frequency / static_cast<double>(sampleRate)));
+                y[i] = amplitude * 2.0
+                       * (i * frequency / static_cast<double>(sampleRate)
+                          - floor(0.5
+                                  + i * frequency
+                                        / static_cast<double>(sampleRate)));
             }
-        break;
+            break;
 
         case WaveType::SQUARE:
-            for(int i=0; i < x.size(); i++)
+            for (int i = 0; i < x.size(); i++)
             {
                 x[i] = i / static_cast<double>(sampleRate);
-                y[i] = (std::sin(2 * M_PI * frequency * x[i]) >= 0) ? amplitude : -amplitude;
+                y[i] = (std::sin(2 * M_PI * frequency * x[i]) >= 0)
+                           ? amplitude
+                           : -amplitude;
             }
-        break;
+            break;
 
         case WaveType::TRAINGULAR:
-            for(int i=0; i < x.size(); i++)
+            for (int i = 0; i < x.size(); i++)
             {
                 x[i] = i / static_cast<double>(sampleRate);
-                y[i] = amplitude * 2.0 * std::abs(2.0 * ((i * frequency / static_cast<double>(sampleRate)) - std::floor((i * frequency / static_cast<double>(sampleRate)) + 0.5))) - amplitude;
+                y[i] = amplitude * 2.0
+                           * std::abs(2.0
+                                      * ((i * frequency
+                                          / static_cast<double>(sampleRate))
+                                         - std::floor(
+                                             (i * frequency
+                                              / static_cast<double>(sampleRate))
+                                             + 0.5)))
+                       - amplitude;
             }
-        break;
-
+            break;
     }
     m_plot->graph(0)->setData(x, y);
     m_plot->replot();
 }
 
-void ToneGenerator::sdlAudioCallback(void *userData, Uint8* _stream, int len) noexcept
+void SDLCALL
+ToneGenerator::audioCallback(void *userdata, SDL_AudioStream *_stream,
+                             int additional, int total) noexcept
 {
-    ToneGenerator* s = reinterpret_cast<ToneGenerator *>(userData);
-    Sint16 *stream = reinterpret_cast<Sint16*>(_stream);
+    /*
+      `total` is how much data the audio stream is eating right now,
+      additional_amount is how much more it needs than what it currently has
+      queued (which might be zero!). You can supply any amount of data here; it
+      will take what it needs and use the extra later. If you don't give it
+      enough, it will take everything and then feed silence to the hardware for
+      the rest. Ideally, though, we always give it what it needs and no extra,
+      so we aren't buffering more than necessary.
+     */
+    ToneGenerator *s = static_cast<ToneGenerator *>(userdata);
 
-    int bytesToCopy = std::min(static_cast<int>(s->m_audioData.size() * sizeof(short) - s->m_audioOffset), len);
+    if (s->m_audioData.empty())
+        return;
 
-    if (bytesToCopy == 0) {
-        memset(stream + bytesToCopy, 0, len - bytesToCopy);
-        SDL_PauseAudioDevice(s->m_audioDevice, 1); // Stop audio playback
-        emit s->audioFinishedPlaying();
+    const int totalBytes
+        = static_cast<int>(s->m_audioData.size() * sizeof(short));
+    const int bytesRemaining = totalBytes - s->m_audioOffset;
+
+    if (bytesRemaining <= 0)
+    {
+        // Audio is finished
+        QMetaObject::invokeMethod(s, [s]() { emit s->audioFinishedPlaying(); },
+                                  Qt::QueuedConnection);
+        return;
     }
 
-    memcpy(stream, s->m_audioData.data() + s->m_audioOffset / sizeof(short), bytesToCopy);
+    if (bytesRemaining <= 0)
+    {
+        SDL_PauseAudioStreamDevice(s->m_audioStream);
+        emit s->audioFinishedPlaying();
+        return;
+    }
+
+    int bytesToCopy = std::min(additional, bytesRemaining);
+
+    SDL_PutAudioStreamData(
+        _stream,
+        reinterpret_cast<const uint8_t *>(s->m_audioData.data())
+            + s->m_audioOffset,
+        bytesToCopy);
 
     s->m_audioOffset += bytesToCopy;
-    int progress = static_cast<int>((s->m_audioOffset / static_cast<double>(s->m_audioData.size() * sizeof(short))) * 100);
-    emit s->audioProgress(progress);
+
+    // Optional progress reporting
+    int progress = static_cast<int>(
+        (s->m_audioOffset / static_cast<double>(totalBytes)) * 100);
+    QMetaObject::invokeMethod(s, [s, progress]()
+    { emit s->audioProgress(progress); }, Qt::QueuedConnection);
 }
 
-QVector<short> ToneGenerator::generateSineWave(const double& _amplitude, const double& frequency,
-                                               const double& time) noexcept
+QVector<short>
+ToneGenerator::generateSineWave(const double &_amplitude,
+                                const double &frequency,
+                                const double &time) noexcept
 {
     QVector<short> fs;
     int N = m_sampleRate * time;
     fs.resize(N);
     int amplitude = _amplitude * 32767;
-    double val = 2 * M_PI * frequency / m_sampleRate;
-    double angle = 0.0f;
-    for(int i=0; i < N; i++)
+    double val    = 2 * M_PI * frequency / m_sampleRate;
+    double angle  = 0.0f;
+    for (int i = 0; i < N; i++)
     {
         fs[i] = amplitude * sin(angle);
         angle += val;
@@ -270,64 +337,90 @@ QVector<short> ToneGenerator::generateSineWave(const double& _amplitude, const d
     return fs;
 }
 
-QVector<short> ToneGenerator::generateSquareWave(const double& _amplitude, const double& frequency,
-                                                 const double& time) noexcept
+QVector<short>
+ToneGenerator::generateSquareWave(const double &_amplitude,
+                                  const double &frequency,
+                                  const double &time) noexcept
 {
     QVector<short> fs;
     int N = m_sampleRate * time;
     fs.resize(N);
     int amplitude = _amplitude * 32767;
-    for(int i=0; i < N; i++)
+    for (int i = 0; i < N; i++)
     {
-        fs[i] = amplitude * (std::sin(2 * M_PI * frequency * i / m_sampleRate) >= 0) ? 1.0 : -1.0;
+        fs[i]
+            = amplitude
+                      * (std::sin(2 * M_PI * frequency * i / m_sampleRate) >= 0)
+                  ? 1.0
+                  : -1.0;
     }
     return fs;
 }
 
-QVector<short> ToneGenerator::generateTriangularWave(const double& _amplitude, const double& frequency,
-                                                     const double& time) noexcept
+QVector<short>
+ToneGenerator::generateTriangularWave(const double &_amplitude,
+                                      const double &frequency,
+                                      const double &time) noexcept
 {
     QVector<short> fs;
     int N = m_sampleRate * time;
     fs.resize(N);
     int amplitude = _amplitude * 32767;
-    for(int i=0; i < N; i++)
+    for (int i = 0; i < N; i++)
     {
-        fs[i] = amplitude * 2.0 * std::abs(2.0 * ((i * frequency / static_cast<double>(m_sampleRate)) - std::floor((i * frequency / static_cast<double>(m_sampleRate)) + 0.5))) - 1.0; 
+        fs[i] = amplitude * 2.0
+                    * std::abs(
+                        2.0
+                        * ((i * frequency / static_cast<double>(m_sampleRate))
+                           - std::floor((i * frequency
+                                         / static_cast<double>(m_sampleRate))
+                                        + 0.5)))
+                - 1.0;
     }
     return fs;
 }
 
-QVector<short> ToneGenerator::generateSawtoothWave(const double& _amplitude, const double& frequency,
-                                                   const double& time) noexcept
+QVector<short>
+ToneGenerator::generateSawtoothWave(const double &_amplitude,
+                                    const double &frequency,
+                                    const double &time) noexcept
 {
     QVector<short> fs;
     int N = m_sampleRate * time;
     fs.resize(N);
     int amplitude = _amplitude * 32767;
-    for(int i=0; i < N; i++)
+    for (int i = 0; i < N; i++)
     {
-        fs[i] = amplitude * 2.0 * (i * frequency / static_cast<double>(m_sampleRate) - floor(0.5 + i * frequency / static_cast<double>(m_sampleRate)));
+        fs[i]
+            = amplitude * 2.0
+              * (i * frequency / static_cast<double>(m_sampleRate)
+                 - floor(0.5
+                         + i * frequency / static_cast<double>(m_sampleRate)));
     }
     return fs;
 }
 
 ToneGenerator::~ToneGenerator()
 {
-    if (m_audioDevice) {
+    if (m_audioDevice)
+    {
         SDL_CloseAudioDevice(m_audioDevice);
     }
     SDL_Quit();
 }
 
-void ToneGenerator::closeEvent(QCloseEvent *e) noexcept
+void
+ToneGenerator::closeEvent(QCloseEvent *e) noexcept
 {
     emit closed();
 }
 
-void ToneGenerator::keyPressEvent(QKeyEvent *e) noexcept
+void
+ToneGenerator::keyPressEvent(QKeyEvent *e) noexcept
 {
-    if(e->key() != Qt::Key_Escape)
+    if (e->key() != Qt::Key_Escape)
         QDialog::keyPressEvent(e);
-    else {/* minimize */}
+    else
+    { /* minimize */
+    }
 }

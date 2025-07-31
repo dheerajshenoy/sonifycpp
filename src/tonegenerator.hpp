@@ -2,23 +2,25 @@
 
 #include "notes.hpp"
 #include "qboxlayout.h"
-#include <sndfile.h>
-#include <QVector>
-#include <QVBoxLayout>
-#include <QDialog>
-#include <QComboBox>
-#include <QPushButton>
-#include <QDoubleSpinBox>
-#include <QCloseEvent>
-#include <QKeyEvent>
-#include <QColor>
-#include <QLabel>
-#include <QSplitter>
-#include <QProgressBar>
-#include <QColorDialog>
-#include <cmath>
-#include <SDL2/SDL.h>
 #include "qcustomplot.h"
+
+#include <QCloseEvent>
+#include <QColor>
+#include <QColorDialog>
+#include <QComboBox>
+#include <QDialog>
+#include <QDoubleSpinBox>
+#include <QKeyEvent>
+#include <QLabel>
+#include <QProgressBar>
+#include <QPushButton>
+#include <QSplitter>
+#include <QVBoxLayout>
+#include <QVector>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_audio.h>
+#include <cmath>
+#include <sndfile.h>
 
 enum class WaveType : int
 {
@@ -34,11 +36,16 @@ class ToneGenerator : public QDialog
 public:
     ToneGenerator(QWidget *parent = nullptr) noexcept;
     ~ToneGenerator();
-    QVector<short> generateSineWave(const double&, const double&, const double&) noexcept;
-    QVector<short> generateSawtoothWave(const double& , const double&, const double&) noexcept;
-    QVector<short> generateTriangularWave(const double&, const double&, const double&) noexcept;
-    QVector<short> generateSquareWave(const double&, const double&, const double&) noexcept;
-    static void sdlAudioCallback(void* userdata, Uint8* stream, int len) noexcept;
+    QVector<short> generateSineWave(const double &, const double &,
+                                    const double &) noexcept;
+    QVector<short> generateSawtoothWave(const double &, const double &,
+                                        const double &) noexcept;
+    QVector<short> generateTriangularWave(const double &, const double &,
+                                          const double &) noexcept;
+    QVector<short> generateSquareWave(const double &, const double &,
+                                      const double &) noexcept;
+    static void audioCallback(void *userdata, SDL_AudioStream *stream,
+                              int additional_amount, int total_amount) noexcept;
 
 signals:
     void audioFinishedPlaying();
@@ -50,43 +57,45 @@ protected:
     void keyPressEvent(QKeyEvent *e) noexcept;
 
 private:
-    void plotWave(const WaveType&) noexcept;
+    void plotWave(const WaveType &) noexcept;
     /*Notes *m_notes = new Notes();*/
-    QVBoxLayout *m_layout = new QVBoxLayout();
-    QWidget *m_side_panel = new QWidget();
+    QVBoxLayout *m_layout            = new QVBoxLayout();
+    QWidget *m_side_panel            = new QWidget();
     QGridLayout *m_side_panel_layout = new QGridLayout();
 
-    QPushButton *m_play_btn = new QPushButton("Play"),
-                *m_stop_btn = new QPushButton("Stop"),
+    QPushButton *m_play_btn  = new QPushButton("Play"),
+                *m_stop_btn  = new QPushButton("Stop"),
                 *m_color_btn = new QPushButton();
 
-    QLabel  *m_duration_label = new QLabel("Duration"),
-            *m_freq_label = new QLabel("Frequency"),
-            *m_amplitude_label = new QLabel("Amplitude"),
-            *m_color_label = new QLabel("Wave color");
+    QLabel *m_duration_label  = new QLabel("Duration"),
+           *m_freq_label      = new QLabel("Frequency"),
+           *m_amplitude_label = new QLabel("Amplitude"),
+           *m_color_label     = new QLabel("Wave color");
 
-    QDoubleSpinBox  *m_amplitude_sb = new QDoubleSpinBox(),
-                    *m_duration_sb = new QDoubleSpinBox(),
-                    *m_freq_sb = new QDoubleSpinBox();
+    QDoubleSpinBox *m_amplitude_sb = new QDoubleSpinBox(),
+                   *m_duration_sb  = new QDoubleSpinBox(),
+                   *m_freq_sb      = new QDoubleSpinBox();
 
     QSplitter *m_splitter = new QSplitter();
 
-
     QVector<short> m_audioData;
-    int m_nsamples = 1024;
+    int m_nsamples     = 1024;
     float m_sampleRate = 44100.0f;
-    int m_audioOffset = 0;
+    int m_audioOffset  = 0;
 
-    SDL_AudioSpec m_wavSpec;
-    SDL_AudioDeviceID m_audioDevice;
+    SDL_AudioSpec m_audioSpec;
+    SDL_AudioDeviceID m_audioDevice{SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK};
+    SDL_AudioStream *m_audioStream;
+
     QComboBox *m_wave_type_combo = new QComboBox();
-    QLabel *m_wave_type_label = new QLabel("Wave Type");
+    QLabel *m_wave_type_label    = new QLabel("Wave Type");
 
-    bool m_playing = false;
+    bool m_playing      = false;
     QCustomPlot *m_plot = new QCustomPlot();
 
-    QStringList m_wavetype_labels = { "Sine", "Triangular", "Sawtooth", "Square" };
+    QStringList m_wavetype_labels
+        = {"Sine", "Triangular", "Sawtooth", "Square"};
 
-    WaveType m_wavetype = WaveType::SINE;
+    WaveType m_wavetype            = WaveType::SINE;
     QProgressBar *m_audio_progress = new QProgressBar();
 };
