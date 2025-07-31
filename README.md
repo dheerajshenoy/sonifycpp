@@ -59,41 +59,6 @@ https://github.com/user-attachments/assets/d00d3c65-ccbb-42d5-90e7-c1b127f9cfe9
 
   ![image](https://github.com/user-attachments/assets/1c8997f1-b2d4-45cf-b50e-67f18348cc62)
 
-* Lua scripting
-
-    Able to set options of the program in a script file. For now, only defaults can be set. In the future, I am planning to add the ability to create mapping functions from within lua to call in the C++ code for sonifying. Script file should be placed at `/home/<USER>/.config/sonifycpp/` on linux and `C:/Users/<USER>/AppData/Local/sonifycpp/`, The file can look something like this.
-
-    ```lua
-    -- default settings
-    Defaults = {
-        object_color = "#FFFFFF", -- set the curve color
-        samples = 1024, -- default samples
-
-        --
-        -- The traverse mode can be one of the following strings:
-        -- "LeftToRight", "RightToLeft", "TopToBottom", "BottomToTop", "Clockwise", "Anticlockwise", "CircleOutwards", "CircleInwards", "Path"
-        --
-
-        traverse_mode = "Anticlockwise",
-        side_panel = "top", -- "left", "right", "top", "bottom"
-        resolution = { height = 480, width = 720, keep_aspect = false; ask_for_resize = false; }, -- default image loading resolution
-        icons = true, -- show menu and button icons or not ("true", "false")
-        menubar = true, -- show menubar
-        panel = true, -- show panel
-        statusbar = true, -- show statusbar
-    }
-
-    local mapping1 = function ()
-        print("HELLO WORLD FROM LUA")
-    end
-
-    -- Custom mapping
-    Maps = {
-        { name = "Mapping1", func = mapping1 },
-    }
-
-    ```
-
 <a name="traversal"/>
 
 ## Traversal Methods
@@ -175,7 +140,7 @@ Credit: [Link](https://www.seeingwithsound.com/im2sound.htm)
 * [x] Frequency Analyzer
 * [x] Implement multi-threading
 * [ ] Option for mapping selection
-* [ ] Support for custom mapping user functions (maybe add lua scripting support ?)
+* [ ] Support for custom mapping user functions (add scripting support ?)
 * [ ] Pixel audio visualiser (inpsecting each column or row of pixel from the image and producing the audio instantly).
 * [ ] Video Export: Create a video file that combines the image and the sonification, showing the progression over time.
 * [ ] **Reverse audio to produce image**
@@ -218,7 +183,6 @@ https://github.com/user-attachments/assets/5749613d-6004-4d84-90ae-adaa8904268f
     - `Qt6` (GUI)
     - `libsndfile` (reading and writing audio files)
     - `SDL2` (audio playback)
-    - `lua` (scripting)
     - `ninja` (build dependency)
     - `fftw3` (fast fourier transforms and inverse transforms)
 
