@@ -1,9 +1,10 @@
+<!-- -*- mode: nxml; -*- -->
+
 <!DOCTYPE RCC>
 <RCC version="1.0">
     <qresource prefix="/">
-        <file compress="1">icons/play.svg</file>
-        <file compress="1">icons/pause.svg</file>
-        <file compress="1">icons/image.svg</file>
+        <file compress="1">icons/play-button.svg</file>
+        <file compress="1">icons/pause-button.svg</file>
         <file compress="1">icons/sonify.svg</file>
         <file compress="1">icons/stop.svg</file>
         <file compress="1">icons/exit.svg</file>
@@ -20,4 +21,3 @@
 
 
 <!-- vim: set ft=xml: -->
-
