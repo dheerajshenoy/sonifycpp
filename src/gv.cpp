@@ -1,14 +1,13 @@
 /*
-*
-*   Contains functions that are used to draw the line, circle or path on the graphicsview along with
-*   rendering the image
-*
-*/
+ *
+ *   Contains functions that are used to draw the line, circle or path on the
+ * graphicsview along with rendering the image
+ *
+ */
 
 #include "gv.hpp"
 
-GV::GV(QWidget *parent) noexcept
-    : QGraphicsView(parent)
+GV::GV(QWidget *parent) noexcept : QGraphicsView(parent)
 {
     this->setScene(m_scene);
     m_scene->addItem(m_pi);
@@ -17,14 +16,16 @@ GV::GV(QWidget *parent) noexcept
 }
 
 // Get the current location in the audiodata array
-void GV::setAudioIndex(const int& index) noexcept
+void
+GV::setAudioIndex(const int &index) noexcept
 {
     m_audio_index = index;
     emit audioIndexSet();
 }
 
 // Function to handle draw path mode
-void GV::setDrawPathMode(const bool& t) noexcept
+void
+GV::setDrawPathMode(const bool &t) noexcept
 {
     m_draw_path_mode = t;
 
@@ -41,7 +42,8 @@ void GV::setDrawPathMode(const bool& t) noexcept
 }
 
 // Method to set the traverse mode, so as to prepare for the animation
-void GV::setTraverse(const Traverse& t) noexcept
+void
+GV::setTraverse(const Traverse &t) noexcept
 {
     if (m_traverse == t)
         return;
@@ -69,7 +71,7 @@ void GV::setTraverse(const Traverse& t) noexcept
         m_pathi = nullptr;
     }
 
-    switch(t)
+    switch (t)
     {
         case Traverse::LEFT_TO_RIGHT:
             if (m_li)
@@ -81,9 +83,8 @@ void GV::setTraverse(const Traverse& t) noexcept
                 m_scene->addItem(m_li);
             }
 
-            connect(this, &GV::audioIndexSet, m_li, [&]() {
-                m_li->setLine(m_audio_index, 0, m_audio_index, m_height);
-            });
+            connect(this, &GV::audioIndexSet, m_li, [&]()
+            { m_li->setLine(m_audio_index, 0, m_audio_index, m_height); });
             break;
 
         case Traverse::RIGHT_TO_LEFT:
@@ -96,8 +97,10 @@ void GV::setTraverse(const Traverse& t) noexcept
                 m_scene->addItem(m_li);
                 qDebug() << "DD";
             }
-            connect(this, &GV::audioIndexSet, m_li, [&]() {
-                m_li->setLine(m_width - m_audio_index, 0, m_width - m_audio_index, m_height);
+            connect(this, &GV::audioIndexSet, m_li, [&]()
+            {
+                m_li->setLine(m_width - m_audio_index, 0,
+                              m_width - m_audio_index, m_height);
             });
             break;
 
@@ -110,9 +113,8 @@ void GV::setTraverse(const Traverse& t) noexcept
                 m_li = new AnimatedLineItem(m_obj_color);
                 m_scene->addItem(m_li);
             }
-            connect(this, &GV::audioIndexSet, m_li, [&]() {
-                m_li->setLine(0, m_audio_index, m_width, m_audio_index);
-            });
+            connect(this, &GV::audioIndexSet, m_li, [&]()
+            { m_li->setLine(0, m_audio_index, m_width, m_audio_index); });
             break;
 
         case Traverse::BOTTOM_TO_TOP:
@@ -124,8 +126,10 @@ void GV::setTraverse(const Traverse& t) noexcept
                 m_li = new AnimatedLineItem(m_obj_color);
                 m_scene->addItem(m_li);
             }
-            connect(this, &GV::audioIndexSet, m_li, [&]() {
-                m_li->setLine(0, m_height - m_audio_index, m_width, m_height - m_audio_index);
+            connect(this, &GV::audioIndexSet, m_li, [&]()
+            {
+                m_li->setLine(0, m_height - m_audio_index, m_width,
+                              m_height - m_audio_index);
             });
             break;
 
@@ -141,9 +145,8 @@ void GV::setTraverse(const Traverse& t) noexcept
                 m_ci->setCenter();
                 m_scene->addItem(m_ci);
             }
-            connect(this, &GV::audioIndexSet, m_ci, [&]() {
-                m_ci->setRadius(m_audio_index);
-            });
+            connect(this, &GV::audioIndexSet, m_ci,
+                    [&]() { m_ci->setRadius(m_audio_index); });
             break;
 
         case Traverse::CIRCLE_INWARDS:
@@ -158,9 +161,8 @@ void GV::setTraverse(const Traverse& t) noexcept
                 m_ci->setCenter();
                 m_scene->addItem(m_ci);
             }
-            connect(this, &GV::audioIndexSet, m_ci, [&]() {
-                m_ci->setRadius(m_sqrt - m_audio_index);
-            });
+            connect(this, &GV::audioIndexSet, m_ci,
+                    [&]() { m_ci->setRadius(m_sqrt - m_audio_index); });
             break;
 
         case Traverse::CLOCKWISE:
@@ -175,9 +177,8 @@ void GV::setTraverse(const Traverse& t) noexcept
                 m_li->setLength();
                 m_scene->addItem(m_li);
             }
-            connect(this, &GV::audioIndexSet, m_li, [&]() {
-                m_li->setAngle(m_audio_index);
-            });
+            connect(this, &GV::audioIndexSet, m_li,
+                    [&]() { m_li->setAngle(m_audio_index); });
             break;
 
         case Traverse::ANTICLOCKWISE:
@@ -192,9 +193,8 @@ void GV::setTraverse(const Traverse& t) noexcept
                 m_li->setLength();
                 m_scene->addItem(m_li);
             }
-            connect(this, &GV::audioIndexSet, m_li, [&]() {
-                m_li->setAngle(360 - m_audio_index);
-            });
+            connect(this, &GV::audioIndexSet, m_li,
+                    [&]() { m_li->setAngle(360 - m_audio_index); });
             break;
 
         case Traverse::PATH:
@@ -206,58 +206,64 @@ void GV::setTraverse(const Traverse& t) noexcept
                 m_pathi = new AnimatedPathItem(m_obj_color);
                 m_scene->addItem(m_pathi);
             }
-            connect(this, &GV::audioIndexSet, m_pathi, [&]() {
-                m_pathi->setPos(m_pathDrawnPixelsPos.at(m_audio_index));
-            });
+            connect(this, &GV::audioIndexSet, m_pathi, [&]()
+            { m_pathi->setPos(m_pathDrawnPixelsPos.at(m_audio_index)); });
     }
 }
 
-void GV::setDuration(const double& s) noexcept
+void
+GV::setDuration(const double &s) noexcept
 {
     m_duration_s = s;
 }
 
 // Set the image onto the graphicsview
-void GV::setPixmap(const QPixmap& pix) noexcept
+void
+GV::setPixmap(const QPixmap &pix) noexcept
 {
-    if (!pix) return;
+    if (!pix)
+        return;
 
     m_pi->setPixmap(pix);
     /*this->fitInView(m_pi);*/
+    centerOn(m_pi);
+    m_scene->setSceneRect(pix.rect());
 
-    m_width = pix.width();
+    m_width  = pix.width();
     m_height = pix.height();
 
     m_sqrt = sqrt(m_width * m_width / 4.0 + m_height * m_height / 4.0);
 }
 
-QPixmap GV::getPixmap() noexcept
+QPixmap
+GV::getPixmap() noexcept
 {
     return m_pi->pixmap();
 }
 
 // Reset the positions of the object drawn on the graphicsview
-void GV::reset() noexcept
+void
+GV::reset() noexcept
 {
     if (m_li)
         m_li->reset();
     if (m_ci)
         m_ci->reset();
-
 }
 
-void GV::mousePressEvent(QMouseEvent *e) noexcept
+void
+GV::mousePressEvent(QMouseEvent *e) noexcept
 {
-    if(e->button() == Qt::MouseButton::LeftButton)
+    if (e->button() == Qt::MouseButton::LeftButton)
     {
         if (m_draw_path_mode)
         {
             auto pos = mapToScene(e->pos());
 
-                QPointF s = pos;
-                m_painter_path.moveTo(s);
-                m_path_item->setPath(m_painter_path);
-                m_pathDrawnPixelsPos.push_back(s);
+            QPointF s = pos;
+            m_painter_path.moveTo(s);
+            m_path_item->setPath(m_painter_path);
+            m_pathDrawnPixelsPos.push_back(s);
             return;
         }
         emit pixelClick(mapToScene(e->pos()));
@@ -265,11 +271,12 @@ void GV::mousePressEvent(QMouseEvent *e) noexcept
     QGraphicsView::mousePressEvent(e);
 }
 
-void GV::mouseReleaseEvent(QMouseEvent *e) noexcept
+void
+GV::mouseReleaseEvent(QMouseEvent *e) noexcept
 {
-    if(e->button() == Qt::MouseButton::LeftButton)
+    if (e->button() == Qt::MouseButton::LeftButton)
     {
-        if(m_draw_path_mode)
+        if (m_draw_path_mode)
         {
             setDrawPathMode(false);
             emit drawPathFinished();
@@ -278,15 +285,17 @@ void GV::mouseReleaseEvent(QMouseEvent *e) noexcept
     QGraphicsView::mouseReleaseEvent(e);
 }
 
-void GV::mouseMoveEvent(QMouseEvent *e) noexcept
+void
+GV::mouseMoveEvent(QMouseEvent *e) noexcept
 {
-    if(m_draw_path_mode)
+    if (m_draw_path_mode)
     {
 
-        auto pos = mapToScene(e->pos());
+        auto pos  = mapToScene(e->pos());
         auto posx = pos.x();
         auto posy = pos.y();
-        if (posx >= 0 && posx < m_pi->pixmap().width() && posy >=0 && posy < m_pi->pixmap().height())
+        if (posx >= 0 && posx < m_pi->pixmap().width() && posy >= 0
+            && posy < m_pi->pixmap().height())
         {
             QPointF s = mapToScene(e->pos());
             m_painter_path.lineTo(s);
@@ -297,23 +306,26 @@ void GV::mouseMoveEvent(QMouseEvent *e) noexcept
     QGraphicsView::mouseMoveEvent(e);
 }
 
-GV::~GV()
-{}
+GV::~GV() {}
 
-QVector<QPointF> GV::getPathDrawnPos() noexcept
+QVector<QPointF>
+GV::getPathDrawnPos() noexcept
 {
     return m_pathDrawnPixelsPos;
 }
 
-// Function to handle drag and drop event to open the file when it is dropped into the graphicsview
-void GV::dropEvent(QDropEvent *e) noexcept
+// Function to handle drag and drop event to open the file when it is dropped
+// into the graphicsview
+void
+GV::dropEvent(QDropEvent *e) noexcept
 {
     QString droppedFilePath = e->mimeData()->urls()[0].toLocalFile();
     e->acceptProposedAction();
     emit dropFile(droppedFilePath);
 }
 
-void GV::dragEnterEvent(QDragEnterEvent *e) noexcept
+void
+GV::dragEnterEvent(QDragEnterEvent *e) noexcept
 {
     if (e->mimeData()->hasUrls())
     {
@@ -322,17 +334,22 @@ void GV::dragEnterEvent(QDragEnterEvent *e) noexcept
     }
 }
 
-void GV::dragMoveEvent(QDragMoveEvent *e) noexcept
-{}
+void
+GV::dragMoveEvent(QDragMoveEvent *e) noexcept
+{
+}
 
-// Function to set the color of "object" (line or circle or path) drawn over the image
-void GV::setObjColor(const QString& color) noexcept
+// Function to set the color of "object" (line or circle or path) drawn over the
+// image
+void
+GV::setObjColor(const QString &color) noexcept
 {
     if (QColor::isValidColorName(color))
         m_obj_color = QColor(color);
 }
 
-void GV::clearDrawPath() noexcept
+void
+GV::clearDrawPath() noexcept
 {
     if (m_path_item)
     {
@@ -345,4 +362,10 @@ void GV::clearDrawPath() noexcept
         m_pathi = nullptr;
         m_painter_path.clear();
     }
+}
+
+void
+GV::clearPixmap() noexcept
+{
+    m_pi->setPixmap(QPixmap());
 }

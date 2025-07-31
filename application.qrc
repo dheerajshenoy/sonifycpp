@@ -9,6 +9,7 @@
         <file compress="1">icons/stop.svg</file>
         <file compress="1">icons/exit.svg</file>
         <file compress="1">icons/open-file.svg</file>
+        <file compress="1">icons/close-file.svg</file>
         <file compress="1">icons/note.svg</file>
         <file compress="1">icons/screen-record.svg</file>
         <file compress="1">icons/waveform.svg</file>

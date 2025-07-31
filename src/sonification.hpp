@@ -23,7 +23,7 @@ class Sonification : public QObject
 public:
     Sonification() noexcept;
     ~Sonification() noexcept;
-    void Sonify(const QPixmap &pix, GV *gv,
+    void Sonify(const QPixmap &pix, GV *gv, const Sonifier::MapFunc &mapFunc,
                 Traverse mode = Traverse::LEFT_TO_RIGHT, int min = 20,
                 int max = 20000) noexcept;
 
@@ -38,15 +38,16 @@ public:
         m_audioOffset = offset;
     }
 
-    SDL_AudioDeviceID audioDevice() noexcept
+    inline Sonifier *sonifier() noexcept
     {
-        return m_audioDevice;
+        return m_sonifier;
     }
 
     double duration() noexcept;
     void play() noexcept;
     void pause() noexcept;
     void reset() noexcept;
+    void clear() noexcept;
     bool save(const QString &filename, Format format = Format::WAV) noexcept;
 
     inline int numSamples() noexcept
@@ -66,7 +67,7 @@ public:
 
     void stopSonification(bool state) noexcept;
 
-    inline int sampleRate() noexcept
+    inline float sampleRate() noexcept
     {
         return m_SampleRate;
     }
@@ -99,7 +100,7 @@ private:
     static void audioCallback(void *userdata, SDL_AudioStream *stream,
                               int additional_amount, int total_amount) noexcept;
 
-    int m_SampleRate{44100};
+    float m_SampleRate{44100.0f};
     int m_ChannelCount{1};
     double m_Duration;
     int m_NumSamples{1024};
@@ -108,12 +109,11 @@ private:
 
     SDL_AudioSpec m_audioSpec;
     SDL_AudioStream *m_audioStream;
-    SDL_AudioDeviceID m_audioDevice{0};
 
     size_t m_audioOffset{0};
     Traverse m_traverse{Traverse::LEFT_TO_RIGHT};
     const double M_PI2{6.28318530718};
     Mapping *mapping{new Mapping()};
-    Sonifier *sonifier{nullptr};
+    Sonifier *m_sonifier{nullptr};
     QThread *m_thread{nullptr};
 };

@@ -4,6 +4,7 @@
 
 #include <SDL3/SDL_audio.h>
 #include <cmath>
+#include <immintrin.h>
 
 // Constructor
 Sonification::Sonification() noexcept
@@ -16,32 +17,29 @@ Sonification::Sonification() noexcept
         return;
     }
 
-    sonifier = new Sonifier();
+    m_sonifier = new Sonifier();
 
-    connect(sonifier, &Sonifier::sonificationDone, this,
+    connect(m_sonifier, &Sonifier::sonificationDone, this,
             [&](QVector<short> audioData)
     {
         m_audioData = audioData;
         emit sonificationDone();
     });
 
-    connect(sonifier, &Sonifier::sonificationProgress, this,
+    connect(m_sonifier, &Sonifier::sonificationProgress, this,
             [&](int progress) { emit sonificationProgress(progress); });
 }
 
 // Destructor
 Sonification::~Sonification() noexcept
 {
-    if (m_audioDevice)
-    {
-        SDL_CloseAudioDevice(m_audioDevice);
-    }
-
+    SDL_PauseAudioStreamDevice(m_audioStream);
+    SDL_DestroyAudioStream(m_audioStream);
     SDL_Quit();
 
     if (m_thread && m_thread->isRunning())
     {
-        sonifier->stopSonifying(true);
+        m_sonifier->stopSonifying(true);
         m_thread->quit();
         m_thread->wait();
     }
@@ -49,7 +47,8 @@ Sonification::~Sonification() noexcept
 
 // Function to sonify an `image` provided by QImage and in mode `mode`
 void
-Sonification::Sonify(const QPixmap &pix, GV *gv, Traverse mode, int min,
+Sonification::Sonify(const QPixmap &pix, GV *gv,
+                     const Sonifier::MapFunc &mapFunc, Traverse mode, int min,
                      int max) noexcept
 {
     // Return if null
@@ -64,30 +63,31 @@ Sonification::Sonify(const QPixmap &pix, GV *gv, Traverse mode, int min,
     m_audioSpec.format   = SDL_AUDIO_S16;
     m_audioSpec.channels = m_ChannelCount;
 
-    sonifier->setSampleRate(m_SampleRate);
-    sonifier->setSamples(m_NumSamples);
-    sonifier->setMinMax(min, max);
+    m_sonifier->setMapFunc(mapFunc);
+    m_sonifier->setSampleRate(m_SampleRate);
+    m_sonifier->setSamples(m_NumSamples);
+    m_sonifier->setMinMax(min, max);
 
     m_audioStream = SDL_OpenAudioDeviceStream(
         SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &m_audioSpec, audioCallback, this);
 
     if (mode == Traverse::PATH)
-        sonifier->setParameters(pix, mode, gv->getPathDrawnPos());
+        m_sonifier->setParameters(pix, mode, gv->getPathDrawnPos());
     else if (mode == Traverse::INSPECT)
     {
         // TODO: Implement INSPECT mode
     }
     else
-        sonifier->setParameters(pix, mode);
+        m_sonifier->setParameters(pix, mode);
 
     if (!m_thread)
     {
         m_thread = new QThread();
-        connect(m_thread, &QThread::started, sonifier, &Sonifier::Sonify);
+        connect(m_thread, &QThread::started, m_sonifier, &Sonifier::Sonify);
         connect(m_thread, &QThread::finished, this, [&]() {});
-        connect(sonifier, &Sonifier::sonificationDone, this,
+        connect(m_sonifier, &Sonifier::sonificationDone, this,
                 [&]() { m_thread->quit(); });
-        sonifier->moveToThread(m_thread);
+        m_sonifier->moveToThread(m_thread);
     }
 
     m_thread->start();
@@ -177,15 +177,6 @@ void SDLCALL
 Sonification::audioCallback(void *userdata, SDL_AudioStream *_stream,
                             int additional, int total) noexcept
 {
-    /*
-      `total` is how much data the audio stream is eating right now,
-      additional_amount is how much more it needs than what it currently has
-      queued (which might be zero!). You can supply any amount of data here; it
-      will take what it needs and use the extra later. If you don't give it
-      enough, it will take everything and then feed silence to the hardware for
-      the rest. Ideally, though, we always give it what it needs and no extra,
-      so we aren't buffering more than necessary.
-     */
     Sonification *s = static_cast<Sonification *>(userdata);
 
     if (s->m_audioData.empty())
@@ -235,7 +226,7 @@ Sonification::audioCallback(void *userdata, SDL_AudioStream *_stream,
 void
 Sonification::stopSonification(bool state) noexcept
 {
-    sonifier->stopSonifying(state);
+    m_sonifier->stopSonifying(state);
     if (state)
     {
         if (m_thread->isRunning())
@@ -251,5 +242,14 @@ Sonification::stopSonification(bool state) noexcept
 void
 Sonification::setFreqMap(FreqMap f) noexcept
 {
-    sonifier->setFreqMap(f);
+    m_sonifier->setFreqMap(f);
+}
+
+void
+Sonification::clear() noexcept
+{
+    SDL_PauseAudioStreamDevice(m_audioStream);
+    SDL_ClearAudioStream(m_audioStream);
+    m_audioData.clear();
+    m_audioOffset = 0;
 }

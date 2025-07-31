@@ -14,12 +14,15 @@
 #include <QThreadPool>
 #include <QVector>
 #include <QtConcurrent/QtConcurrent>
+#include <functional>
 
 class Sonifier : public QObject
 {
     Q_OBJECT
 public:
-    Sonifier() = default;
+    using MapFunc = std::function<QVector<short>(const QVector<PixelColumn> &)>;
+
+    Sonifier();
     void setParameters(const QPixmap &pix, Traverse t) noexcept;
     void setParameters(const QPixmap &pix, Traverse t,
                        const QVector<QPointF> &) noexcept;
@@ -42,6 +45,14 @@ public:
     }
     void setMinMax(int min, int max) noexcept;
     void setFreqMap(FreqMap f) noexcept;
+    inline void setMapFunc(const MapFunc &mapFunc) noexcept
+    {
+        m_mapFunc = mapFunc;
+    }
+    inline Mapping *mapping() noexcept
+    {
+        return m_mapping;
+    }
 
 signals:
     void sonificationDone(QVector<short>);
@@ -82,6 +93,8 @@ private:
 
     QVector<short> m_audioData;
     std::atomic<int> m_progressCounter = 0;
+
+    MapFunc m_mapFunc;
 
     QMutex m_mutex;
 };

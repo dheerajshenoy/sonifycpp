@@ -9,11 +9,13 @@ sonification process and audio playback. This represents the main window
 #include "ReverbDialog.hpp"
 #include "SpectrumAnalyzer.hpp"
 #include "aboutdialog.hpp"
+#include "config.hpp"
 #include "gv.hpp"
 #include "screenRecorder.hpp"
 #include "sonification.hpp"
 #include "toml.hpp"
 #include "tonegenerator.hpp"
+#include "traverse.hpp"
 #include "waveform_savedialog.hpp"
 #include "waveformwidget.hpp"
 
@@ -45,14 +47,7 @@ sonification process and audio playback. This represents the main window
 #include <QWidget>
 #include <QtConcurrent/QtConcurrent>
 #include <QtMultimedia/QWindowCapture>
-
-enum PanelLocation
-{
-    LEFT = 0,
-    RIGHT,
-    TOP,
-    BOTTOM,
-};
+#include <unordered_map>
 
 class Sonify : public QMainWindow
 {
@@ -60,6 +55,15 @@ class Sonify : public QMainWindow
 public:
     Sonify(QWidget *parent = nullptr);
     void Open(QString filename = "") noexcept;
+    void Close() noexcept;
+
+    enum class Location
+    {
+        LEFT = 0,
+        RIGHT,
+        TOP,
+        BOTTOM,
+    };
 
 signals:
     void fileOpened();
@@ -73,7 +77,7 @@ private:
     bool Save(const QString &filename = "") noexcept;
     void setMsg(QString &&msg, const int &s = -1) noexcept;
     void doSonify() noexcept;
-    void initConfigDir() noexcept;
+    void initConfigFile() noexcept;
     void initConnections() noexcept;
     void initMenu() noexcept;
     void initWidgets() noexcept;
@@ -92,12 +96,8 @@ private:
     QWidget *m_widget     = new QWidget();
     QSplitter *m_splitter = new QSplitter();
 
-    QWidget *m_side_panel = new QWidget(), *m_top_panel = new QWidget();
+    QWidget *m_panel = new QWidget();
 
-    QGridLayout *m_side_panel_layout = new QGridLayout();
-
-    QBoxLayout *m_top_panel_layout
-        = new QBoxLayout(QBoxLayout::Direction::LeftToRight);
     QVBoxLayout *m_layout      = new QVBoxLayout();
     Sonification *sonification = new Sonification();
     QPushButton *m_play_btn = nullptr, *m_sonify_btn = nullptr,
@@ -111,8 +111,8 @@ private:
           *m_tools_menu = nullptr, *m_view_menu = nullptr,
           *m_effects_menu = nullptr, *m_help_menu = nullptr;
 
-    QAction *m_file__open = nullptr, *m_file__exit = nullptr;
-
+    QAction *m_file__open = nullptr, *m_file__close = nullptr,
+            *m_file__exit  = nullptr;
     QAction *m_audio__save = nullptr;
 
     QAction *m_effects__reverb = nullptr, *m_effects__phaser = nullptr,
@@ -130,8 +130,9 @@ private:
     QAction *m_view__panel = nullptr, *m_view__statusbar = nullptr,
             *m_view__menubar = nullptr;
 
-    QComboBox *m_traverse_combo = new QComboBox(),
-              *m_mapping_combo  = new QComboBox();
+    QComboBox *m_traverse_combo      = new QComboBox(),
+              *m_freq_mapping_combo  = new QComboBox(),
+              *m_pixel_mapping_combo = new QComboBox();
 
     QLabel *m_duration_label, *m_audio_progress_label, *m_traverse_label,
         *m_num_samples_label, *m_statusbar_msg_label, *m_min_freq_label,
@@ -166,5 +167,19 @@ private:
     SpectrumAnalyzer *m_sp = nullptr;
     QString m_config_file_path, m_config_dir;
 
-    PanelLocation m_panel_location = PanelLocation::LEFT;
+    Config m_config;
+
+    const std::unordered_map<std::string, Traverse> m_traverse_string_map{
+        {"Left to Right", Traverse::LEFT_TO_RIGHT},
+        {"Right to Left", Traverse::RIGHT_TO_LEFT},
+        {"Top to Bottom", Traverse::TOP_TO_BOTTOM},
+        {"Bottom to Top", Traverse::BOTTOM_TO_TOP},
+        {"Circle Outwards", Traverse::CIRCLE_OUTWARDS},
+        {"Circle Inwards", Traverse::CIRCLE_INWARDS},
+        {"Clockwise", Traverse::CLOCKWISE},
+        {"Anti-Clockwise", Traverse::ANTICLOCKWISE},
+        {"Draw Path", Traverse::PATH},
+        {"Inspect", Traverse::INSPECT},
+        // Optional: include REGION if it's still used somewhere else
+        {"Region", Traverse::REGION}};
 };

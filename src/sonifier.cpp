@@ -2,6 +2,16 @@
 
 #include "sonifier.hpp"
 
+#include <qnamespace.h>
+
+Sonifier::Sonifier()
+{
+    m_mapFunc = [this](const QVector<PixelColumn> &cols)
+    {
+        return m_mapping->Map__Intensity(cols);
+    };
+}
+
 template <typename T, typename... Args>
 QVector<T>
 addVectors(const QVector<T> &first, const QVector<T> &second,
@@ -72,14 +82,13 @@ Sonifier::processImageChunk__LeftToRight(int startX, int endX, void *s) noexcept
         if (son->m_stop_sonifying)
             return;
         /*temp.clear();*/
-        temp.resize(nsamples);
 
         for (int y = 0; y < son->m_img.height(); y++)
             pixcols[y] = PixelColumn{son->m_img.pixel(x, y), x, y};
 
-        temp = son->m_mapping->add(pixcols);
+        temp = son->m_mapFunc(pixcols);
 
-        index = startX + x * nsamples;
+        index = x * nsamples;
 
         for (int i = 0; i < nsamples; i++)
             son->m_audioData[index + i] = temp.at(i);
@@ -114,7 +123,7 @@ Sonifier::processImageChunk__RightToLeft(int startX, int endX, void *s) noexcept
         for (int y = 0; y < son->m_img.height(); y++)
             pixcols[y] = PixelColumn{son->m_img.pixel(x, y), x, y};
 
-        temp = son->m_mapping->MapFull2(pixcols);
+        temp = son->m_mapFunc(pixcols);
 
         index = (totalsamples - 1 - x) * nsamples;
 
@@ -151,7 +160,7 @@ Sonifier::processImageChunk__TopToBottom(int startY, int endY, void *s) noexcept
         for (int x = 0; x < son->m_img.width(); x++)
             pixcols[x] = PixelColumn{son->m_img.pixel(x, y), x, y};
 
-        temp = son->m_mapping->MapFull2(pixcols);
+        temp = son->m_mapping->Map__HSV(pixcols);
 
         index = startY + y * nsamples;
 
@@ -188,7 +197,7 @@ Sonifier::processImageChunk__BottomToTop(int startY, int endY, void *s) noexcept
         for (int x = 0; x < son->m_img.width(); x++)
             pixcols[x] = PixelColumn{son->m_img.pixel(x, y), x, y};
 
-        temp = son->m_mapping->MapFull2(pixcols);
+        temp = son->m_mapFunc(pixcols);
 
         index = (totalsamples - 1 - y) * nsamples;
 
@@ -242,7 +251,7 @@ Sonifier::processImageChunk__CircleOutwards(int startRadius, int endRadius,
             }
         }
 
-        temp  = son->m_mapping->MapFull2(pixcols);
+        temp  = son->m_mapFunc(pixcols);
         index = r * nsamples;
 
         for (int i = 0; i < nsamples; i++)
@@ -295,7 +304,7 @@ Sonifier::processImageChunk__CircleInwards(int startRadius, int endRadius,
             }
         }
 
-        temp  = son->m_mapping->MapFull2(pixcols);
+        temp  = son->m_mapFunc(pixcols);
         index = (lastRadius - r) * nsamples;
 
         for (int i = 0; i < temp.size(); i++)
@@ -350,7 +359,7 @@ Sonifier::processImageChunk__Clockwise(int startAngle, int endAngle,
             }
         }
 
-        temp  = son->m_mapping->MapFull2(pixcols);
+        temp  = son->m_mapFunc(pixcols);
         index = startAngle + angle * nsamples;
 
         for (int i = 0; i < nsamples; i++)
@@ -405,7 +414,7 @@ Sonifier::processImageChunk__AntiClockwise(int startAngle, int endAngle,
             }
         }
 
-        temp  = son->m_mapping->MapFull2(pixcols);
+        temp  = son->m_mapFunc(pixcols);
         index = (360 - angle) * nsamples;
 
         for (int i = 0; i < nsamples; i++)
@@ -429,7 +438,8 @@ Sonifier::LeftToRight() noexcept
 
     int totalsamples = m_img.width();
     int numThreads   = QThreadPool::globalInstance()->maxThreadCount();
-    int chunkWidth   = totalsamples / numThreads;
+    QVector<QVector<short>> threadBuffers(numThreads);
+    int chunkWidth = totalsamples / numThreads;
 
     auto completed = std::make_shared<std::atomic<int>>(0);
 
@@ -488,7 +498,6 @@ Sonifier::RightToLeft() noexcept
 void
 Sonifier::TopToBottom() noexcept
 {
-
     m_audioData.clear();
     m_audioData.resize(m_nsamples * m_img.height());
 
@@ -518,7 +527,6 @@ Sonifier::TopToBottom() noexcept
 void
 Sonifier::BottomToTop() noexcept
 {
-
     m_audioData.clear();
     m_audioData.resize(m_nsamples * m_img.height());
 
@@ -548,7 +556,6 @@ Sonifier::BottomToTop() noexcept
 void
 Sonifier::CircleOutwards() noexcept
 {
-
     int width  = m_img.width();
     int height = m_img.height();
 
@@ -588,7 +595,6 @@ Sonifier::CircleOutwards() noexcept
 void
 Sonifier::CircleInwards() noexcept
 {
-
     int width  = m_img.width();
     int height = m_img.height();
 
@@ -748,7 +754,6 @@ Sonifier::setParameters(const QPixmap &pix, Traverse t) noexcept
 void
 Sonifier::Sonify() noexcept
 {
-
     switch (m_traverse)
     {
         case Traverse::LEFT_TO_RIGHT:
