@@ -250,8 +250,6 @@ Mapping::Map__HSV(const QVector<PixelColumn> &pixelCol) noexcept
             break;
     }
 
-    std::vector<double> list = {0, 0.2, 0.4, 0.6, 0.8, 1.0};
-    /*auto s = list.at(rand() % list.size());*/
     wave = generateSineWave(0.5, f, 1);
     fs   = addVectors(fs, wave);
     return fs;
