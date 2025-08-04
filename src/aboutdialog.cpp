@@ -1,23 +1,32 @@
 #include "aboutdialog.hpp"
 
-AboutDialog::AboutDialog(QWidget *parent) noexcept
-    : QDialog(parent)
+#include <QDesktopServices>
+#include <qdesktopservices.h>
+
+AboutDialog::AboutDialog(QWidget *parent) noexcept : QDialog(parent)
 {
-    this->setLayout(m_layout);
-    m_layout->addWidget(m_name_label);
+    QVBoxLayout *layout   = new QVBoxLayout();
+    QLabel *name_label    = new QLabel("SonifyCPP");
+    QPushButton *done_btn = new QPushButton("Done");
+    QLabel *info_label    = new QLabel("Convert images to audio");
+    QPushButton *git_btn  = new QPushButton("Git");
+
+    this->setLayout(layout);
+    layout->addWidget(name_label);
 
     this->setWindowModality(Qt::WindowModality::ApplicationModal);
-    m_name_label->setFont(QFont("ShureTechMono Nerd Font Mono", 18));
-    m_name_label->setAlignment(Qt::AlignmentFlag::AlignCenter);
-    m_layout->addWidget(m_done_btn);
+    name_label->setFont(QFont("ShureTechMono Nerd Font Mono", 18));
+    name_label->setAlignment(Qt::AlignmentFlag::AlignCenter);
+    layout->addWidget(done_btn);
 
-    connect(m_done_btn, &QPushButton::clicked, this, [&]() {
-        this->close();
-    });
+    connect(done_btn, &QPushButton::clicked, this, [&]() { this->close(); });
 
-    m_layout->addWidget(m_info_label);
-    m_layout->addWidget(m_git_btn);
+    layout->addWidget(info_label);
+    layout->addWidget(git_btn);
 
-    connect(m_git_btn, &QPushButton::clicked, this, [&]() {
+    connect(git_btn, &QPushButton::clicked, this, [&]()
+    {
+        QDesktopServices::openUrl(
+            QUrl("https://github.com/dheerajshenoy/sonifycpp"));
     });
 }

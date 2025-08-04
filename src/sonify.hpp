@@ -9,6 +9,7 @@ sonification process and audio playback. This represents the main window
 #include "ReverbDialog.hpp"
 #include "SpectrumAnalyzer.hpp"
 #include "aboutdialog.hpp"
+#include "argparse.hpp"
 #include "config.hpp"
 #include "gv.hpp"
 #include "screenRecorder.hpp"
@@ -55,6 +56,7 @@ class Sonify : public QMainWindow
 public:
     Sonify(QWidget *parent = nullptr);
     void Open(QString filename = "") noexcept;
+    void args(const argparse::ArgumentParser &args) noexcept;
     void Close() noexcept;
 
     enum class Location
@@ -89,7 +91,7 @@ private:
     void initKeybinds() noexcept;
     void initIcons() noexcept;
     void CaptureWindow() noexcept;
-    void AskForResize(const QString &filename) noexcept;
+    bool AskForResize(const QString &filename) noexcept;
     void viewWaveform(const bool &state = false) noexcept;
     void readConfigFile() noexcept;
 

@@ -1,5 +1,6 @@
 #include "sonify.hpp"
 
+#include <cstdio>
 #include <qboxlayout.h>
 
 Sonify::Sonify(QWidget *parent) : QMainWindow(parent)
@@ -121,12 +122,9 @@ Sonify::initRightPanel() noexcept
 void
 Sonify::initIcons() noexcept
 {
-    m_sonify_btn->setText("");
-    m_sonify_btn->setIcon(QIcon(":/icons/sonify.svg"));
-    m_play_btn->setText("");
-    m_play_btn->setIcon(QIcon(":/icons/play-button.svg"));
-    m_reset_btn->setText("");
-    m_reset_btn->setIcon(QIcon(":/icons/stop.svg"));
+    m_sonify_btn->setText("Sonify");
+    m_play_btn->setText("Play");
+    m_reset_btn->setText("Reset");
     m_file__open->setIcon(QIcon(":/icons/open-file.svg"));
     m_file__close->setIcon(QIcon(":/icons/close-file.svg"));
     m_file__exit->setIcon(QIcon(":/icons/exit.svg"));
@@ -208,6 +206,8 @@ Sonify::initStatusbar() noexcept
 {
     m_status_bar_layout->addWidget(m_statusbar_msg_label);
     m_status_bar_layout->addWidget(m_progress_bar);
+    m_status_bar_layout->addStretch(1);
+
     m_status_bar_layout->addWidget(m_stop_sonification_btn);
     m_status_bar_layout->addWidget(m_audio_progress_label);
     m_status_bar_layout->addWidget(m_duration_label);
@@ -237,6 +237,7 @@ Sonify::initWidgets() noexcept
 
     m_pixel_mapping_combo->addItem("Intensity");
     m_pixel_mapping_combo->addItem("HSV");
+    m_pixel_mapping_combo->addItem("Orchestra");
 
     m_sonify_btn->setToolTip("Sonify");
     m_reset_btn->setToolTip("Reset");
@@ -456,8 +457,7 @@ Sonify::initConnections() noexcept
 
     connect(gv, &GV::animationFinished, this, [this]()
     {
-        m_play_btn->setIcon(QIcon(":/icons/play-button.svg"));
-        /*m_play_btn->setText("Play");*/
+        m_play_btn->setText("Play");
         m_isAudioPlaying = false;
         sonification->reset();
         m_traverse_combo->setEnabled(true);
@@ -615,7 +615,6 @@ Sonify::PlayAudio() noexcept
         Play();
     else
         Pause();
-    qDebug() << m_isAudioPlaying;
 }
 
 // Function that is similar to numpy linspace.
@@ -682,36 +681,44 @@ Sonify::Save(const QString &filename) noexcept
 void
 Sonify::Open(QString filename) noexcept
 {
-
     if (filename.isEmpty())
     {
-        QFileDialog fd;
-        QStringList files = fd.getOpenFileNames(
+        filename = QFileDialog::getOpenFileName(
             this, "Open Image", nullptr, "Image Files (*.png *.jpeg *.jpg)");
-
-        if (files.empty())
+        if (filename.isEmpty())
             return;
+    }
 
-        filename = files[0];
+    if (filename.startsWith("~"))
+    {
+        const QString home = QDir::homePath();
+        filename.remove(0, 1);
+        filename = QDir(home).filePath(filename);
     }
 
     if (m_def_ask_for_resize)
-        AskForResize(filename);
+    {
+        if (!AskForResize(filename))
+            return;
+    }
     else
     {
         m_pix = QPixmap(filename);
         if (m_def_keep_aspect)
+        {
             m_pix
                 = m_pix.scaled(m_def_width, m_def_height, Qt::KeepAspectRatio);
+        }
         else
+        {
             m_pix = m_pix.scaled(m_def_width, m_def_height,
                                  Qt::IgnoreAspectRatio);
+        }
     }
 
     gv->setPixmap(m_pix);
     m_sonify_btn->setEnabled(true);
     m_file__close->setEnabled(true);
-    // sonification->clear();
     m_play_btn->setEnabled(false);
     m_reset_btn->setEnabled(false);
     emit fileOpened();
@@ -772,6 +779,14 @@ Sonify::doSonify() noexcept
             mapFunc = [this](const QVector<PixelColumn> &cols)
             {
                 return sonification->sonifier()->mapping()->Map__HSV(cols);
+            };
+            break;
+
+        case 2:
+            mapFunc = [this](const QVector<PixelColumn> &cols)
+            {
+                return sonification->sonifier()->mapping()->Map__Orchestra(
+                    cols);
             };
             break;
     }
@@ -897,89 +912,252 @@ Sonify::CaptureWindow() noexcept
 {
 }
 
-// Function to ask for image resize when opening
-void
+bool
 Sonify::AskForResize(const QString &filename) noexcept
 {
-    QDialog *ask_widget     = new QDialog(this);
-    QGridLayout *ask_layout = new QGridLayout();
+    // Load original pixmap early so we can restore if needed
+    QPixmap original_pix = QPixmap(filename);
+    if (original_pix.isNull())
+    {
+        // optionally: show error message about failing to load
+        return false;
+    }
 
-    m_pix = QPixmap(filename);
+    // Dialog setup
+    QDialog dialog(this);
+    dialog.setWindowTitle("Resize Input Image");
+    dialog.setModal(true);
+    QGridLayout *layout = new QGridLayout(&dialog);
 
-    ask_widget->setLayout(ask_layout);
+    // Message
     QString msgtext
-        = QString("The input image (%1) has dimensions (%2,%3). Images with "
-                  "large dimensions tend be to slow during the sonification "
-                  "process and can result in longer waiting time")
+        = QString(
+              "The input image (%1) has dimensions (%2, %3). Images with large "
+              "dimensions tend to be slower during sonification and can "
+              "increase wait time.")
               .arg(filename)
-              .arg(m_pix.width())
-              .arg(m_pix.height());
+              .arg(original_pix.width())
+              .arg(original_pix.height());
     QLabel *msg = new QLabel(msgtext);
     msg->setWordWrap(true);
+    layout->addWidget(msg, 0, 0, 1, 2);
 
-    QSpinBox *input_img_width  = new QSpinBox();
-    QSpinBox *input_img_height = new QSpinBox();
-    QPushButton *ok_btn        = new QPushButton("Ok"),
-                *keep_original_btn
-                = new QPushButton("Ignore and Keep Original Dimension");
-    QCheckBox *keep_aspect_ratio_cb = new QCheckBox();
+    // Width/Height controls
+    QLabel *width_label   = new QLabel("Width:");
+    QLabel *height_label  = new QLabel("Height:");
+    QSpinBox *width_spin  = new QSpinBox();
+    QSpinBox *height_spin = new QSpinBox();
+    width_spin->setRange(1, 5000);
+    height_spin->setRange(1, 5000);
+    width_spin->setToolTip("Target width for the resized image");
+    height_spin->setToolTip("Target height for the resized image");
 
-    keep_aspect_ratio_cb->setChecked(m_def_keep_aspect);
+    // Initial values from defaults or original
+    if (m_def_width > 0)
+        width_spin->setValue(m_def_width);
+    else
+        width_spin->setValue(original_pix.width());
 
-    connect(ok_btn, &QPushButton::clicked, this,
-            [input_img_height, input_img_width, keep_aspect_ratio_cb,
-             ask_widget, this]()
+    if (m_def_height > 0)
+        height_spin->setValue(m_def_height);
+    else
+        height_spin->setValue(original_pix.height());
+
+    layout->addWidget(width_label, 1, 0);
+    layout->addWidget(width_spin, 1, 1);
+    layout->addWidget(height_label, 2, 0);
+    layout->addWidget(height_spin, 2, 1);
+
+    // Aspect ratio
+    QCheckBox *keep_aspect = new QCheckBox("Keep aspect ratio");
+    keep_aspect->setChecked(m_def_keep_aspect);
+    keep_aspect->setToolTip("Maintain original aspect ratio when resizing");
+    layout->addWidget(keep_aspect, 3, 0, 1, 2);
+
+    // Synchronize width/height when aspect ratio is on
+    const double original_ratio
+        = original_pix.width() > 0 ? static_cast<double>(original_pix.height())
+                                         / original_pix.width()
+                                   : 1.0;
+    auto sync_height = [&](int w)
     {
-        auto width  = input_img_width->text().toInt();
-        auto height = input_img_height->text().toInt();
+        if (keep_aspect->isChecked())
+        {
+            int new_h = static_cast<int>(std::round(w * original_ratio));
+            height_spin->blockSignals(true);
+            height_spin->setValue(new_h);
+            height_spin->blockSignals(false);
+        }
+    };
+    auto sync_width = [&](int h)
+    {
+        if (keep_aspect->isChecked() && original_ratio != 0.0)
+        {
+            int new_w = static_cast<int>(std::round(h / original_ratio));
+            width_spin->blockSignals(true);
+            width_spin->setValue(new_w);
+            width_spin->blockSignals(false);
+        }
+    };
 
-        if (keep_aspect_ratio_cb->isChecked())
-            m_pix = m_pix.scaled(width, height, Qt::KeepAspectRatio);
+    QObject::connect(width_spin, &QSpinBox::valueChanged, &dialog,
+                     [&](int v) { sync_height(v); });
+    QObject::connect(height_spin, &QSpinBox::valueChanged, &dialog,
+                     [&](int v) { sync_width(v); });
+
+    // Buttons: OK / Ignore original / Cancel
+    QDialogButtonBox *button_box
+        = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    QPushButton *ignore_btn
+        = new QPushButton("Ignore and Keep Original Dimension");
+    ignore_btn->setToolTip("Skip resizing and use the original image as-is");
+    layout->addWidget(ignore_btn, 4, 0);
+    layout->addWidget(button_box, 4, 1);
+
+    // Keep aspect ratio toggle should re-sync if toggled
+    QObject::connect(keep_aspect, &QCheckBox::toggled, &dialog,
+                     [&](bool checked)
+    {
+        if (checked)
+        {
+            // enforce ratio based on current width
+            sync_height(width_spin->value());
+        }
+    });
+
+    // OK button enable/disable (prevent zero dim, though ranges start at 1)
+    QPushButton *ok_button = button_box->button(QDialogButtonBox::Ok);
+    ok_button->setEnabled(true); // already safe due to spinbox ranges
+
+    // Signal handling
+    QObject::connect(ignore_btn, &QPushButton::clicked, &dialog, [&]()
+    {
+        m_pix = original_pix;
+        if (gv)
+            gv->setPixmap(m_pix);
+        dialog.reject();
+    });
+
+    QObject::connect(button_box, &QDialogButtonBox::accepted, &dialog, [&]()
+    {
+        int w = width_spin->value();
+        int h = height_spin->value();
+        if (keep_aspect->isChecked())
+            m_pix = original_pix.scaled(w, h, Qt::KeepAspectRatio,
+                                        Qt::SmoothTransformation);
         else
-            m_pix = m_pix.scaled(width, height, Qt::IgnoreAspectRatio);
-        gv->setPixmap(m_pix);
-        ask_widget->accept();
-    });
+            m_pix = original_pix.scaled(w, h, Qt::IgnoreAspectRatio,
+                                        Qt::SmoothTransformation);
 
-    connect(keep_original_btn, &QPushButton::clicked, this, [&]()
+        if (gv)
+            gv->setPixmap(m_pix);
+
+        // Persist defaults for next time
+        m_def_width       = w;
+        m_def_height      = h;
+        m_def_keep_aspect = keep_aspect->isChecked();
+
+        dialog.accept();
+    });
+    QObject::connect(button_box, &QDialogButtonBox::rejected, &dialog, [&]()
     {
-        gv->setPixmap(m_pix);
-        ask_widget->reject();
+        dialog.reject();
+        return false;
     });
 
-    input_img_width->setRange(0, 5000);
-    input_img_height->setRange(0, 5000);
+    // Execute modally
+    auto dialogResult = dialog.exec();
 
-    if (m_def_width > -1)
-        input_img_width->setValue(m_def_width);
-    else
-        input_img_width->setValue(m_pix.width());
+    if (dialogResult == QDialog::Rejected)
+        return false;
 
-    if (m_def_height > -1)
-        input_img_height->setValue(m_def_height);
-    else
-        input_img_height->setValue(m_pix.height());
-
-    ask_layout->addWidget(msg, 0, 0, 1, 2);
-    ask_layout->addWidget(new QLabel("Width"), 1, 0);
-    ask_layout->addWidget(input_img_width, 1, 1);
-    ask_layout->addWidget(new QLabel("Height"), 2, 0);
-    ask_layout->addWidget(input_img_height, 2, 1);
-    ask_layout->addWidget(new QLabel("Keep aspect ratio"), 3, 0);
-    ask_layout->addWidget(keep_aspect_ratio_cb, 3, 1);
-    ask_layout->addWidget(keep_original_btn, 4, 0);
-    ask_layout->addWidget(ok_btn, 4, 1);
-
-    ask_widget->open();
+    return true;
 }
+
+// Function to ask for image resize when opening
+// void
+// Sonify::AskForResize(const QString &filename) noexcept
+// {
+//     QDialog *ask_widget     = new QDialog(this);
+//     QGridLayout *ask_layout = new QGridLayout();
+//
+//     m_pix = QPixmap(filename);
+//
+//     ask_widget->setLayout(ask_layout);
+//     QString msgtext
+//         = QString("The input image (%1) has dimensions (%2,%3). Images with "
+//                   "large dimensions tend be to slow during the sonification "
+//                   "process and can result in longer waiting time")
+//               .arg(filename)
+//               .arg(m_pix.width())
+//               .arg(m_pix.height());
+//     QLabel *msg = new QLabel(msgtext);
+//     msg->setWordWrap(true);
+//
+//     QSpinBox *input_img_width  = new QSpinBox();
+//     QSpinBox *input_img_height = new QSpinBox();
+//     QPushButton *ok_btn        = new QPushButton("Ok"),
+//                 *keep_original_btn
+//                 = new QPushButton("Ignore and Keep Original Dimension");
+//     QCheckBox *keep_aspect_ratio_cb = new QCheckBox();
+//
+//     connect(keep_original_btn, &QPushButton::clicked, this, [&]()
+//     {
+//         gv->setPixmap(m_pix);
+//         ask_widget->reject();
+//     });
+//
+//     keep_aspect_ratio_cb->setChecked(m_def_keep_aspect);
+//
+//     connect(ok_btn, &QPushButton::clicked, this,
+//             [input_img_height, input_img_width, keep_aspect_ratio_cb,
+//              ask_widget, this]()
+//     {
+//         auto width  = input_img_width->text().toInt();
+//         auto height = input_img_height->text().toInt();
+//
+//         if (keep_aspect_ratio_cb->isChecked())
+//             m_pix = m_pix.scaled(width, height, Qt::KeepAspectRatio);
+//         else
+//             m_pix = m_pix.scaled(width, height, Qt::IgnoreAspectRatio);
+//         gv->setPixmap(m_pix);
+//         ask_widget->accept();
+//     });
+//
+//     input_img_width->setRange(0, 5000);
+//     input_img_height->setRange(0, 5000);
+//
+//     if (m_def_width > -1)
+//         input_img_width->setValue(m_def_width);
+//     else
+//         input_img_width->setValue(m_pix.width());
+//
+//     if (m_def_height > -1)
+//         input_img_height->setValue(m_def_height);
+//     else
+//         input_img_height->setValue(m_pix.height());
+//
+//     ask_layout->addWidget(msg, 0, 0, 1, 2);
+//     ask_layout->addWidget(new QLabel("Width"), 1, 0);
+//     ask_layout->addWidget(input_img_width, 1, 1);
+//     ask_layout->addWidget(new QLabel("Height"), 2, 0);
+//     ask_layout->addWidget(input_img_height, 2, 1);
+//     ask_layout->addWidget(new QLabel("Keep aspect ratio"), 3, 0);
+//     ask_layout->addWidget(keep_aspect_ratio_cb, 3, 1);
+//     ask_layout->addWidget(keep_original_btn, 4, 0);
+//     ask_layout->addWidget(ok_btn, 4, 1);
+//
+//     ask_widget->open();
+// }
 
 // Function that handles 'play' state
 void
 Sonify::Play() noexcept
 {
     sonification->play();
-    /*m_play_btn->setText("Pause");*/
-    m_play_btn->setIcon(QIcon(":/icons/pause-button.svg"));
+    m_play_btn->setText("Pause");
+
+    m_sonify_btn->setEnabled(false);
     m_reset_btn->setEnabled(false);
     m_num_samples_spinbox->setEnabled(false);
     m_traverse_combo->setEnabled(false);
@@ -990,9 +1168,9 @@ void
 Sonify::Pause() noexcept
 {
     sonification->pause();
-    /*m_play_btn->setText("Play");*/
-    m_play_btn->setIcon(QIcon(":/icons/play-button.svg"));
+    m_play_btn->setText("Play");
     m_reset_btn->setEnabled(true);
+    m_sonify_btn->setEnabled(true);
     m_num_samples_spinbox->setEnabled(true);
     m_traverse_combo->setEnabled(true);
 }
@@ -1061,4 +1239,16 @@ Sonify::readConfigFile() noexcept
                 .traversal      = traversal,
                 .sample_rate    = sample_rate,
                 .panel_position = panel_position};
+}
+
+void
+Sonify::args(const argparse::ArgumentParser &args) noexcept
+{
+    if (auto filename = args.present("-i"))
+    {
+        if (filename)
+        {
+            Open(QString::fromStdString(*filename));
+        }
+    }
 }

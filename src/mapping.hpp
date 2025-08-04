@@ -38,6 +38,7 @@ public:
     QVector<short> Map1(const double &, const int &, const int &) noexcept;
     QVector<short> Map__Intensity(const QVector<PixelColumn> &) noexcept;
     QVector<short> Map__HSV(const QVector<PixelColumn> &) noexcept;
+    QVector<short> Map__Orchestra(const QVector<PixelColumn> &) noexcept;
     QVector<short> add(const QVector<PixelColumn> &pix) noexcept;
 
 private:
@@ -60,6 +61,9 @@ private:
 
     double sineWave(const double &_amplitude, const double &frequency,
                     const double &time) noexcept;
+
+    void applySimpleEnvelope(QVector<short> &buf, double attackFrac = 0.1,
+                             double releaseFrac = 0.1) noexcept;
 
     double m_samplerate;
     int m_nsamples;

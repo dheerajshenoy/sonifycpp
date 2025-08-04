@@ -11,6 +11,41 @@
 
 #include <cmath>
 
+// simple linear attack-release envelope applied per-sample
+void
+Mapping::applySimpleEnvelope(QVector<short> &buf, double attackFrac,
+                             double releaseFrac) noexcept
+{
+    int totalSamples = buf.size();
+    int attackSamples
+        = static_cast<int>(attackFrac * totalSamples); // 10% attack
+    int releaseSamples
+        = static_cast<int>(releaseFrac * totalSamples); // 10% release
+
+    for (int i = 0; i < totalSamples; ++i)
+    {
+        double env = 1.0;
+        if (i < attackSamples)
+        {
+            env = static_cast<double>(i)
+                  / std::max(1, attackSamples); // ramp up
+        }
+        else if (i >= totalSamples - releaseSamples)
+        {
+            env = static_cast<double>(totalSamples - i)
+                  / std::max(1, releaseSamples); // ramp down
+        }
+
+        double sample = static_cast<double>(buf[i]) * env;
+        // clamp to 16-bit range
+        if (sample > 32767.0)
+            sample = 32767.0;
+        if (sample < -32768.0)
+            sample = -32768.0;
+        buf[i] = static_cast<short>(sample);
+    }
+}
+
 QVector<short>
 Mapping::Map1(const double &amplitude, const int &y, const int &x) noexcept
 {
@@ -340,4 +375,52 @@ Mapping::add(const QVector<PixelColumn> &pixelCol) noexcept
     // auto wave7 = generateSineWave(intensity * 0.0168 / 7, 3080.0, 1);
     // fs         = addVectors(wave1, wave2, wave3, wave4, wave5, wave6, wave7);
     return fs;
+}
+
+QVector<short>
+Mapping::Map__Orchestra(const QVector<PixelColumn> &pixelCol) noexcept
+{
+    int N = static_cast<int>(pixelCol.size());
+    PixelColumn p;
+    QVector<short> wave;
+    wave.resize(N);
+    double f = 0;
+
+    switch (m_freq_map)
+    {
+        case FreqMap::Linear:
+            for (int i = 0; i < N; i++)
+            {
+                p               = pixelCol[i];
+                float intensity = static_cast<float>(qGray(p.pixel)) / 255.0f;
+                f += LinearMap(0, 360, m_freq_min, m_freq_max, intensity)
+                     / static_cast<double>(N);
+                wave.append(generateSineWave(intensity, f, 1.0));
+            }
+            break;
+
+        case FreqMap::Exp:
+            for (int i = 0; i < N; i++)
+            {
+                p               = pixelCol[i];
+                float intensity = static_cast<float>(qGray(p.pixel)) / 255.0f;
+                f += ExpMap(0, 360, m_freq_min, m_freq_max, intensity)
+                     / static_cast<double>(N);
+                wave.append(generateSineWave(intensity, f, 1.0));
+            }
+            break;
+
+        case FreqMap::Log:
+            for (int i = 0; i < N; i++)
+            {
+                p               = pixelCol[i];
+                float intensity = static_cast<float>(qGray(p.pixel)) / 255.0f;
+                f += LogMap(0, 360, m_freq_min, m_freq_max, intensity)
+                     / static_cast<double>(N);
+                wave.append(generateSineWave(intensity, f, 1.0));
+            }
+            break;
+    }
+
+    return wave;
 }

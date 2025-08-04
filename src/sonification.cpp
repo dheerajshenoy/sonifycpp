@@ -13,7 +13,7 @@ Sonification::Sonification() noexcept
 
     if (!SDL_Init(SDL_INIT_AUDIO))
     {
-        qDebug() << "SDL could not initialize! SDL_Error: " << SDL_GetError();
+        qFatal() << "SDL could not initialize! SDL_Error: " << SDL_GetError();
         return;
     }
 
@@ -145,7 +145,7 @@ Sonification::m_GenerateWavFile(const QString &filename) noexcept
 
     if (!sndfile)
     {
-        qDebug() << "Error writing to file: Error %d" << sf_error(sndfile);
+        qCritical() << "Error writing to file: Error %d" << sf_error(sndfile);
         m_audioData.clear();
         return false;
     }
