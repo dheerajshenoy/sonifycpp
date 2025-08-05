@@ -13,6 +13,10 @@ ImageEditorDialog::ImageEditorDialog(QWidget *parent) noexcept : QDialog(parent)
     m_saturation_slider->setOrientation(Qt::Orientation::Horizontal);
     m_contrast_slider->setOrientation(Qt::Orientation::Horizontal);
     m_gamma_slider->setOrientation(Qt::Orientation::Horizontal);
+    m_rotate_slider->setOrientation(Qt::Orientation::Horizontal);
+
+    m_rotate_slider->setRange(0, 360);
+    m_rotate_slider->setValue(0);
     m_contrast_slider->setRange(-100, 100); // 0.1 to 3.0
     m_gamma_slider->setRange(10, 300);      // 0.1 to 3.0
     m_saturation_slider->setRange(-100, 100);
@@ -21,21 +25,25 @@ ImageEditorDialog::ImageEditorDialog(QWidget *parent) noexcept : QDialog(parent)
     m_gamma_slider->setValue(100);
     m_brightness_slider->setValue(0);
     m_saturation_slider->setValue(0);
+
     m_side_panel_layout->addWidget(m_brightness_label, 1, 0);
     m_side_panel_layout->addWidget(m_brightness_slider, 1, 1);
     m_side_panel_layout->addWidget(m_contrast_label, 2, 0);
     m_side_panel_layout->addWidget(m_contrast_slider, 2, 1);
     m_side_panel_layout->addWidget(m_saturation_label, 3, 0);
     m_side_panel_layout->addWidget(m_saturation_slider, 3, 1);
-    m_side_panel_layout->addWidget(m_gamma_label, 4, 0);
-    m_side_panel_layout->addWidget(m_gamma_slider, 4, 1);
-    m_side_panel_layout->addWidget(m_gray_label, 5, 0);
-    m_side_panel_layout->addWidget(m_gray_cb, 5, 1);
-    m_side_panel_layout->addWidget(m_invert_label, 6, 0);
-    m_side_panel_layout->addWidget(m_invert_cb, 6, 1);
-    m_side_panel_layout->addWidget(m_cancel_btn, 7, 0, 1, 2);
-    m_side_panel_layout->addWidget(m_apply_btn, 8, 0, 1, 2);
-    m_side_panel_layout->addWidget(m_reset_btn, 9, 0, 1, 2);
+    m_side_panel_layout->addWidget(new QLabel("Rotate"), 4, 0);
+    m_side_panel_layout->addWidget(m_rotate_slider, 4, 1);
+    m_side_panel_layout->addWidget(m_gamma_label, 5, 0);
+    m_side_panel_layout->addWidget(m_gamma_slider, 5, 1);
+    m_side_panel_layout->addWidget(m_gray_label, 6, 0);
+    m_side_panel_layout->addWidget(m_gray_cb, 6, 1);
+    m_side_panel_layout->addWidget(m_invert_label, 7, 0);
+    m_side_panel_layout->addWidget(m_invert_cb, 7, 1);
+    m_side_panel_layout->addWidget(m_cancel_btn, 8, 0, 1, 2);
+    m_side_panel_layout->addWidget(m_apply_btn, 9, 0, 1, 2);
+    m_side_panel_layout->addWidget(m_reset_btn, 10, 0, 1, 2);
+
     m_side_panel_layout->setRowStretch(10, 1);
     m_side_panel->setLayout(m_side_panel_layout);
     m_splitter->setStretchFactor(0, 1);
@@ -59,6 +67,9 @@ ImageEditorDialog::ImageEditorDialog(QWidget *parent) noexcept : QDialog(parent)
         this->close();
     });
 
+    connect(m_rotate_slider, &QSlider::valueChanged, this,
+            &ImageEditorDialog::applyImageOptions);
+
     connect(m_apply_btn, &QPushButton::clicked, this, [this]()
     {
         int brightness = m_brightness_slider->value();
@@ -67,9 +78,10 @@ ImageEditorDialog::ImageEditorDialog(QWidget *parent) noexcept : QDialog(parent)
         int gamma      = m_gamma_slider->value();
         bool grayscale = m_gray_cb->isChecked();
         bool invert    = m_invert_cb->isChecked();
+        int rotate     = m_rotate_slider->value();
 
         emit optionsApplied(ImageOptions{brightness, saturation, contrast,
-                                         gamma, grayscale, invert});
+                                         gamma, rotate, grayscale, invert});
         this->close();
     });
 
@@ -82,6 +94,7 @@ ImageEditorDialog::ImageEditorDialog(QWidget *parent) noexcept : QDialog(parent)
 void
 ImageEditorDialog::applyImageOptions() noexcept
 {
+    double rotate     = m_rotate_slider->value();
     double brightness = m_brightness_slider->value();
     double contrast   = m_contrast_slider->value();
     double saturation = m_saturation_slider->value();
@@ -89,21 +102,33 @@ ImageEditorDialog::applyImageOptions() noexcept
     bool grayscale    = m_gray_cb->isChecked();
     bool invert       = m_invert_cb->isChecked();
 
-    m_edited_img = m_img;
+    // Early exit if no operation is needed
+    const bool hasModifications = brightness != 0 || contrast != 0
+                                  || saturation != 0 || gamma != 100
+                                  || rotate != 0 || grayscale || invert;
 
-    if (brightness != 0)
-        m_edited_img = changeBrightness(m_edited_img, brightness);
-    if (contrast != 0)
-        m_edited_img = changeContrast(m_edited_img, contrast);
-    if (saturation != 0)
-        m_edited_img = changeSaturation(m_edited_img, saturation);
-    if (gamma != 100)
-        m_edited_img = changeGamma(m_edited_img, gamma);
+    if (!hasModifications)
+    {
+        m_edited_img = m_img;
+        m_img_label->setPixmap(QPixmap::fromImage(m_edited_img));
+        return;
+    }
+
+    QImage img = m_img;
+
+    m_edited_img = changeBrightness(img, brightness);
+    m_edited_img = changeContrast(img, contrast);
+    m_edited_img = changeSaturation(img, saturation);
+    m_edited_img = changeGamma(img, gamma);
+    QTransform t;
+    img = img.transformed(t.rotate(rotate));
+
     if (invert)
-        m_edited_img = invertColor(m_edited_img);
+        m_edited_img = invertColor(img);
     if (grayscale)
-        m_edited_img = convertToGrayscale(m_edited_img);
+        m_edited_img = convertToGrayscale(img);
 
+    m_edited_img = img;
     m_img_label->setPixmap(QPixmap::fromImage(m_edited_img));
 }
 
@@ -115,7 +140,7 @@ ImageEditorDialog::closeEvent(QCloseEvent *) noexcept
 
 // gamma 0.1 to 300
 QImage
-ImageEditorDialog::changeGamma(QImage &image, const int &_value) noexcept
+ImageEditorDialog::changeGamma(QImage &image, int _value) noexcept
 {
     double value = _value / 100.0;
     for (int y = 0; y < m_height; ++y)
@@ -141,7 +166,7 @@ ImageEditorDialog::changeGamma(QImage &image, const int &_value) noexcept
 }
 
 QImage
-ImageEditorDialog::changeBrightness(QImage &image, const int &value) noexcept
+ImageEditorDialog::changeBrightness(QImage &image, int value) noexcept
 {
     for (int y = 0; y < m_height; ++y)
     {
@@ -164,7 +189,7 @@ ImageEditorDialog::changeBrightness(QImage &image, const int &value) noexcept
 }
 
 QImage
-ImageEditorDialog::changeSaturation(QImage &image, const int &value) noexcept
+ImageEditorDialog::changeSaturation(QImage &image, int value) noexcept
 {
     for (int y = 0; y < m_height; ++y)
     {
@@ -236,7 +261,7 @@ ImageEditorDialog::setPixmap(const QPixmap &pix) noexcept
 
 // contrast factor 0.0 to 2.0
 QImage
-ImageEditorDialog::changeContrast(QImage &image, const int &_value) noexcept
+ImageEditorDialog::changeContrast(QImage &image, int _value) noexcept
 {
     double value = (259.0 * (_value + 255.0)) / (255.0 * (259.0 - _value));
     for (int y = 0; y < m_height; ++y)

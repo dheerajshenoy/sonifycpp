@@ -16,16 +16,6 @@
 #include <qt6/QtWidgets/QSpinBox>
 #include <qt6/QtWidgets/QSplitter>
 
-struct ImageOptions
-{
-    int Brightness;
-    int Saturation;
-    int Contrast;
-    int Gamma;
-    bool Grayscale;
-    bool Invert;
-};
-
 class ImageEditorDialog : public QDialog
 {
     Q_OBJECT
@@ -33,9 +23,20 @@ public:
     ImageEditorDialog(QWidget *parent = nullptr) noexcept;
     void setPixmap(const QPixmap &pix) noexcept;
 
+    struct ImageOptions
+    {
+        int Brightness;
+        int Saturation;
+        int Contrast;
+        int Gamma;
+        int rotate;
+        bool Grayscale;
+        bool Invert;
+    };
+
 signals:
     void closed();
-    void optionsApplied(ImageOptions);
+    void optionsApplied(const ImageOptions &);
     void resetImage();
 
 protected:
@@ -62,6 +63,7 @@ private:
     QSlider *m_saturation_slider     = new QSlider();
     QSlider *m_brightness_slider     = new QSlider();
     QSlider *m_blur_slider           = new QSlider();
+    QSlider *m_rotate_slider         = new QSlider();
     QPushButton *m_cancel_btn        = new QPushButton("Cancel");
     QPushButton *m_apply_btn         = new QPushButton("Apply");
     QPushButton *m_reset_btn         = new QPushButton("Reset");
@@ -69,10 +71,10 @@ private:
     int m_width, m_height;
 
     QImage convertToGrayscale(QImage &img) noexcept;
-    QImage changeSaturation(QImage &img, const int &value) noexcept;
-    QImage changeBrightness(QImage &img, const int &value) noexcept;
-    QImage changeContrast(QImage &img, const int &value) noexcept;
-    QImage changeGamma(QImage &img, const int &value) noexcept;
+    QImage changeSaturation(QImage &img, int value) noexcept;
+    QImage changeBrightness(QImage &img, int value) noexcept;
+    QImage changeContrast(QImage &img, int value) noexcept;
+    QImage changeGamma(QImage &img, int value) noexcept;
     QImage invertColor(QImage &img) noexcept;
     void applyImageOptions() noexcept;
 };
