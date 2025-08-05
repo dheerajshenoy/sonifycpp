@@ -1,12 +1,14 @@
 #pragma once
 
 #include "traverse.hpp"
+
 #include <QGraphicsLineItem>
-#include <QPen>
 #include <QObject>
+#include <QPen>
 
 // A custom QGraphicsLineItem to allow for animation
-class AnimatedLineItem : public QObject, public QGraphicsLineItem {
+class AnimatedLineItem : public QObject, public QGraphicsLineItem
+{
     Q_OBJECT
 public:
     AnimatedLineItem(QColor color) noexcept
@@ -19,7 +21,7 @@ public:
 
     inline void setLeftToRight() noexcept
     {
-        this->setLine(QLineF(0, 0, 0, m_h));
+        this->setLine(QLineF(0, 0, m_w, m_h));
         m_line = line();
     }
 
@@ -41,12 +43,12 @@ public:
         m_line = line();
     }
 
-    inline void setImageWidth(const qreal& w) noexcept
+    inline void setImageWidth(const qreal &w) noexcept
     {
         m_w = w;
     }
 
-    inline void setImageHeight(const qreal& h) noexcept
+    inline void setImageHeight(const qreal &h) noexcept
     {
         m_h = h;
     }
@@ -60,15 +62,15 @@ public:
     {
         auto centerX = m_w / 2.0;
         auto centerY = m_h / 2.0;
-        m_l = sqrt(centerX * centerX + centerY * centerY);
+        m_l          = sqrt(centerX * centerX + centerY * centerY);
     }
 
-    void setAngle(const qreal& angle) noexcept
+    void setAngle(const qreal &angle) noexcept
     {
         QLineF line = this->line();
-        qreal rad = qDegreesToRadians(static_cast<qreal>(angle));
-        auto x = m_w / 2.0 + m_l * cos(rad);
-        auto y = m_h / 2.0 + m_l * sin(rad);
+        qreal rad   = qDegreesToRadians(static_cast<qreal>(angle));
+        auto x      = m_w / 2.0 + m_l * cos(rad);
+        auto y      = m_h / 2.0 + m_l * sin(rad);
         line.setP1(QPointF(m_w / 2.0, m_h / 2.0));
         line.setP2(QPointF(x, y));
         this->setLine(line);
