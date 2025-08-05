@@ -32,26 +32,32 @@ class GV : public QGraphicsView
     Q_OBJECT
 public:
     GV(QWidget *parent = nullptr) noexcept;
-
     void setPixmap(const QPixmap &img) noexcept;
     QPixmap getPixmap() noexcept;
     void reset() noexcept;
-    void setDuration(const double &s) noexcept;
+    inline void setDuration(const double &s) noexcept
+    {
+        m_duration_s = s;
+    }
+
     void setTraverse(const Traverse &t) noexcept;
-    void setDrawPathMode(const bool &t) noexcept;
-    void getOffset(const size_t &offset) noexcept;
-    void setAudioIndex(const int &index) noexcept;
+    void setDrawPathMode(bool t) noexcept;
+    void getOffset(size_t offset) noexcept;
+    void setAudioIndex(int index) noexcept;
     void setObjColor(const QString &) noexcept;
     void clearDrawPath() noexcept;
-    void clearPixmap() noexcept;
+    inline void clearPixmap() noexcept
+    {
+        m_pi->setPixmap(QPixmap());
+    }
+
     QVector<QPointF> getPathDrawnPos() noexcept;
-    ~GV();
 
 signals:
     void animationFinished();
     void drawPathFinished();
     void audioIndexSet();
-    void dropFile(QString filepath);
+    void dropFile(const QString &filepath);
     void pixelClick(QPointF pixelLocation);
 
 protected:

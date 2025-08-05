@@ -21,7 +21,7 @@ GV::GV(QWidget *parent) noexcept : QGraphicsView(parent)
 
 // Get the current location in the audiodata array
 void
-GV::setAudioIndex(const int &index) noexcept
+GV::setAudioIndex(int index) noexcept
 {
     m_audio_index = index;
     emit audioIndexSet();
@@ -29,7 +29,7 @@ GV::setAudioIndex(const int &index) noexcept
 
 // Function to handle draw path mode
 void
-GV::setDrawPathMode(const bool &t) noexcept
+GV::setDrawPathMode(bool t) noexcept
 {
     m_draw_path_mode = t;
 
@@ -215,12 +215,6 @@ GV::setTraverse(const Traverse &t) noexcept
     }
 }
 
-void
-GV::setDuration(const double &s) noexcept
-{
-    m_duration_s = s;
-}
-
 // Set the image onto the graphicsview
 void
 GV::setPixmap(const QPixmap &pix) noexcept
@@ -311,8 +305,6 @@ GV::mouseMoveEvent(QMouseEvent *e) noexcept
     QGraphicsView::mouseMoveEvent(e);
 }
 
-GV::~GV() {}
-
 QVector<QPointF>
 GV::getPathDrawnPos() noexcept
 {
@@ -367,12 +359,6 @@ GV::clearDrawPath() noexcept
         m_pathi = nullptr;
         m_painter_path.clear();
     }
-}
-
-void
-GV::clearPixmap() noexcept
-{
-    m_pi->setPixmap(QPixmap());
 }
 
 void
