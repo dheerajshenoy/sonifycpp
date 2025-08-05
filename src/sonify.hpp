@@ -14,6 +14,7 @@ sonification process and audio playback. This represents the main window
 #include "gv.hpp"
 #include "screenRecorder.hpp"
 #include "sonification.hpp"
+#include "statusbar.hpp"
 #include "toml.hpp"
 #include "tonegenerator.hpp"
 #include "traverse.hpp"
@@ -77,7 +78,6 @@ private:
     void PlayAudio() noexcept;
     void Reset() noexcept;
     bool Save(const QString &filename = "") noexcept;
-    void setMsg(QString &&msg, const int &s = -1) noexcept;
     void doSonify() noexcept;
     void initConfigFile() noexcept;
     void initConnections() noexcept;
@@ -94,6 +94,8 @@ private:
     bool AskForResize(const QString &filename) noexcept;
     void viewWaveform(const bool &state = false) noexcept;
     void readConfigFile() noexcept;
+    void sonificationDone() noexcept;
+    void audioPlaybackDone() noexcept;
 
     QWidget *m_widget     = new QWidget();
     QSplitter *m_splitter = new QSplitter();
@@ -105,7 +107,7 @@ private:
     QPushButton *m_play_btn = nullptr, *m_sonify_btn = nullptr,
                 *m_reset_btn = nullptr;
 
-    GV *gv                = new GV();
+    GV *m_gv              = new GV();
     bool m_isAudioPlaying = false;
 
     QMenuBar *m_menu_bar = new QMenuBar();
@@ -136,20 +138,12 @@ private:
               *m_freq_mapping_combo  = new QComboBox(),
               *m_pixel_mapping_combo = new QComboBox();
 
-    QLabel *m_duration_label, *m_audio_progress_label, *m_traverse_label,
-        *m_num_samples_label, *m_statusbar_msg_label, *m_min_freq_label,
-        *m_max_freq_label, *m_mapping_label;
-
     QSpinBox *m_num_samples_spinbox = new QSpinBox(),
              *m_min_freq_sb = new QSpinBox(), *m_max_freq_sb = new QSpinBox();
 
-    QWidget *m_status_bar            = new QWidget();
-    QHBoxLayout *m_status_bar_layout = new QHBoxLayout();
+    Statusbar *m_status_bar = new Statusbar();
 
     QPixmap m_pix;
-
-    QProgressBar *m_progress_bar         = new QProgressBar();
-    QPushButton *m_stop_sonification_btn = nullptr;
 
     QLabel *m_input_img_height_label = nullptr,
            *m_input_img_width_label  = nullptr;
