@@ -423,29 +423,11 @@ Sonify::initConnections() noexcept
         ImageEditorDialog *e = new ImageEditorDialog(this);
         QPixmap pix          = m_gv->getPixmap();
         e->setPixmap(pix);
+        e->setAttribute(Qt::WA_DeleteOnClose);
         connect(e, &ImageEditorDialog::optionsApplied, this,
-                [this, &pix](ImageOptions options)
-        {
-            QImage img = m_pix.toImage();
-            img        = Utils::changeBrightness(img, options.Brightness,
-                                                 m_pix.height(), m_pix.width());
-            img        = Utils::changeSaturation(img, options.Saturation,
-                                                 m_pix.height(), m_pix.width());
-            img = Utils::changeContrast(img, options.Contrast, m_pix.height(),
-                                        m_pix.width());
-            img = Utils::changeGamma(img, options.Gamma, m_pix.height(),
-                                     m_pix.width());
-            if (options.Grayscale)
-                img = Utils::convertToGrayscale(img, m_pix.height(),
-                                                m_pix.width());
-            if (options.Invert)
-                img = Utils::invertColor(img, m_pix.height(), m_pix.width());
-            pix = QPixmap::fromImage(img);
-            m_gv->setPixmap(pix);
-        });
+                &Sonify::applyImageEdits);
         connect(e, &ImageEditorDialog::resetImage, this,
                 [this]() { m_gv->setPixmap(m_pix); });
-        e->setAttribute(Qt::WA_DeleteOnClose);
         e->open();
     });
 
@@ -543,8 +525,8 @@ Sonify::initConnections() noexcept
             [this](bool state) { m_panel->setVisible(!state); });
 }
 
-// This is used to set the state of the audio playback. Call Play() if we
-// have to play the audio or call Pause() if we want to pause.
+// This is used to set the state of the audio playback. Call Play() if
+// we have to play the audio or call Pause() if we want to pause.
 void
 Sonify::PlayAudio() noexcept
 {
@@ -614,8 +596,8 @@ Sonify::Save(const QString &filename) noexcept
     return false;
 }
 
-// Function that handles Opening an image. If filename is specified, image
-// will be opened, otherwise a file dialog will ask for the file.
+// Function that handles Opening an image. If filename is specified,
+// image will be opened, otherwise a file dialog will ask for the file.
 void
 Sonify::Open(QString filename) noexcept
 {
@@ -865,14 +847,15 @@ Sonify::AskForResize(const QString &filename) noexcept
     QGridLayout *layout = new QGridLayout(&dialog);
 
     // Message
-    QString msgtext
-        = QString(
-              "The input image (%1) has dimensions (%2, %3). Images with large "
-              "dimensions tend to be slower during sonification and can "
-              "increase wait time.")
-              .arg(filename)
-              .arg(original_pix.width())
-              .arg(original_pix.height());
+    QString msgtext = QString("The input image (%1) has dimensions "
+                              "(%2, %3). Images with "
+                              "large "
+                              "dimensions tend to be slower during "
+                              "sonification and can "
+                              "increase wait time.")
+                          .arg(filename)
+                          .arg(original_pix.width())
+                          .arg(original_pix.height());
     QLabel *msg = new QLabel(msgtext);
     msg->setWordWrap(true);
     layout->addWidget(msg, 0, 0, 1, 2);
@@ -960,7 +943,8 @@ Sonify::AskForResize(const QString &filename) noexcept
         }
     });
 
-    // OK button enable/disable (prevent zero dim, though ranges start at 1)
+    // OK button enable/disable (prevent zero dim, though ranges start
+    // at 1)
     QPushButton *ok_button = button_box->button(QDialogButtonBox::Ok);
     ok_button->setEnabled(true); // already safe due to spinbox ranges
 
@@ -1133,4 +1117,23 @@ Sonify::audioPlaybackDone() noexcept
     m_reset_btn->setEnabled(true);
     emit m_gv->animationFinished();
     m_sonify_btn->setEnabled(true);
+}
+
+void
+Sonify::applyImageEdits(const ImageOptions &options) noexcept
+{
+    QImage img = m_pix.toImage();
+    img = Utils::changeBrightness(img, options.Brightness, m_pix.height(),
+                                  m_pix.width());
+    img = Utils::changeSaturation(img, options.Saturation, m_pix.height(),
+                                  m_pix.width());
+    img = Utils::changeContrast(img, options.Contrast, m_pix.height(),
+                                m_pix.width());
+    img = Utils::changeGamma(img, options.Gamma, m_pix.height(), m_pix.width());
+    if (options.Grayscale)
+        img = Utils::convertToGrayscale(img, m_pix.height(), m_pix.width());
+    if (options.Invert)
+        img = Utils::invertColor(img, m_pix.height(), m_pix.width());
+    QPixmap pix = QPixmap::fromImage(img);
+    m_gv->setPixmap(pix);
 }
