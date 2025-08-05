@@ -269,6 +269,8 @@ Sonify::initWidgets() noexcept
         initLeftPanel();
 
     m_panel->setEnabled(false);
+
+    m_widget->setMinimumSize(800, 600);
 }
 
 void
