@@ -421,7 +421,7 @@ Sonify::initConnections() noexcept
     connect(m_tools__image_settings, &QAction::triggered, this, [this]()
     {
         ImageEditorDialog *e = new ImageEditorDialog(this);
-        auto pix             = m_gv->getPixmap();
+        QPixmap pix          = m_gv->getPixmap();
         e->setPixmap(pix);
         connect(e, &ImageEditorDialog::optionsApplied, this,
                 [this, &pix](ImageOptions options)
@@ -475,8 +475,8 @@ Sonify::initConnections() noexcept
                 m_sp = nullptr;
                 m_tools__spectrum_analyzer->setChecked(false);
             });
-            auto data = sonification->audioData();
-            auto sr   = sonification->sampleRate();
+            QVector<short> data = sonification->audioData();
+            float sr            = sonification->sampleRate();
             m_sp->setData(data, sr);
             m_sp->open();
         }
@@ -587,7 +587,7 @@ Sonify::viewWaveform(const bool &state) noexcept
                 m_wf_widget = nullptr;
             });
         }
-        auto data = sonification->audioData();
+        QVector<short> data = sonification->audioData();
         m_wf_widget->setData(data, sonification->sampleRate());
         m_wf_widget->show();
     }
@@ -698,8 +698,8 @@ Sonify::doSonify() noexcept
             break;
     }
 
-    auto min_freq = m_min_freq_sb->text().toInt();
-    auto max_freq = m_max_freq_sb->text().toInt();
+    int min_freq = m_min_freq_sb->text().toInt();
+    int max_freq = m_max_freq_sb->text().toInt();
 
     Sonifier::MapFunc mapFunc;
     switch (m_pixel_mapping_combo->currentIndex())
