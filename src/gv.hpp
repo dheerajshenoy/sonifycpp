@@ -25,6 +25,7 @@
 #include <QPainterPath>
 #include <QTimeLine>
 #include <QTimer>
+#include <qevent.h>
 
 class GV : public QGraphicsView
 {
@@ -57,6 +58,7 @@ protected:
     void mousePressEvent(QMouseEvent *) noexcept override;
     void mouseReleaseEvent(QMouseEvent *) noexcept override;
     void mouseMoveEvent(QMouseEvent *) noexcept override;
+    void wheelEvent(QWheelEvent *) noexcept override;
     void dropEvent(QDropEvent *e) noexcept override;
     void dragEnterEvent(QDragEnterEvent *e) noexcept override;
     void dragMoveEvent(QDragMoveEvent *e) noexcept override;

@@ -7,11 +7,15 @@
 
 #include "gv.hpp"
 
+#include <qnamespace.h>
+
 GV::GV(QWidget *parent) noexcept : QGraphicsView(parent)
 {
     this->setScene(m_scene);
     m_scene->addItem(m_pi);
     this->setAcceptDrops(true);
+    this->setDragMode(QGraphicsView::DragMode::ScrollHandDrag);
+    this->setResizeAnchor(QGraphicsView::ViewportAnchor::AnchorUnderMouse);
     this->show();
 }
 
@@ -268,6 +272,7 @@ GV::mousePressEvent(QMouseEvent *e) noexcept
         }
         emit pixelClick(mapToScene(e->pos()));
     }
+
     QGraphicsView::mousePressEvent(e);
 }
 
@@ -368,4 +373,17 @@ void
 GV::clearPixmap() noexcept
 {
     m_pi->setPixmap(QPixmap());
+}
+
+void
+GV::wheelEvent(QWheelEvent *e) noexcept
+{
+    if (e->modifiers() & Qt::Modifier::CTRL)
+    {
+        int angle    = e->angleDelta().y();
+        float factor = (angle > 0) ? 1.15 : 1 / 1.15;
+        scale(factor, factor);
+    }
+    else
+        QGraphicsView::wheelEvent(e);
 }
