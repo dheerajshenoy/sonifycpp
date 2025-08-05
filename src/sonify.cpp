@@ -1,5 +1,7 @@
 #include "sonify.hpp"
 
+#include "ImageEditorDialog.hpp"
+
 #include <cstdio>
 #include <qboxlayout.h>
 
@@ -1001,7 +1003,11 @@ Sonify::Play() noexcept
 
     m_sonify_btn->setEnabled(false);
     m_reset_btn->setEnabled(false);
+    m_min_freq_sb->setEnabled(false);
+    m_max_freq_sb->setEnabled(false);
+    m_pixel_mapping_combo->setEnabled(false);
     m_num_samples_spinbox->setEnabled(false);
+    m_freq_mapping_combo->setEnabled(false);
     m_traverse_combo->setEnabled(false);
 }
 
@@ -1011,9 +1017,14 @@ Sonify::Pause() noexcept
 {
     sonification->pause();
     m_play_btn->setText("Play");
-    m_reset_btn->setEnabled(true);
+
     m_sonify_btn->setEnabled(true);
+    m_reset_btn->setEnabled(true);
+    m_min_freq_sb->setEnabled(true);
+    m_max_freq_sb->setEnabled(true);
+    m_pixel_mapping_combo->setEnabled(true);
     m_num_samples_spinbox->setEnabled(true);
+    m_freq_mapping_combo->setEnabled(true);
     m_traverse_combo->setEnabled(true);
 }
 
@@ -1122,7 +1133,7 @@ Sonify::audioPlaybackDone() noexcept
 }
 
 void
-Sonify::applyImageEdits(const ImageOptions &options) noexcept
+Sonify::applyImageEdits(const ImageEditorDialog::ImageOptions &options) noexcept
 {
     QImage img = m_pix.toImage();
     img = Utils::changeBrightness(img, options.Brightness, m_pix.height(),
@@ -1132,6 +1143,8 @@ Sonify::applyImageEdits(const ImageOptions &options) noexcept
     img = Utils::changeContrast(img, options.Contrast, m_pix.height(),
                                 m_pix.width());
     img = Utils::changeGamma(img, options.Gamma, m_pix.height(), m_pix.width());
+    QTransform t;
+    img = img.transformed(t.rotate(options.rotate));
     if (options.Grayscale)
         img = Utils::convertToGrayscale(img, m_pix.height(), m_pix.width());
     if (options.Invert)

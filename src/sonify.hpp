@@ -72,7 +72,8 @@ signals:
     void fileOpened();
 
 private:
-    void applyImageEdits(const ImageOptions &options) noexcept;
+    void
+    applyImageEdits(const ImageEditorDialog::ImageOptions &options) noexcept;
     void Play() noexcept;
     void ConvertToVideo() noexcept;
     void Pause() noexcept;
