@@ -1,13 +1,15 @@
-#define SONIFYCPP_VERSION 0.1.1
-
 #include "argparse.hpp"
+#include "sol/sol.hpp"
 #include "sonify.hpp"
 
-void
-init_args(argparse::ArgumentParser &program) noexcept
+namespace
 {
-    program.add_argument("-i", "--input").help("input file");
-}
+    void init_args(argparse::ArgumentParser &program) noexcept
+    {
+        program.add_argument("-i", "--input").help("input file");
+    }
+
+} // namespace
 
 int
 main(int argc, char *argv[])
