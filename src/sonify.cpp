@@ -443,7 +443,7 @@ Sonify::initConnections() noexcept
 
     connect(sonification, &Sonification::sonificationProgress, this,
             [this](int progress)
-    { m_status_bar->setAudioProgressText(QString::number(progress)); });
+    { m_status_bar->setSonificationProgress(progress); });
 
     connect(m_gv, &GV::dropFile, this,
             [this](QString droppedFilePath) { Open(droppedFilePath); });
