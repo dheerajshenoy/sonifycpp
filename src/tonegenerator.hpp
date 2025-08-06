@@ -36,14 +36,10 @@ class ToneGenerator : public QDialog
 public:
     ToneGenerator(QWidget *parent = nullptr) noexcept;
     ~ToneGenerator();
-    QVector<short> generateSineWave(const double &, const double &,
-                                    const double &) noexcept;
-    QVector<short> generateSawtoothWave(const double &, const double &,
-                                        const double &) noexcept;
-    QVector<short> generateTriangularWave(const double &, const double &,
-                                          const double &) noexcept;
-    QVector<short> generateSquareWave(const double &, const double &,
-                                      const double &) noexcept;
+    QVector<short> generateSineWave(double, double, double) noexcept;
+    QVector<short> generateSawtoothWave(double, double, double) noexcept;
+    QVector<short> generateTriangularWave(double, double, double) noexcept;
+    QVector<short> generateSquareWave(double, double, double) noexcept;
     static void audioCallback(void *userdata, SDL_AudioStream *stream,
                               int additional_amount, int total_amount) noexcept;
 
@@ -84,7 +80,6 @@ private:
     int m_audioOffset  = 0;
 
     SDL_AudioSpec m_audioSpec;
-    SDL_AudioDeviceID m_audioDevice{SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK};
     SDL_AudioStream *m_audioStream;
 
     QComboBox *m_wave_type_combo = new QComboBox();

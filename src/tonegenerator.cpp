@@ -61,7 +61,7 @@ ToneGenerator::ToneGenerator(QWidget *parent) noexcept : QDialog(parent)
     m_duration_sb->setRange(1, 100);
     m_duration_sb->setValue(10);
 
-    if (SDL_Init(SDL_INIT_AUDIO) < 0)
+    if (!SDL_Init(SDL_INIT_AUDIO))
     {
         qDebug() << "SDL could not initialize! SDL_Error: " << SDL_GetError();
         return;
@@ -73,7 +73,8 @@ ToneGenerator::ToneGenerator(QWidget *parent) noexcept : QDialog(parent)
     m_audioSpec.freq     = 44100;
 
     m_audioStream = SDL_OpenAudioDeviceStream(
-        m_audioDevice, &m_audioSpec, &ToneGenerator::audioCallback, this);
+        SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &m_audioSpec,
+        &ToneGenerator::audioCallback, this);
 
     if (!m_audioStream)
     {
@@ -202,42 +203,49 @@ ToneGenerator::ToneGenerator(QWidget *parent) noexcept : QDialog(parent)
     plotWave(WaveType::SINE);
 }
 
+ToneGenerator::~ToneGenerator()
+{
+    if (m_audioStream)
+        SDL_PauseAudioStreamDevice(m_audioStream);
+    SDL_Quit();
+}
+
 void
 ToneGenerator::plotWave(const WaveType &wave) noexcept
 {
-    QVector<double> x, y;
-    auto duration  = m_duration_sb->text().toFloat();
-    int sampleRate = 44100;
-    x.resize(duration * sampleRate);
-    y.resize(duration * sampleRate);
-    auto frequency = m_freq_sb->text().toFloat();
-    auto amplitude = m_amplitude_sb->text().toDouble();
+    const float duration   = m_duration_sb->text().toFloat();
+    const float sampleRate = 44100.0f;
+    const float frequency  = m_freq_sb->text().toFloat();
+    const double amplitude = m_amplitude_sb->text().toDouble();
+
+    const int N = static_cast<int>(duration * sampleRate);
+    QVector<double> x(N), y(N);
+
+    const double step = 1.0 / sampleRate;
+
     switch (wave)
     {
         case WaveType::SINE:
-            for (int i = 0; i < x.size(); i++)
+            for (int i = 0; i < N; i++)
             {
-                x[i] = i / static_cast<double>(sampleRate);
-                y[i] = amplitude * qSin(x[i] * frequency * 2 * M_PI);
+                x[i] = i * step;
+                y[i] = amplitude * std::sin(2 * M_PI * frequency * x[i]);
             }
-
             break;
+
         case WaveType::SAWTOOTH:
-            for (int i = 0; i < x.size(); i++)
+            for (int i = 0; i < N; i++)
             {
-                x[i] = i / static_cast<double>(sampleRate);
-                y[i] = amplitude * 2.0
-                       * (i * frequency / static_cast<double>(sampleRate)
-                          - floor(0.5
-                                  + i * frequency
-                                        / static_cast<double>(sampleRate)));
+                x[i]         = i * step;
+                double phase = frequency * x[i];
+                y[i] = amplitude * 2.0 * (phase - std::floor(phase + 0.5));
             }
             break;
 
         case WaveType::SQUARE:
-            for (int i = 0; i < x.size(); i++)
+            for (int i = 0; i < N; i++)
             {
-                x[i] = i / static_cast<double>(sampleRate);
+                x[i] = i * step;
                 y[i] = (std::sin(2 * M_PI * frequency * x[i]) >= 0)
                            ? amplitude
                            : -amplitude;
@@ -245,28 +253,25 @@ ToneGenerator::plotWave(const WaveType &wave) noexcept
             break;
 
         case WaveType::TRAINGULAR:
-            for (int i = 0; i < x.size(); i++)
+            for (int i = 0; i < N; i++)
             {
-                x[i] = i / static_cast<double>(sampleRate);
-                y[i] = amplitude * 2.0
-                           * std::abs(2.0
-                                      * ((i * frequency
-                                          / static_cast<double>(sampleRate))
-                                         - std::floor(
-                                             (i * frequency
-                                              / static_cast<double>(sampleRate))
-                                             + 0.5)))
-                       - amplitude;
+                x[i]         = i * step;
+                double phase = frequency * x[i];
+                y[i]
+                    = amplitude
+                      * (2.0 * std::abs(2.0 * (phase - std::floor(phase + 0.5)))
+                         - 1.0);
             }
             break;
     }
+
     m_plot->graph(0)->setData(x, y);
     m_plot->replot();
 }
 
 void SDLCALL
 ToneGenerator::audioCallback(void *userdata, SDL_AudioStream *_stream,
-                             int additional, int total) noexcept
+                             int additional, int /* total */) noexcept
 {
     /*
       `total` is how much data the audio stream is eating right now,
@@ -291,13 +296,8 @@ ToneGenerator::audioCallback(void *userdata, SDL_AudioStream *_stream,
         // Audio is finished
         QMetaObject::invokeMethod(s, [s]() { emit s->audioFinishedPlaying(); },
                                   Qt::QueuedConnection);
-        return;
-    }
-
-    if (bytesRemaining <= 0)
-    {
         SDL_PauseAudioStreamDevice(s->m_audioStream);
-        emit s->audioFinishedPlaying();
+
         return;
     }
 
@@ -319,94 +319,83 @@ ToneGenerator::audioCallback(void *userdata, SDL_AudioStream *_stream,
 }
 
 QVector<short>
-ToneGenerator::generateSineWave(const double &_amplitude,
-                                const double &frequency,
-                                const double &time) noexcept
+ToneGenerator::generateSineWave(double _amplitude, double frequency,
+                                double time) noexcept
 {
-    QVector<short> fs;
-    int N = m_sampleRate * time;
-    fs.resize(N);
-    int amplitude = _amplitude * 32767;
-    double val    = 2 * M_PI * frequency / m_sampleRate;
-    double angle  = 0.0f;
+    const int N         = static_cast<int>(m_sampleRate * time);
+    const int amplitude = static_cast<int>(_amplitude * 32767);
+    const double val    = 2 * M_PI * frequency / m_sampleRate;
+    double angle        = 0.0f;
+
+    QVector<short> fs(N);
+
     for (int i = 0; i < N; i++)
     {
-        fs[i] = amplitude * sin(angle);
+        fs[i] = static_cast<short>(amplitude * sin(angle));
         angle += val;
     }
     return fs;
 }
 
 QVector<short>
-ToneGenerator::generateSquareWave(const double &_amplitude,
-                                  const double &frequency,
-                                  const double &time) noexcept
+ToneGenerator::generateSquareWave(double _amplitude, double frequency,
+                                  double time) noexcept
 {
-    QVector<short> fs;
-    int N = m_sampleRate * time;
-    fs.resize(N);
-    int amplitude = _amplitude * 32767;
+    const int N         = static_cast<int>(m_sampleRate * time);
+    const int amplitude = static_cast<int>(_amplitude * 32767);
+
+    QVector<short> fs(N);
+
+    const double phaseStep = 2.0 * M_PI * frequency / m_sampleRate;
+
     for (int i = 0; i < N; i++)
     {
-        fs[i]
-            = amplitude
-                      * (std::sin(2 * M_PI * frequency * i / m_sampleRate) >= 0)
-                  ? 1.0
-                  : -1.0;
+        fs[i] = static_cast<short>(
+            (std::sin(i * phaseStep) >= 0.0) ? amplitude : -amplitude);
     }
     return fs;
 }
 
 QVector<short>
-ToneGenerator::generateTriangularWave(const double &_amplitude,
-                                      const double &frequency,
-                                      const double &time) noexcept
+ToneGenerator::generateTriangularWave(double _amplitude, double frequency,
+                                      double time) noexcept
 {
     QVector<short> fs;
-    int N = m_sampleRate * time;
+    int N = static_cast<int>(m_sampleRate * time);
     fs.resize(N);
-    int amplitude = _amplitude * 32767;
+    int amplitude = static_cast<int>(_amplitude * 32767);
     for (int i = 0; i < N; i++)
     {
-        fs[i] = amplitude * 2.0
-                    * std::abs(
-                        2.0
-                        * ((i * frequency / static_cast<double>(m_sampleRate))
-                           - std::floor((i * frequency
-                                         / static_cast<double>(m_sampleRate))
-                                        + 0.5)))
-                - 1.0;
+        fs[i] = static_cast<short>(
+            amplitude * 2.0
+                * std::abs(
+                    2.0
+                    * ((i * frequency / static_cast<double>(m_sampleRate))
+                       - std::floor(
+                           (i * frequency / static_cast<double>(m_sampleRate))
+                           + 0.5)))
+            - 1.0);
     }
     return fs;
 }
 
 QVector<short>
-ToneGenerator::generateSawtoothWave(const double &_amplitude,
-                                    const double &frequency,
-                                    const double &time) noexcept
+ToneGenerator::generateSawtoothWave(double _amplitude, double frequency,
+                                    double time) noexcept
 {
     QVector<short> fs;
-    int N = m_sampleRate * time;
+    int N = static_cast<int>(m_sampleRate * time);
     fs.resize(N);
-    int amplitude = _amplitude * 32767;
+    int amplitude = static_cast<int>(_amplitude * 32767);
     for (int i = 0; i < N; i++)
     {
-        fs[i]
-            = amplitude * 2.0
-              * (i * frequency / static_cast<double>(m_sampleRate)
-                 - floor(0.5
-                         + i * frequency / static_cast<double>(m_sampleRate)));
+        fs[i] = static_cast<short>(
+            amplitude * 2.0
+            * (i * frequency / static_cast<double>(m_sampleRate)
+               - floor(0.5
+                       + i * frequency / static_cast<double>(m_sampleRate))));
     }
     return fs;
-}
-
-ToneGenerator::~ToneGenerator()
-{
-    if (m_audioDevice)
-    {
-        SDL_CloseAudioDevice(m_audioDevice);
-    }
-    SDL_Quit();
 }
 
 void
