@@ -722,7 +722,6 @@ Sonify::doSonify() noexcept
         == m_traversal_name_list[static_cast<int>(Traverse::LEFT_TO_RIGHT)])
     {
         m_mode = Traverse::LEFT_TO_RIGHT;
-        sonification->Sonify(m_pix, m_gv, mapFunc, m_mode, min_freq, max_freq);
         m_status_bar->setTraversalModeText("Left to Right");
     }
 
@@ -731,7 +730,6 @@ Sonify::doSonify() noexcept
                  Traverse::RIGHT_TO_LEFT)])
     {
         m_mode = Traverse::RIGHT_TO_LEFT;
-        sonification->Sonify(m_pix, m_gv, mapFunc, m_mode, min_freq, max_freq);
         m_status_bar->setTraversalModeText("Right to Left");
     }
 
@@ -740,7 +738,6 @@ Sonify::doSonify() noexcept
                  Traverse::TOP_TO_BOTTOM)])
     {
         m_mode = Traverse::TOP_TO_BOTTOM;
-        sonification->Sonify(m_pix, m_gv, mapFunc, m_mode, min_freq, max_freq);
         m_status_bar->setTraversalModeText("Top to Bottom");
     }
 
@@ -749,7 +746,6 @@ Sonify::doSonify() noexcept
                  Traverse::BOTTOM_TO_TOP)])
     {
         m_mode = Traverse::BOTTOM_TO_TOP;
-        sonification->Sonify(m_pix, m_gv, mapFunc, m_mode, min_freq, max_freq);
         m_status_bar->setTraversalModeText("Bottom to Top");
     }
 
@@ -758,7 +754,6 @@ Sonify::doSonify() noexcept
                  Traverse::CIRCLE_OUTWARDS)])
     {
         m_mode = Traverse::CIRCLE_OUTWARDS;
-        sonification->Sonify(m_pix, m_gv, mapFunc, m_mode, min_freq, max_freq);
         m_status_bar->setTraversalModeText("Circle Outwards");
     }
 
@@ -767,7 +762,6 @@ Sonify::doSonify() noexcept
                  Traverse::CIRCLE_INWARDS)])
     {
         m_mode = Traverse::CIRCLE_INWARDS;
-        sonification->Sonify(m_pix, m_gv, mapFunc, m_mode, min_freq, max_freq);
         m_status_bar->setTraversalModeText("Circle Inwards");
     }
 
@@ -775,7 +769,6 @@ Sonify::doSonify() noexcept
              == m_traversal_name_list[static_cast<int>(Traverse::CLOCKWISE)])
     {
         m_mode = Traverse::CLOCKWISE;
-        sonification->Sonify(m_pix, m_gv, mapFunc, m_mode, min_freq, max_freq);
         m_status_bar->setTraversalModeText("Clockwise");
     }
 
@@ -784,7 +777,6 @@ Sonify::doSonify() noexcept
                  Traverse::ANTICLOCKWISE)])
     {
         m_mode = Traverse::ANTICLOCKWISE;
-        sonification->Sonify(m_pix, m_gv, mapFunc, m_mode, min_freq, max_freq);
         m_status_bar->setTraversalModeText("Anti-clockwise");
     }
 
@@ -796,8 +788,6 @@ Sonify::doSonify() noexcept
         connect(m_gv, &GV::drawPathFinished, this, [&]()
         {
             m_mode = Traverse::PATH;
-            sonification->Sonify(m_pix, m_gv, mapFunc, m_mode, min_freq,
-                                 max_freq);
             m_status_bar->setTraversalModeText("Path");
         });
     }
@@ -807,9 +797,10 @@ Sonify::doSonify() noexcept
     {
         /*gv->setPixelAnalyserMode(true);*/
         m_mode = Traverse::INSPECT;
-        sonification->Sonify(m_pix, m_gv, mapFunc, m_mode, min_freq, max_freq);
         m_status_bar->setTraversalModeText("Inspect");
     }
+
+    sonification->Sonify(m_pix, m_gv, mapFunc, m_mode, min_freq, max_freq);
 }
 
 // Reset btn function
@@ -1000,7 +991,6 @@ Sonify::Play() noexcept
 {
     sonification->play();
     m_play_btn->setText("Pause");
-
     m_sonify_btn->setEnabled(false);
     m_reset_btn->setEnabled(false);
     m_min_freq_sb->setEnabled(false);
@@ -1118,37 +1108,53 @@ Sonify::sonificationDone() noexcept
     m_gv->setDuration(sonification->duration());
     m_status_bar->setAudioDurationText(
         "Duration: " + QString::number(sonification->duration()) + " secs");
+    m_num_samples_spinbox->setEnabled(true);
     m_sonify_btn->setEnabled(true);
     m_play_btn->setEnabled(true);
     m_reset_btn->setEnabled(true);
+    m_max_freq_sb->setEnabled(true);
+    m_min_freq_sb->setEnabled(true);
+    m_freq_mapping_combo->setEnabled(true);
+    m_pixel_mapping_combo->setEnabled(true);
+    m_traverse_combo->setEnabled(true);
     m_gv->setTraverse(m_mode);
 }
 
 void
 Sonify::audioPlaybackDone() noexcept
 {
+    m_num_samples_spinbox->setEnabled(true);
     m_reset_btn->setEnabled(true);
     emit m_gv->animationFinished();
     m_sonify_btn->setEnabled(true);
+    m_play_btn->setEnabled(true);
+    m_reset_btn->setEnabled(true);
+    m_max_freq_sb->setEnabled(true);
+    m_min_freq_sb->setEnabled(true);
+    m_freq_mapping_combo->setEnabled(true);
+    m_pixel_mapping_combo->setEnabled(true);
+    m_traverse_combo->setEnabled(true);
 }
 
 void
 Sonify::applyImageEdits(const ImageEditorDialog::ImageOptions &options) noexcept
 {
     QImage img = m_pix.toImage();
-    img = Utils::changeBrightness(img, options.Brightness, m_pix.height(),
-                                  m_pix.width());
-    img = Utils::changeSaturation(img, options.Saturation, m_pix.height(),
-                                  m_pix.width());
-    img = Utils::changeContrast(img, options.Contrast, m_pix.height(),
-                                m_pix.width());
-    img = Utils::changeGamma(img, options.Gamma, m_pix.height(), m_pix.width());
+
+    img = Utils::changeBrightness(img, options.Brightness);
+    img = Utils::changeSaturation(img, options.Saturation);
+    img = Utils::changeContrast(img, options.Contrast);
+    img = Utils::changeGamma(img, options.Gamma);
+
     QTransform t;
     img = img.transformed(t.rotate(options.rotate));
+
     if (options.Grayscale)
-        img = Utils::convertToGrayscale(img, m_pix.height(), m_pix.width());
+        img = Utils::convertToGrayscale(img);
+
     if (options.Invert)
-        img = Utils::invertColor(img, m_pix.height(), m_pix.width());
-    QPixmap pix = QPixmap::fromImage(img);
-    m_gv->setPixmap(pix);
+        img = Utils::invertColor(img);
+
+    m_pix = QPixmap::fromImage(img);
+    m_gv->setPixmap(m_pix);
 }
