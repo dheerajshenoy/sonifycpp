@@ -55,42 +55,36 @@ public:
         HSV
     };
 
-    void setSampleRate(const float &samplerate) noexcept;
-    void setSamples(const int &samples) noexcept;
-    void setMinMax(const int &min, const int &max) noexcept;
-    void setFreqMap(const FreqMap &f) noexcept;
+    inline void setSamples(int samples) noexcept
+    {
+        m_nsamples = samples;
+    }
 
-    QVector<short> Map1(const double &, const int &, const int &) noexcept;
+    inline void setFreqMap(const FreqMap &f) noexcept
+    {
+        m_freq_map = f;
+    }
+
+    inline void setSampleRate(float samplerate) noexcept
+    {
+        m_samplerate = samplerate;
+    }
+
+    inline void setMinMax(int min, int max) noexcept
+    {
+        m_freq_min = min;
+        m_freq_max = max;
+    }
+
     QVector<short> Map__Intensity(const QVector<PixelColumn> &) noexcept;
     QVector<short> Map__HSV(const QVector<PixelColumn> &) noexcept;
     QVector<short> Map__Orchestra(const QVector<PixelColumn> &) noexcept;
     QVector<short> add(const QVector<PixelColumn> &pix) noexcept;
 
 private:
-    double Hue2Freq(const int &H) noexcept;
+    double Hue2Freq(int H) noexcept;
 
-    short LinearMap(const double &inp_min, const double &inp_max,
-                    const double &out_min, const double &out_max,
-                    const double &val) noexcept;
-
-    short ExpMap(const double &inp_min, const double &inp_max,
-                 const double &out_min, const double &out_max,
-                 const double &val) noexcept;
-
-    short LogMap(const double &inp_min, const double &inp_max,
-                 const double &out_min, const double &out_max,
-                 const double &val) noexcept;
-    QVector<short> generateSineWave(const double &amplitude,
-                                    const double &frequency,
-                                    const double &time) noexcept;
-
-    double sineWave(const double &_amplitude, const double &frequency,
-                    const double &time) noexcept;
-
-    void applySimpleEnvelope(QVector<short> &buf, double attackFrac = 0.1,
-                             double releaseFrac = 0.1) noexcept;
-
-    double m_samplerate;
+    float m_samplerate;
     int m_nsamples;
     Notes m_notes;
 
