@@ -1031,7 +1031,7 @@ Sonify::Pause() noexcept
 // Read in a WAV file. This was used just to check if the Waveforms
 // visualizer worked
 QVector<short>
-readWAVFile(const QString filename) noexcept
+readWAVFile(const QString &filename) noexcept
 {
     SF_INFO sfinfo;
 
