@@ -17,6 +17,31 @@
 #include <QRgb>
 #include <QVector>
 
+namespace
+{
+    short LinearMap(double inp_min, double inp_max, double out_min,
+                    double out_max, double val);
+
+    short ExpMap(double inp_min, double inp_max, double out_min, double out_max,
+                 double val);
+
+    short LogMap(double inp_min, double inp_max, double out_min, double out_max,
+                 double val);
+
+    QVector<short> generateSineWave(double amplitude, double frequency,
+                                    double time, float samplerate) noexcept;
+
+    void generateSineWave(QVector<short> &vector, double _amplitude,
+                          double frequency, double time,
+                          float samplerate) noexcept;
+
+    void applyEnvelope(QVector<short> &samples) noexcept;
+
+    double sineWave(double _amplitude, double frequency, double time) noexcept;
+    void applyEnvelope(QVector<short> &samples) noexcept;
+
+} // namespace
+
 class Mapping
 {
 
