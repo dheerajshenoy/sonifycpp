@@ -76,6 +76,8 @@ protected:
     void dragMoveEvent(QDragMoveEvent *e) noexcept override;
 
 private:
+    void clearItems() noexcept;
+
     QGraphicsScene *m_scene   = new QGraphicsScene();
     QGraphicsPixmapItem *m_pi = new QGraphicsPixmapItem();
     AnimatedLineItem *m_li    = nullptr;

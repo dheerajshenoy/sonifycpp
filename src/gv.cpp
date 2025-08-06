@@ -13,6 +13,8 @@ GV::GV(QWidget *parent) noexcept : QGraphicsView(parent)
 {
     this->setScene(m_scene);
     m_scene->addItem(m_pi);
+    m_scene->addItem(m_ci);
+    m_scene->addItem(m_li);
     this->setAcceptDrops(true);
     this->setDragMode(QGraphicsView::DragMode::ScrollHandDrag);
     this->setResizeAnchor(QGraphicsView::ViewportAnchor::AnchorUnderMouse);
@@ -49,28 +51,21 @@ GV::setDrawPathMode(bool enabled) noexcept
 void
 GV::setTraverse(const Traverse &mode) noexcept
 {
-    if (m_traverse == mode)
-        return;
-
-    m_traverse = mode;
+    clearItems();
 
     auto clearItem = [&](QGraphicsItem *&item)
     {
-        if (item && m_scene)
+        if (item)
         {
-            m_scene->removeItem(item);
+            if (item->scene() == m_scene)
+                m_scene->removeItem(item);
             delete item;
             item = nullptr;
         }
     };
 
-    clearItem(reinterpret_cast<QGraphicsItem *&>(m_li));
-    clearItem(reinterpret_cast<QGraphicsItem *&>(m_ci));
-    clearItem(reinterpret_cast<QGraphicsItem *&>(m_pathi));
-
     switch (mode)
     {
-
         case Traverse::LEFT_TO_RIGHT:
         case Traverse::RIGHT_TO_LEFT:
         case Traverse::TOP_TO_BOTTOM:
@@ -79,7 +74,7 @@ GV::setTraverse(const Traverse &mode) noexcept
             m_li = new AnimatedLineItem(m_obj_color);
             m_scene->addItem(m_li);
 
-            connect(this, &GV::audioIndexSet, m_li, [this, mode]()
+            connect(this, &GV::audioIndexSet, m_li, [&]()
             {
                 switch (mode)
                 {
@@ -87,21 +82,26 @@ GV::setTraverse(const Traverse &mode) noexcept
                         m_li->setLine(m_audio_index, 0, m_audio_index,
                                       m_height);
                         break;
+
                     case Traverse::RIGHT_TO_LEFT:
                         m_li->setLine(m_width - m_audio_index, 0,
                                       m_width - m_audio_index, m_height);
                         break;
+
                     case Traverse::TOP_TO_BOTTOM:
                         m_li->setLine(0, m_audio_index, m_width, m_audio_index);
                         break;
+
                     case Traverse::BOTTOM_TO_TOP:
                         m_li->setLine(0, m_height - m_audio_index, m_width,
                                       m_height - m_audio_index);
                         break;
+
                     default:
                         break;
                 }
             });
+
             break;
         }
 
@@ -153,6 +153,10 @@ GV::setTraverse(const Traverse &mode) noexcept
             }
             connect(this, &GV::audioIndexSet, m_pathi, [&]()
             { m_pathi->setPos(m_pathDrawnPixelsPos.at(m_audio_index)); });
+
+        case Traverse::REGION:
+        case Traverse::INSPECT:
+            break;
     }
 }
 
@@ -303,5 +307,18 @@ GV::wheelEvent(QWheelEvent *e) noexcept
     else
     {
         QGraphicsView::wheelEvent(e);
+    }
+}
+
+void
+GV::clearItems() noexcept
+{
+    for (QGraphicsItem *item : m_scene->items())
+    {
+        if (item != m_pi)
+        {
+            m_scene->removeItem(item);
+            delete item;
+        }
     }
 }
