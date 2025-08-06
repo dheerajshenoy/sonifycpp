@@ -2,128 +2,126 @@
 
 #include <QColor>
 #include <QImage>
-#include <QVector>
 #include <QtMath>
 
 namespace Utils
 {
-
-    static QImage changeGamma(QImage &image, int _value, int h, int w)
+    inline QImage changeGamma(const QImage &input, int gammaValue)
     {
-        double value = _value / 100.0;
-        for (int y = 0; y < h; ++y)
+        QImage image = input.convertToFormat(QImage::Format_RGB32);
+        double gamma = gammaValue / 100.0;
+
+        for (int y = 0; y < image.height(); ++y)
         {
-            for (int x = 0; x < w; ++x)
+            QRgb *line = reinterpret_cast<QRgb *>(image.scanLine(y));
+            for (int x = 0; x < image.width(); ++x)
             {
-                QColor color = image.pixelColor(x, y);
-
-                int red = qBound(
-                    0, static_cast<int>(qPow(color.red() / 255.0, value) * 255),
-                    255);
-                int green = qBound(
-                    0,
-                    static_cast<int>(qPow(color.green() / 255.0, value) * 255),
-                    255);
-                int blue = qBound(
-                    0,
-                    static_cast<int>(qPow(color.blue() / 255.0, value) * 255),
-                    255);
-
-                image.setPixelColor(x, y, QColor(red, green, blue));
+                QColor c(line[x]);
+                int r = qBound(0, int(qPow(c.red() / 255.0, gamma) * 255), 255);
+                int g
+                    = qBound(0, int(qPow(c.green() / 255.0, gamma) * 255), 255);
+                int b
+                    = qBound(0, int(qPow(c.blue() / 255.0, gamma) * 255), 255);
+                line[x] = qRgb(r, g, b);
             }
         }
+
         return image;
     }
 
-    static QImage changeBrightness(QImage &image, int value, int h, int w)
+    inline QImage changeBrightness(const QImage &input, int delta)
     {
-        for (int y = 0; y < h; ++y)
+        QImage image = input.convertToFormat(QImage::Format_RGB32);
+
+        for (int y = 0; y < image.height(); ++y)
         {
-            for (int x = 0; x < w; ++x)
+            QRgb *line = reinterpret_cast<QRgb *>(image.scanLine(y));
+            for (int x = 0; x < image.width(); ++x)
             {
-                QColor color = image.pixelColor(x, y);
-                int red      = color.red() + value;
-                int green    = color.green() + value;
-                int blue     = color.blue() + value;
-
-                // Clamp values to the 0-255 range
-                red   = qBound(0, red, 255);
-                green = qBound(0, green, 255);
-                blue  = qBound(0, blue, 255);
-
-                image.setPixelColor(x, y, QColor(red, green, blue));
+                QColor c(line[x]);
+                int r   = qBound(0, c.red() + delta, 255);
+                int g   = qBound(0, c.green() + delta, 255);
+                int b   = qBound(0, c.blue() + delta, 255);
+                line[x] = qRgb(r, g, b);
             }
         }
+
         return image;
     }
 
-    static QImage changeSaturation(QImage &image, int value, int h, int w)
+    inline QImage changeSaturation(const QImage &input, int delta)
     {
-        for (int y = 0; y < h; ++y)
+        QImage image = input.convertToFormat(QImage::Format_RGB32);
+
+        for (int y = 0; y < image.height(); ++y)
         {
-            for (int x = 0; x < w; ++x)
+            QRgb *line = reinterpret_cast<QRgb *>(image.scanLine(y));
+            for (int x = 0; x < image.width(); ++x)
             {
-                QColor color = image.pixelColor(x, y);
+                QColor c(line[x]);
                 int h, s, v;
-                color.getHsv(&h, &s, &v);
-
-                s = qBound(0, s + value,
-                           255); // Adjust saturation and clamp to [0, 255]
-
-                color.setHsv(h, s, v);
-                image.setPixelColor(x, y, color);
+                c.getHsv(&h, &s, &v);
+                s = qBound(0, s + delta, 255);
+                c.setHsv(h, s, v);
+                line[x] = c.rgb();
             }
         }
+
         return image;
     }
 
-    static QImage invertColor(QImage &img, int h, int w)
+    inline QImage invertColor(const QImage &input)
     {
-        for (int i = 0; i < w; i++)
-            for (int j = 0; j < h; j++)
-            {
-                QColor color = img.pixelColor(i, j);
-                img.setPixelColor(i, j,
-                                  QColor(255 - color.red(), 255 - color.green(),
-                                         255 - color.blue()));
-            }
+        QImage image = input.convertToFormat(QImage::Format_RGB32);
 
-        return img;
-    }
-
-    static QImage convertToGrayscale(QImage &img, int h, int w)
-    {
-        for (int i = 0; i < w; i++)
-            for (int j = 0; j < h; j++)
-            {
-                QColor color = img.pixelColor(i, j);
-                int gray     = qGray(color.rgb());
-                img.setPixelColor(i, j, QColor(gray, gray, gray));
-            }
-        return img;
-    }
-
-    // contrast factor 0.0 to 2.0
-    static QImage changeContrast(QImage &image, int _value, int h, int w)
-    {
-        double value = (259.0 * (_value + 255.0)) / (255.0 * (259.0 - _value));
-        for (int y = 0; y < h; ++y)
+        for (int y = 0; y < image.height(); ++y)
         {
-            for (int x = 0; x < w; ++x)
+            QRgb *line = reinterpret_cast<QRgb *>(image.scanLine(y));
+            for (int x = 0; x < image.width(); ++x)
             {
-                QColor color = image.pixelColor(x, y);
+                QColor c(line[x]);
+                line[x] = qRgb(255 - c.red(), 255 - c.green(), 255 - c.blue());
+            }
+        }
 
-                int red = qBound(
-                    0, static_cast<int>((value * (color.red() - 128)) + 128),
-                    255);
-                int green = qBound(
-                    0, static_cast<int>((value * (color.green() - 128)) + 128),
-                    255);
-                int blue = qBound(
-                    0, static_cast<int>((value * (color.blue() - 128)) + 128),
-                    255);
+        return image;
+    }
 
-                image.setPixelColor(x, y, QColor(red, green, blue));
+    inline QImage convertToGrayscale(const QImage &input)
+    {
+        QImage image = input.convertToFormat(QImage::Format_RGB32);
+
+        for (int y = 0; y < image.height(); ++y)
+        {
+            QRgb *line = reinterpret_cast<QRgb *>(image.scanLine(y));
+            for (int x = 0; x < image.width(); ++x)
+            {
+                QColor c(line[x]);
+                int gray = qGray(c.rgb());
+                line[x]  = qRgb(gray, gray, gray);
+            }
+        }
+
+        return image;
+    }
+
+    inline QImage changeContrast(const QImage &input, int contrastValue)
+    {
+        QImage image = input.convertToFormat(QImage::Format_RGB32);
+
+        double factor = (259.0 * (contrastValue + 255.0))
+                        / (255.0 * (259.0 - contrastValue));
+
+        for (int y = 0; y < image.height(); ++y)
+        {
+            QRgb *line = reinterpret_cast<QRgb *>(image.scanLine(y));
+            for (int x = 0; x < image.width(); ++x)
+            {
+                QColor c(line[x]);
+                int r   = qBound(0, int(factor * (c.red() - 128) + 128), 255);
+                int g   = qBound(0, int(factor * (c.green() - 128) + 128), 255);
+                int b   = qBound(0, int(factor * (c.blue() - 128) + 128), 255);
+                line[x] = qRgb(r, g, b);
             }
         }
 
