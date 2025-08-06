@@ -10,83 +10,121 @@
 #include "mapping.hpp"
 
 #include <cmath>
+#include <complex>
 
-// simple linear attack-release envelope applied per-sample
-void
-Mapping::applySimpleEnvelope(QVector<short> &buf, double attackFrac,
-                             double releaseFrac) noexcept
+namespace
 {
-    int totalSamples = buf.size();
-    int attackSamples
-        = static_cast<int>(attackFrac * totalSamples); // 10% attack
-    int releaseSamples
-        = static_cast<int>(releaseFrac * totalSamples); // 10% release
-
-    for (int i = 0; i < totalSamples; ++i)
+    short LinearMap(double inp_min, double inp_max, double out_min,
+                    double out_max, double val)
     {
-        double env = 1.0;
-        if (i < attackSamples)
+        return static_cast<short>(out_min
+                                  + (val - inp_min) * (out_max - out_min)
+                                        / (inp_max - inp_min));
+    }
+
+    short ExpMap(double inp_min, double inp_max, double out_min, double out_max,
+                 double val)
+    {
+        double x_norm = (val - inp_min) / (inp_max - inp_min);
+        double y_norm = std::pow(x_norm, 2);
+        return static_cast<short>(y_norm * (out_max - out_min) + out_min);
+    }
+
+    short LogMap(double inp_min, double inp_max, double out_min, double out_max,
+                 double val)
+    {
+        double x_norm = (val - inp_min) / (inp_max - inp_min);
+        double y_norm = std::log(x_norm + 1) / std::log(10.0);
+        return static_cast<short>(y_norm * (out_max - out_min) + out_min);
+    }
+
+    void generateSineWave(QVector<short> &vector, double _amplitude,
+                          double frequency, double time,
+                          float samplerate) noexcept
+    {
+        const unsigned int N = static_cast<unsigned int>(samplerate * time);
+        if (N == 0)
+            return;
+
+        vector.resize(N);
+
+        // clamp amplitude to avoid overflow
+        double amp         = std::clamp(_amplitude, -1.0, 1.0);
+        const double scale = amp * 32767.0;
+
+        const double theta
+            = 2.0 * M_PI * frequency / static_cast<double>(samplerate);
+
+        // rotation complex number: e^{i θ}
+        const std::complex<double> w(std::cos(theta), std::sin(theta));
+        std::complex<double> z(0.0, 0.0);
+        // start at angle zero: sin(0)=0, but we want first sample as sin(0),
+        // so initialize z = (cos(0), sin(0)) = (1,0), then advance after using.
+        z = std::complex<double>(1.0, 0.0);
+
+        for (unsigned int i = 0; i < N; ++i)
         {
-            env = static_cast<double>(i)
-                  / std::max(1, attackSamples); // ramp up
+            vector[i] = static_cast<short>(scale * z.imag());
+            z *= w; // advance phase
         }
-        else if (i >= totalSamples - releaseSamples)
+    }
+
+    QVector<short> generateSineWave(double _amplitude, double frequency,
+                                    double time, float samplerate) noexcept
+    {
+        const unsigned int N = static_cast<unsigned int>(samplerate * time);
+        if (N == 0)
+            return {};
+
+        QVector<short> fs;
+        fs.resize(N);
+
+        // clamp amplitude to avoid overflow
+        double amp         = std::clamp(_amplitude, -1.0, 1.0);
+        const double scale = amp * 32767.0;
+
+        const double theta
+            = 2.0 * M_PI * frequency / static_cast<double>(samplerate);
+        // rotation complex number: e^{i θ}
+        const std::complex<double> w(std::cos(theta), std::sin(theta));
+        std::complex<double> z(0.0, 0.0);
+        // start at angle zero: sin(0)=0, but we want first sample as sin(0),
+        // so initialize z = (cos(0), sin(0)) = (1,0), then advance after using.
+        z = std::complex<double>(1.0, 0.0);
+
+        for (unsigned int i = 0; i < N; ++i)
         {
-            env = static_cast<double>(totalSamples - i)
-                  / std::max(1, releaseSamples); // ramp down
+            double sample = z.imag(); // sin(current angle)
+            fs[i]         = static_cast<short>(scale * sample);
+            z *= w; // advance phase
         }
 
-        double sample = static_cast<double>(buf[i]) * env;
-        // clamp to 16-bit range
-        if (sample > 32767.0)
-            sample = 32767.0;
-        if (sample < -32768.0)
-            sample = -32768.0;
-        buf[i] = static_cast<short>(sample);
-    }
-}
-
-QVector<short>
-Mapping::Map1(const double &amplitude, const int &y, const int &x) noexcept
-{
-    QVector<short> fs;
-    return fs;
-}
-
-/*
-template<typename T, typename... Args>
-QVector<T> addVectors(const QVector<T>& first, const QVector<T>& second, const
-Args&... args)
-{
-    if (first.isEmpty())
-        return second;
-
-    if (second.isEmpty())
-        return first;
-
-    size_t size = first.size();
-    QVector<T> result(size, T{});
-
-    for (size_t i = 0; i < size; ++i) {
-        result[i] = first[i] + second[i];
+        return fs;
     }
 
-    if constexpr (sizeof...(args) > 0) {
-        result = addVectors<T>(result, args...);
+    void applyEnvelope(QVector<short> &samples) noexcept
+    {
+        const int N       = static_cast<int>(samples.size());
+        const int attack  = std::min(100, N / 10);
+        const int release = std::min(100, N / 10);
+
+        for (int i = 0; i < attack; ++i)
+            samples[i] *= static_cast<float>(i) / attack;
+
+        for (int i = 0; i < release; ++i)
+            samples[N - 1 - i] *= static_cast<float>(i) / release;
     }
 
-    return result;
-}
-*/
+} // namespace
 
 template <typename T>
 QVector<T>
 addTwoVectors(const QVector<T> &first, const QVector<T> &second) noexcept
 {
-    size_t maxSize = std::max(first.size(), second.size());
+    int maxSize = static_cast<int>(std::max(first.size(), second.size()));
     QVector<T> result(maxSize, T{});
 
-    for (size_t i = 0; i < maxSize; ++i)
+    for (qsizetype i = 0; i < maxSize; ++i)
     {
         if (i < first.size())
         {
@@ -116,70 +154,8 @@ addVectors(const QVector<T> &first, const QVector<T> &second,
     return result;
 }
 
-void
-Mapping::setSamples(const int &samples) noexcept
-{
-    m_nsamples = samples;
-}
-
-void
-Mapping::setFreqMap(const FreqMap &f) noexcept
-{
-    m_freq_map = f;
-}
-
-void
-Mapping::setSampleRate(const float &samplerate) noexcept
-{
-    m_samplerate = samplerate;
-}
-
-void
-Mapping::setMinMax(const int &min, const int &max) noexcept
-{
-    m_freq_min = min;
-    m_freq_max = max;
-}
-
-#include <cmath>
-#include <complex>
-
-QVector<short>
-Mapping::generateSineWave(const double &_amplitude, const double &frequency,
-                          const double &time) noexcept
-{
-    const unsigned int N = static_cast<unsigned int>(m_samplerate * time);
-    if (N == 0)
-        return {};
-
-    QVector<short> fs;
-    fs.resize(N);
-
-    // clamp amplitude to avoid overflow
-    double amp         = std::clamp(_amplitude, -1.0, 1.0);
-    const double scale = amp * 32767.0;
-
-    const double theta
-        = 2.0 * M_PI * frequency / static_cast<double>(m_samplerate);
-    // rotation complex number: e^{i θ}
-    const std::complex<double> w(std::cos(theta), std::sin(theta));
-    std::complex<double> z(0.0, 0.0);
-    // start at angle zero: sin(0)=0, but we want first sample as sin(0),
-    // so initialize z = (cos(0), sin(0)) = (1,0), then advance after using.
-    z = std::complex<double>(1.0, 0.0);
-
-    for (unsigned int i = 0; i < N; ++i)
-    {
-        double sample = z.imag(); // sin(current angle)
-        fs[i]         = static_cast<short>(scale * sample);
-        z *= w; // advance phase
-    }
-
-    return fs;
-}
-
 double
-Mapping::Hue2Freq(const int &H) noexcept
+Mapping::Hue2Freq(int H) noexcept
 {
     constexpr double scale_freqs[]
         = {220.00, 246.94, 261.63, 293.66, 329.63, 349.23, 415.30};
@@ -213,79 +189,40 @@ Mapping::Hue2Freq(const int &H) noexcept
     return note;
 }
 
-short
-Mapping::LinearMap(const double &inp_min, const double &inp_max,
-                   const double &out_min, const double &out_max,
-                   const double &val) noexcept
-{
-    return out_min
-           + (val - inp_min) * (out_max - out_min) / (inp_max - inp_min);
-}
-
-short
-Mapping::ExpMap(const double &inp_min, const double &inp_max,
-                const double &out_min, const double &out_max,
-                const double &val) noexcept
-{
-    double x_norm = (val - inp_min) / (inp_max - inp_min);
-    double y_norm = std::pow(x_norm, 2);
-    return y_norm * (out_max - out_min) + out_min;
-}
-
-short
-Mapping::LogMap(const double &inp_min, const double &inp_max,
-                const double &out_min, const double &out_max,
-                const double &val) noexcept
-{
-    double x_norm = (val - inp_min) / (inp_max - inp_min);
-    double y_norm = std::log(x_norm + 1) / std::log(10.0);
-    return y_norm * (out_max - out_min) + out_min;
-}
-
 QVector<short>
 Mapping::Map__HSV(const QVector<PixelColumn> &pixelCol) noexcept
 {
     QVector<short> fs;
-    int N = pixelCol.size();
+    int N = static_cast<int>(pixelCol.size());
     fs.resize(N);
     PixelColumn p;
     QVector<short> wave;
     double f = 0;
 
+    using MapFunc = short (*)(double, double, double, double, double);
+
+    MapFunc mapper = nullptr;
     switch (m_freq_map)
     {
         case FreqMap::Linear:
-            for (int i = 0; i < N; i++)
-            {
-                p        = pixelCol[i];
-                auto hsv = QColor(p.pixel).toHsv();
-                f += LinearMap(0, 360, m_freq_min, m_freq_max, hsv.hue())
-                     / static_cast<double>(N);
-            }
+            mapper = LinearMap;
             break;
-
         case FreqMap::Exp:
-            for (int i = 0; i < N; i++)
-            {
-                p        = pixelCol[i];
-                auto hsv = QColor(p.pixel).toHsv();
-                f += ExpMap(0, 360, m_freq_min, m_freq_max, hsv.hue())
-                     / static_cast<double>(N);
-            }
+            mapper = ExpMap;
             break;
-
         case FreqMap::Log:
-            for (int i = 0; i < N; i++)
-            {
-                p        = pixelCol[i];
-                auto hsv = QColor(p.pixel).toHsv();
-                f += LogMap(0, 360, m_freq_min, m_freq_max, hsv.hue())
-                     / static_cast<double>(N);
-            }
+            mapper = LogMap;
             break;
     }
 
-    wave = generateSineWave(0.5, f, 1);
+    for (int i = 0; i < N; i++)
+    {
+        auto hsv = QColor(pixelCol[i].pixel).toHsv();
+        f += mapper(0, 360, m_freq_min, m_freq_max, hsv.hue())
+             / static_cast<double>(N);
+    }
+
+    wave = generateSineWave(0.5, f, 1, m_samplerate);
     fs   = addVectors(fs, wave);
     return fs;
 }
@@ -296,130 +233,79 @@ Mapping::Map__Intensity(const QVector<PixelColumn> &pixelCol) noexcept
     QVector<short> fs;
     int N = static_cast<int>(pixelCol.size());
     fs.resize(N);
-    PixelColumn p;
     QVector<short> wave;
-    double f = 0;
+    double f = 0.0;
 
+    using MapFunc = short (*)(double, double, double, double, double);
+
+    MapFunc mapper = nullptr;
     switch (m_freq_map)
     {
         case FreqMap::Linear:
-            for (int i = 0; i < N; i++)
-            {
-                p               = pixelCol[i];
-                float intensity = static_cast<float>(qGray(p.pixel)) / 255;
-                f += LinearMap(0, 360, m_freq_min, m_freq_max, intensity)
-                     / static_cast<double>(N);
-            }
+            mapper = LinearMap;
             break;
-
         case FreqMap::Exp:
-            for (int i = 0; i < N; i++)
-            {
-                p               = pixelCol[i];
-                float intensity = static_cast<float>(qGray(p.pixel)) / 255;
-                f += ExpMap(0, 360, m_freq_min, m_freq_max, intensity)
-                     / static_cast<double>(N);
-            }
+            mapper = ExpMap;
             break;
-
         case FreqMap::Log:
-            for (int i = 0; i < N; i++)
-            {
-                p               = pixelCol[i];
-                float intensity = static_cast<float>(qGray(p.pixel)) / 255;
-                f += LogMap(0, 360, m_freq_min, m_freq_max, intensity)
-                     / static_cast<double>(N);
-            }
+            mapper = LogMap;
             break;
+    }
+
+    for (int i = 0; i < N; i++)
+    {
+        float intensity = static_cast<float>(qGray(pixelCol[i].pixel)) / 255;
+        f += mapper(0, 360, m_freq_min, m_freq_max, intensity)
+             / static_cast<double>(N);
     }
 
     std::vector<double> list = {0, 0.2, 0.4, 0.6, 0.8, 1.0};
     /*auto s = list.at(rand() % list.size());*/
-    wave = generateSineWave(0.5, f, 1);
+    wave = generateSineWave(0.5, f, 1, m_samplerate);
     fs   = addVectors(fs, wave);
-    return fs;
-}
-
-QVector<short>
-Mapping::add(const QVector<PixelColumn> &pixelCol) noexcept
-{
-    QVector<short> fs;
-    int N = pixelCol.size();
-    PixelColumn p;
-    double intensity = 0;
-    QVector<QVector<short>> waves;
-    waves.resize(N);
-    fs.resize(waves[0].size());
-    fs.fill(0);
-
-    QVector<double> freqs = {100.0, 200.0, 300.0, 400.0};
-
-    for (int i = 0; i < N; i++)
-    {
-        p         = pixelCol[i];
-        intensity = QColor(p.pixel).toHsv().hue() / 360.0;
-        /*intensity = qGray(p.pixel) / 255.0;*/
-        waves[i] = generateSineWave(intensity / N, 200.0f, 1);
-    }
-    /*intensity /= N;*/
-
-    for (const auto &wave : waves)
-        fs = addVectors(fs, wave);
-
-    // auto wave1 = generateSineWave(intensity / 7, 440.0, 1);
-    // auto wave2 = generateSineWave(intensity * 0.5 / 7, 880.0, 1);
-    // auto wave3 = generateSineWave(intensity * 0.5 / 7, 1320.0, 1);
-    // auto wave4 = generateSineWave(intensity * 0.0513 / 7, 1760.0, 1);
-    // auto wave5 = generateSineWave(intensity * 0.045 / 7, 2200.0, 1);
-    // auto wave6 = generateSineWave(intensity * 0.061 / 7, 2640.0, 1);
-    // auto wave7 = generateSineWave(intensity * 0.0168 / 7, 3080.0, 1);
-    // fs         = addVectors(wave1, wave2, wave3, wave4, wave5, wave6, wave7);
     return fs;
 }
 
 QVector<short>
 Mapping::Map__Orchestra(const QVector<PixelColumn> &pixelCol) noexcept
 {
-    int N = static_cast<int>(pixelCol.size());
-    PixelColumn p;
-    QVector<short> wave;
-    wave.resize(N);
-    double f = 0;
+    const int N = static_cast<int>(pixelCol.size());
+    QVector<short> wave, tone;
+    wave.resize(N); // rough preallocation assuming 100 samples per tone
+
+    double freq = 0.0, amp = 0.0;
+    const double alpha = 0.1; // smoothing factor
+
+    using MapFunc = short (*)(double, double, double, double, double);
+
+    MapFunc mapper = nullptr;
 
     switch (m_freq_map)
     {
         case FreqMap::Linear:
-            for (int i = 0; i < N; i++)
-            {
-                p               = pixelCol[i];
-                float intensity = static_cast<float>(qGray(p.pixel)) / 255.0f;
-                f += LinearMap(0, 360, m_freq_min, m_freq_max, intensity)
-                     / static_cast<double>(N);
-                wave.append(generateSineWave(intensity, f, 1.0));
-            }
+            mapper = LinearMap;
             break;
-
         case FreqMap::Exp:
-            for (int i = 0; i < N; i++)
-            {
-                p               = pixelCol[i];
-                float intensity = static_cast<float>(qGray(p.pixel)) / 255.0f;
-                f += ExpMap(0, 360, m_freq_min, m_freq_max, intensity)
-                     / static_cast<double>(N);
-                wave.append(generateSineWave(intensity, f, 1.0));
-            }
+            mapper = ExpMap;
             break;
-
         case FreqMap::Log:
-            for (int i = 0; i < N; i++)
-            {
-                p               = pixelCol[i];
-                float intensity = static_cast<float>(qGray(p.pixel)) / 255.0f;
-                f += LogMap(0, 360, m_freq_min, m_freq_max, intensity)
-                     / static_cast<double>(N);
-                wave.append(generateSineWave(intensity, f, 1.0));
-            }
+            mapper = LogMap;
             break;
+    }
+
+    for (int i = 0; i < N; ++i)
+    {
+        const float intensity = static_cast<float>(qGray(pixelCol[i].pixel));
+        const double target_freq
+            = mapper(0.0, 255.0, m_freq_min, m_freq_max, intensity);
+        const double target_amp = intensity / 255.0;
+
+        freq += alpha * (target_freq - freq);
+        amp += alpha * (target_amp - amp);
+
+        generateSineWave(tone, amp, freq, 0.05, m_samplerate);
+        applyEnvelope(tone);
+        wave += tone;
     }
 
     return wave;
