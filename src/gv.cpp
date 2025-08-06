@@ -29,11 +29,11 @@ GV::setAudioIndex(int index) noexcept
 
 // Function to handle draw path mode
 void
-GV::setDrawPathMode(bool t) noexcept
+GV::setDrawPathMode(bool enabled) noexcept
 {
-    m_draw_path_mode = t;
+    m_draw_path_mode = enabled;
 
-    if (m_draw_path_mode)
+    if (enabled)
     {
         m_pathDrawnPixelsPos.clear();
         if (!m_path_item)
@@ -47,159 +47,100 @@ GV::setDrawPathMode(bool t) noexcept
 
 // Method to set the traverse mode, so as to prepare for the animation
 void
-GV::setTraverse(const Traverse &t) noexcept
+GV::setTraverse(const Traverse &mode) noexcept
 {
-    if (m_traverse == t)
+    if (m_traverse == mode)
         return;
 
-    m_traverse = t;
+    m_traverse = mode;
 
-    // Clean the canvas
-    if (m_li && m_scene)
+    auto clearItem = [&](QGraphicsItem *&item)
     {
-        m_scene->removeItem(m_li);
-        delete m_li;
-        m_li = nullptr;
-    }
-    if (m_ci && m_scene)
-    {
-        m_scene->removeItem(m_ci);
-        delete m_ci;
-        m_ci = nullptr;
-    }
+        if (item && m_scene)
+        {
+            m_scene->removeItem(item);
+            delete item;
+            item = nullptr;
+        }
+    };
 
-    if (m_pathi && m_scene)
-    {
-        m_scene->removeItem(m_pathi);
-        delete m_pathi;
-        m_pathi = nullptr;
-    }
+    clearItem(reinterpret_cast<QGraphicsItem *&>(m_li));
+    clearItem(reinterpret_cast<QGraphicsItem *&>(m_ci));
+    clearItem(reinterpret_cast<QGraphicsItem *&>(m_pathi));
 
-    switch (t)
+    switch (mode)
     {
+
         case Traverse::LEFT_TO_RIGHT:
-            if (m_li)
-                disconnect(m_li, 0, 0, 0);
-
-            if (!m_li)
-            {
-                m_li = new AnimatedLineItem(m_obj_color);
-                m_scene->addItem(m_li);
-            }
-
-            connect(this, &GV::audioIndexSet, m_li, [&]()
-            { m_li->setLine(m_audio_index, 0, m_audio_index, m_height); });
-            break;
-
         case Traverse::RIGHT_TO_LEFT:
-            if (m_li)
-                disconnect(m_li, 0, 0, 0);
-
-            if (!m_li)
-            {
-                m_li = new AnimatedLineItem(m_obj_color);
-                m_scene->addItem(m_li);
-                qDebug() << "DD";
-            }
-            connect(this, &GV::audioIndexSet, m_li, [&]()
-            {
-                m_li->setLine(m_width - m_audio_index, 0,
-                              m_width - m_audio_index, m_height);
-            });
-            break;
-
         case Traverse::TOP_TO_BOTTOM:
-            if (m_li)
-                disconnect(m_li, 0, 0, 0);
-
-            if (!m_li)
-            {
-                m_li = new AnimatedLineItem(m_obj_color);
-                m_scene->addItem(m_li);
-            }
-            connect(this, &GV::audioIndexSet, m_li, [&]()
-            { m_li->setLine(0, m_audio_index, m_width, m_audio_index); });
-            break;
-
         case Traverse::BOTTOM_TO_TOP:
-            if (m_li)
-                disconnect(m_li, 0, 0, 0);
+        {
+            m_li = new AnimatedLineItem(m_obj_color);
+            m_scene->addItem(m_li);
 
-            if (!m_li)
+            connect(this, &GV::audioIndexSet, m_li, [this, mode]()
             {
-                m_li = new AnimatedLineItem(m_obj_color);
-                m_scene->addItem(m_li);
-            }
-            connect(this, &GV::audioIndexSet, m_li, [&]()
-            {
-                m_li->setLine(0, m_height - m_audio_index, m_width,
-                              m_height - m_audio_index);
+                switch (mode)
+                {
+                    case Traverse::LEFT_TO_RIGHT:
+                        m_li->setLine(m_audio_index, 0, m_audio_index,
+                                      m_height);
+                        break;
+                    case Traverse::RIGHT_TO_LEFT:
+                        m_li->setLine(m_width - m_audio_index, 0,
+                                      m_width - m_audio_index, m_height);
+                        break;
+                    case Traverse::TOP_TO_BOTTOM:
+                        m_li->setLine(0, m_audio_index, m_width, m_audio_index);
+                        break;
+                    case Traverse::BOTTOM_TO_TOP:
+                        m_li->setLine(0, m_height - m_audio_index, m_width,
+                                      m_height - m_audio_index);
+                        break;
+                    default:
+                        break;
+                }
             });
             break;
+        }
 
         case Traverse::CIRCLE_OUTWARDS:
-            if (m_ci)
-                disconnect(m_ci, 0, 0, 0);
-
-            if (!m_ci)
-            {
-                m_ci = new AnimatedCircleItem(m_obj_color);
-                m_ci->setImageHeight(m_height);
-                m_ci->setImageWidth(m_width);
-                m_ci->setCenter();
-                m_scene->addItem(m_ci);
-            }
-            connect(this, &GV::audioIndexSet, m_ci,
-                    [&]() { m_ci->setRadius(m_audio_index); });
-            break;
-
         case Traverse::CIRCLE_INWARDS:
-            if (m_ci)
-                disconnect(m_ci, 0, 0, 0);
+        {
+            m_ci = new AnimatedCircleItem(m_obj_color);
+            m_ci->setImageHeight(m_height);
+            m_ci->setImageWidth(m_width);
+            m_ci->setCenter();
+            m_scene->addItem(m_ci);
 
-            if (!m_ci)
+            connect(this, &GV::audioIndexSet, m_ci, [this, mode]()
             {
-                m_ci = new AnimatedCircleItem(m_obj_color);
-                m_ci->setImageHeight(m_height);
-                m_ci->setImageWidth(m_width);
-                m_ci->setCenter();
-                m_scene->addItem(m_ci);
-            }
-            connect(this, &GV::audioIndexSet, m_ci,
-                    [&]() { m_ci->setRadius(m_sqrt - m_audio_index); });
+                int radius = (mode == Traverse::CIRCLE_OUTWARDS)
+                                 ? m_audio_index
+                                 : m_sqrt - m_audio_index;
+                m_ci->setRadius(radius);
+            });
             break;
+        }
 
         case Traverse::CLOCKWISE:
-            if (m_li)
-                disconnect(m_li, 0, 0, 0);
-
-            if (!m_li)
-            {
-                m_li = new AnimatedLineItem(m_obj_color);
-                m_li->setImageHeight(m_height);
-                m_li->setImageWidth(m_width);
-                m_li->setLength();
-                m_scene->addItem(m_li);
-            }
-            connect(this, &GV::audioIndexSet, m_li,
-                    [&]() { m_li->setAngle(m_audio_index); });
-            break;
-
         case Traverse::ANTICLOCKWISE:
-            if (m_li)
-                disconnect(m_li, 0, 0, 0);
+        {
+            m_li = new AnimatedLineItem(m_obj_color);
+            m_li->setImageHeight(m_height);
+            m_li->setImageWidth(m_width);
+            m_li->setLength();
+            m_scene->addItem(m_li);
 
-            if (!m_li)
+            connect(this, &GV::audioIndexSet, m_li, [this, mode]()
             {
-                m_li = new AnimatedLineItem(m_obj_color);
-                m_li->setImageHeight(m_height);
-                m_li->setImageWidth(m_width);
-                m_li->setLength();
-                m_scene->addItem(m_li);
-            }
-            connect(this, &GV::audioIndexSet, m_li,
-                    [&]() { m_li->setAngle(360 - m_audio_index); });
+                m_li->setAngle(mode == Traverse::CLOCKWISE
+                                   ? m_audio_index
+                                   : 360 - m_audio_index);
+            });
             break;
+        }
 
         case Traverse::PATH:
             if (m_pathi)
@@ -219,24 +160,16 @@ GV::setTraverse(const Traverse &t) noexcept
 void
 GV::setPixmap(const QPixmap &pix) noexcept
 {
-    if (!pix)
+    if (pix.isNull())
         return;
 
     m_pi->setPixmap(pix);
-    /*this->fitInView(m_pi);*/
     centerOn(m_pi);
     m_scene->setSceneRect(pix.rect());
 
     m_width  = pix.width();
     m_height = pix.height();
-
-    m_sqrt = sqrt(m_width * m_width / 4.0 + m_height * m_height / 4.0);
-}
-
-QPixmap
-GV::getPixmap() noexcept
-{
-    return m_pi->pixmap();
+    m_sqrt   = std::sqrt(m_width * m_width / 4.0 + m_height * m_height / 4.0);
 }
 
 // Reset the positions of the object drawn on the graphicsview
@@ -252,19 +185,19 @@ GV::reset() noexcept
 void
 GV::mousePressEvent(QMouseEvent *e) noexcept
 {
-    if (e->button() == Qt::MouseButton::LeftButton)
+    if (e->button() == Qt::LeftButton)
     {
+        QPointF scenePos = mapToScene(e->pos());
+
         if (m_draw_path_mode)
         {
-            auto pos = mapToScene(e->pos());
-
-            QPointF s = pos;
-            m_painter_path.moveTo(s);
+            m_painter_path.moveTo(scenePos);
             m_path_item->setPath(m_painter_path);
-            m_pathDrawnPixelsPos.push_back(s);
+            m_pathDrawnPixelsPos.push_back(scenePos);
             return;
         }
-        emit pixelClick(mapToScene(e->pos()));
+
+        emit pixelClick(scenePos);
     }
 
     QGraphicsView::mousePressEvent(e);
@@ -273,14 +206,12 @@ GV::mousePressEvent(QMouseEvent *e) noexcept
 void
 GV::mouseReleaseEvent(QMouseEvent *e) noexcept
 {
-    if (e->button() == Qt::MouseButton::LeftButton)
+    if (e->button() == Qt::LeftButton && m_draw_path_mode)
     {
-        if (m_draw_path_mode)
-        {
-            setDrawPathMode(false);
-            emit drawPathFinished();
-        }
+        setDrawPathMode(false);
+        emit drawPathFinished();
     }
+
     QGraphicsView::mouseReleaseEvent(e);
 }
 
@@ -289,26 +220,18 @@ GV::mouseMoveEvent(QMouseEvent *e) noexcept
 {
     if (m_draw_path_mode)
     {
+        QPointF scenePos = mapToScene(e->pos());
 
-        auto pos  = mapToScene(e->pos());
-        auto posx = pos.x();
-        auto posy = pos.y();
-        if (posx >= 0 && posx < m_pi->pixmap().width() && posy >= 0
-            && posy < m_pi->pixmap().height())
+        if (scenePos.x() >= 0 && scenePos.y() < m_width && scenePos.y() >= 0
+            && scenePos.y() < m_height)
         {
-            QPointF s = mapToScene(e->pos());
-            m_painter_path.lineTo(s);
+            m_painter_path.lineTo(scenePos);
             m_path_item->setPath(m_painter_path);
-            m_pathDrawnPixelsPos.emplace_back(s);
+            m_pathDrawnPixelsPos.emplace_back(scenePos);
         }
     }
-    QGraphicsView::mouseMoveEvent(e);
-}
 
-QVector<QPointF>
-GV::getPathDrawnPos() noexcept
-{
-    return m_pathDrawnPixelsPos;
+    QGraphicsView::mouseMoveEvent(e);
 }
 
 // Function to handle drag and drop event to open the file when it is dropped
@@ -316,9 +239,12 @@ GV::getPathDrawnPos() noexcept
 void
 GV::dropEvent(QDropEvent *e) noexcept
 {
-    QString droppedFilePath = e->mimeData()->urls()[0].toLocalFile();
+    if (!e->mimeData()->hasUrls())
+        return;
+
+    QString filePath = e->mimeData()->urls().first().toLocalFile();
     e->acceptProposedAction();
-    emit dropFile(droppedFilePath);
+    emit dropFile(filePath);
 }
 
 void
@@ -334,6 +260,7 @@ GV::dragEnterEvent(QDragEnterEvent *e) noexcept
 void
 GV::dragMoveEvent(QDragMoveEvent *e) noexcept
 {
+    // No-op
 }
 
 // Function to set the color of "object" (line or circle or path) drawn over the
@@ -348,28 +275,33 @@ GV::setObjColor(const QString &color) noexcept
 void
 GV::clearDrawPath() noexcept
 {
-    if (m_path_item)
-    {
-        m_scene->removeItem(m_path_item);
-        delete m_path_item;
-        m_path_item = nullptr;
 
-        m_scene->removeItem(m_pathi);
-        delete m_pathi;
-        m_pathi = nullptr;
-        m_painter_path.clear();
-    }
+    auto removeItemSafe = [&](QGraphicsItem *&item)
+    {
+        if (item)
+        {
+            m_scene->removeItem(item);
+            delete item;
+            item = nullptr;
+        }
+    };
+
+    removeItemSafe(reinterpret_cast<QGraphicsItem *&>(m_path_item));
+    removeItemSafe(reinterpret_cast<QGraphicsItem *&>(m_pathi));
+    m_painter_path = QPainterPath();
+    m_pathDrawnPixelsPos.clear();
 }
 
 void
 GV::wheelEvent(QWheelEvent *e) noexcept
 {
-    if (e->modifiers() & Qt::Modifier::CTRL)
+    if (e->modifiers() & Qt::ControlModifier)
     {
-        int angle    = e->angleDelta().y();
-        float factor = (angle > 0) ? 1.15 : 1 / 1.15;
+        float factor = (e->angleDelta().y() > 0) ? 1.15f : 1 / 1.15f;
         scale(factor, factor);
     }
     else
+    {
         QGraphicsView::wheelEvent(e);
+    }
 }

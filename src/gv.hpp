@@ -33,7 +33,10 @@ class GV : public QGraphicsView
 public:
     GV(QWidget *parent = nullptr) noexcept;
     void setPixmap(const QPixmap &img) noexcept;
-    QPixmap getPixmap() noexcept;
+    inline QPixmap getPixmap() noexcept
+    {
+        return m_pi->pixmap();
+    }
     void reset() noexcept;
     inline void setDuration(const double &s) noexcept
     {
@@ -51,7 +54,10 @@ public:
         m_pi->setPixmap(QPixmap());
     }
 
-    QVector<QPointF> getPathDrawnPos() noexcept;
+    inline QVector<QPointF> &getPathDrawnPos() noexcept
+    {
+        return m_pathDrawnPixelsPos;
+    }
 
 signals:
     void animationFinished();
