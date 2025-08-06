@@ -22,7 +22,7 @@ class Sonifier : public QObject
 public:
     using MapFunc = std::function<QVector<short>(const QVector<PixelColumn> &)>;
 
-    Sonifier();
+    Sonifier(QObject *parent = nullptr);
     void setParameters(const QPixmap &pix, Traverse t) noexcept;
     void setParameters(const QPixmap &pix, Traverse t,
                        const QVector<QPointF> &) noexcept;
