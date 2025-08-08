@@ -7,9 +7,18 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 # Set output directories
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+
+# Compiler flags
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -Wall -Wextra -DDEBUG")
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    set(CMAKE_CXX_FLAGS_DEBUG "/Zi /Od /DDEBUG /MDd")
+    set(CMAKE_CXX_FLAGS_RELEASE "/O2 /DNDEBUG /MD")
+endif()
 
 # Enable Qt
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets PrintSupport)
@@ -19,6 +28,7 @@ find_package(SDL3 REQUIRED)
 find_package(SndFile REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(FFTW3 REQUIRED)
+find_package(Lua REQUIRED)
 
 # Add Qt resource file
 qt_add_resources(APP_RESOURCES application.qrc)
@@ -41,6 +51,10 @@ set(SOURCES
     src/SpectrumAnalyzer.cpp
     src/ReverbDialog.cpp
     src/ImageEditorDialog.cpp
+    src/statusbar.cpp
+    src/PixelMappingManager.cpp
+    src/utils.cpp
+
 )
 
 # Header files
@@ -62,10 +76,9 @@ set(HEADERS
     src/aboutdialog.hpp
     src/screenRecorder.hpp
     src/SpectrumAnalyzer.hpp
-    src/pixelColumn.hpp
+    src/pixel.hpp
     src/ReverbDialog.hpp
     src/ImageEditorDialog.hpp
-    src/utils.hpp
 )
 
 # Create the executable
@@ -79,12 +92,12 @@ target_link_libraries(${PROJECT_NAME}
     Qt6::PrintSupport
     SDL3
     SndFile::sndfile
-    ${LUA_LIBRARIES}
     fftw3
+    ${LUA_LIBRARIES}
 )
 
 # Include directories
 target_include_directories(${PROJECT_NAME} PRIVATE
-    ${LUA_INCLUDE_DIRS}
     ${SDL3_INCLUDE_DIRS}
+    ${LUA_INCLUDE_DIRS}
 )
