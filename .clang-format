@@ -2,33 +2,48 @@ BasedOnStyle: LLVM
 IndentWidth: 4
 TabWidth: 4
 UseTab: Never
-
+BracedInitializerIndentWidth: 4
 BreakBeforeBraces: Allman
-AllowShortFunctionsOnASingleLine: Empty
-AllowShortIfStatementsOnASingleLine: false
-AllowShortLoopsOnASingleLine: false
+BreakBeforeTernaryOperators: true
+BreakFunctionDefinitionParameters: false
 
+EmptyLineAfterAccessModifier: Always
+
+AlignAfterOpenBracket: Align
 MaxEmptyLinesToKeep: 1
 IndentCaseLabels: true
 AlwaysBreakAfterReturnType: TopLevel
 SortIncludes: true
 IncludeBlocks: Regroup
-
 PointerAlignment: Right
 DerivePointerAlignment: false
 AlignConsecutiveAssignments: true
 AlignConsecutiveDeclarations: false
-AlignTrailingComments: true
+AlignConsecutiveMacros: true
+# AlignConsecutiveShortCaseStatements: true
 
-Cpp11BracedListStyle: true
+AllowShortLoopsOnASingleLine: false
+AllowShortCaseExpressionOnASingleLine: true
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortLambdasOnASingleLine: All
+AllowShortBlocksOnASingleLine: Always
 
-AllowShortLambdasOnASingleLine: Inline
+AlignEscapedNewlines: LeftWithLastLine
+AlignTrailingComments: Always
+Cpp11BracedListStyle: false
+AllowAllArgumentsOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+
 LambdaBodyIndentation: OuterScope
 SpacesInAngles: false
 SpaceBeforeParens: ControlStatements
 AccessModifierOffset: -4
 IndentAccessModifiers: false
-BreakBeforeBinaryOperators: true
+BreakBeforeBinaryOperators: None
 AlignOperands: true
-ColumnLimit: 80  # Or whatever high value fits your code style
+ColumnLimit: 80
 NamespaceIndentation: All
+BinPackArguments: true
+BinPackParameters: BinPack
