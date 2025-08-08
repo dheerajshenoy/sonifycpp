@@ -376,6 +376,18 @@ Sonify::initMenu() noexcept
 void
 Sonify::initConnections() noexcept
 {
+    connect(m_pixel_mapping_manager, &PixelMappingManager::pixelMappingAdded,
+            this, [&](const std::string &name)
+    { m_pixel_mapping_combo->addItem(QString::fromStdString(name)); });
+
+    connect(m_pixel_mapping_manager, &PixelMappingManager::pixelMappingRemoved,
+            this, [&](const std::string &name)
+        { // TODO
+        });
+
+    connect(m_pixel_mapping_manager, &PixelMappingManager::pixelMappingApplied,
+            this, [&](const std::string &name) {}); // TODO
+
     connect(m_sonify_btn, &QPushButton::clicked, this, &Sonify::doSonify);
     connect(m_play_btn, &QPushButton::clicked, this, &Sonify::PlayAudio);
     connect(m_reset_btn, &QPushButton::clicked, this, &Sonify::Reset);
@@ -696,50 +708,59 @@ void
 Sonify::doSonify() noexcept
 {
     sonification->stopSonification(false);
-    m_panel->setEnabled(false);
     sonification->setNumSamples(m_num_samples_spinbox->value());
 
     switch (m_freq_mapping_combo->currentIndex())
     {
-
         case 0: sonification->setFreqMap(FreqMap::Linear); break;
-
         case 1: sonification->setFreqMap(FreqMap::Log); break;
-
         case 2: sonification->setFreqMap(FreqMap::Exp); break;
     }
 
-    int min_freq = m_min_freq_sb->text().toInt();
-    int max_freq = m_max_freq_sb->text().toInt();
+    const int min_freq = m_min_freq_sb->text().toInt();
+    const int max_freq = m_max_freq_sb->text().toInt();
 
     Sonifier::MapFunc mapFunc;
+    Mapping *mapping = sonification->sonifier()->mapping();
+
     switch (m_pixel_mapping_combo->currentIndex())
     {
         case 0:
-            mapFunc = [this](const std::vector<Pixel> &cols)
-            {
-                return sonification->sonifier()->mapping()->Map__Intensity(
-                    cols);
-            };
+            mapFunc = [mapping](const std::vector<Pixel> &cols)
+            { return mapping->Map__Intensity(cols); };
             break;
 
         case 1:
-            mapFunc = [this](const std::vector<Pixel> &cols)
-            { return sonification->sonifier()->mapping()->Map__HSV(cols); };
+            mapFunc = [mapping](const std::vector<Pixel> &cols)
+            { return mapping->Map__HSV(cols); };
             break;
 
         case 2:
-            mapFunc = [this](const std::vector<Pixel> &cols)
-            {
-                return sonification->sonifier()->mapping()->Map__Orchestra(
-                    cols);
-            };
+            mapFunc = [mapping](const std::vector<Pixel> &cols)
+            { return mapping->Map__Orchestra(cols); };
             break;
+    }
+
+    const QString pixel_mapping = m_pixel_mapping_combo->currentText();
+
+    auto result =
+        m_pixel_mapping_manager->getPixelMapping(pixel_mapping.toStdString());
+
+    if (result)
+        mapFunc = result.value();
+    else
+    {
+        QMessageBox::critical(
+            this, "Pixel Mapping Error",
+            "The pixel mapping function seems to be invalid. The function "
+            "should take in one argument and return a std::vector<short>");
+        m_panel->setEnabled(true);
+        return;
     }
 
     m_status_bar->sonificationStart();
 
-    QString traverseComboText = m_traverse_combo->currentText();
+    const QString traverseComboText = m_traverse_combo->currentText();
 
     if (traverseComboText ==
         m_traversal_name_list[static_cast<int>(Traverse::LEFT_TO_RIGHT)])
@@ -818,6 +839,7 @@ Sonify::doSonify() noexcept
     }
 
     sonification->Sonify(m_pix, m_gv, mapFunc, m_mode, min_freq, max_freq);
+    m_panel->setEnabled(false);
 }
 
 // Reset btn function
@@ -1099,10 +1121,10 @@ Sonify::applyImageEdits(const ImageEditorDialog::ImageOptions &options) noexcept
 void
 Sonify::initLuaAPI() noexcept
 {
-
     m_config_dir =
         QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
-    m_lua.open_libraries(sol::lib::base, sol::lib::jit, sol::lib::package);
+    m_lua.open_libraries(sol::lib::base, sol::lib::jit, sol::lib::package,
+                         sol::lib::math);
 
     m_lua.new_usertype<Config>(
         "__Config", "num_samples", &Config::num_samples, "min_freq",
@@ -1110,6 +1132,9 @@ Sonify::initLuaAPI() noexcept
         &Config::img_height, "img_width", &Config::img_width, "freq_range",
         &Config::freq_range, "traversal", &Config::traversal, "sample_rate",
         &Config::sample_rate, "panel_position", &Config::panel_position);
+
+    m_lua.new_usertype<Pixel>("__Pixel", "pixel", &Pixel::pixel, "x", &Pixel::x,
+                              "y", &Pixel::y);
 
     // Sonifycpp Table
     m_lua["sonifycpp"] = sol::new_table();
@@ -1161,7 +1186,7 @@ Sonify::initLuaAPI() noexcept
         &PixelMappingManager::registerPixelMapping, "list",
         &PixelMappingManager::availablePixelMappings);
 
-    m_lua["sonifycpp"]["pixel_maps"] = &m_pixel_mapping_manager;
+    m_lua["sonifycpp"]["pixel_maps"] = m_pixel_mapping_manager;
 
     // Controls table
     m_lua["sonifycpp"]["controls"]             = sol::new_table();
@@ -1173,7 +1198,11 @@ Sonify::initLuaAPI() noexcept
 
     // utils table
 
-    // m_lua["sonifycpp"]["utils"] =
+    m_lua["sonifycpp"]["utils"] = m_lua.create_table_with(
+        "LinearMap", &utils::LinearMap, "ExpMap", &utils::ExpMap, "LogMap",
+        &utils::LogMap, "generateSineWave", &utils::generateSineWave,
+        "applyFadeInOut", &utils::applyFadeInOut, "normalizeWave",
+        &utils::normalizeWave, "intensity", &utils::intensity);
 }
 
 void
