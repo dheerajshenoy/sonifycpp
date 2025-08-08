@@ -9,37 +9,38 @@
 #include <immintrin.h>
 
 // Constructor
-Sonification::Sonification() noexcept {
+Sonification::Sonification() noexcept
+{
     m_val = M_PI2 * m_NumSamples / m_SampleRate;
 
-    if (!SDL_Init(SDL_INIT_AUDIO)) {
+    if (!SDL_Init(SDL_INIT_AUDIO))
+    {
         qFatal() << "SDL could not initialize! SDL_Error: " << SDL_GetError();
         return;
     }
 
     m_sonifier = new Sonifier();
 
-    connect(m_sonifier,
-            &Sonifier::sonificationDone,
-            this,
-            [&](std::vector<short> audioData) {
+    connect(m_sonifier, &Sonifier::sonificationDone, this,
+            [&](std::vector<short> audioData)
+    {
         m_audioData = audioData;
         emit sonificationDone();
     });
 
-    connect(m_sonifier,
-            &Sonifier::sonificationProgress,
-            this,
+    connect(m_sonifier, &Sonifier::sonificationProgress, this,
             [&](int progress) { emit sonificationProgress(progress); });
 }
 
 // Destructor
-Sonification::~Sonification() noexcept {
+Sonification::~Sonification() noexcept
+{
     SDL_PauseAudioStreamDevice(m_audioStream);
     SDL_DestroyAudioStream(m_audioStream);
     SDL_Quit();
 
-    if (m_thread && m_thread->isRunning()) {
+    if (m_thread && m_thread->isRunning())
+    {
         m_sonifier->stopSonifying(true);
         m_thread->quit();
         m_thread->wait();
@@ -48,15 +49,12 @@ Sonification::~Sonification() noexcept {
 
 // Function to sonify an `image` provided by QImage and in mode `mode`
 void
-Sonification::Sonify(const QPixmap &pix,
-                     GV *gv,
-                     const Sonifier::MapFunc &mapFunc,
-                     Traverse mode,
-                     int min,
-                     int max) noexcept {
+Sonification::Sonify(const QPixmap &pix, GV *gv,
+                     const Sonifier::MapFunc &mapFunc, Traverse mode, int min,
+                     int max) noexcept
+{
     // Return if null
-    if (pix.isNull())
-        return;
+    if (pix.isNull()) return;
 
     m_traverse = mode;
 
@@ -76,47 +74,54 @@ Sonification::Sonify(const QPixmap &pix,
 
     if (mode == Traverse::PATH)
         m_sonifier->setParameters(pix, mode, gv->getPathDrawnPos());
-    else if (mode == Traverse::INSPECT) {
+    else if (mode == Traverse::INSPECT)
+    {
         // TODO: Implement INSPECT mode
-    } else
+    }
+    else
         m_sonifier->setParameters(pix, mode);
 
-    if (!m_thread) {
-        m_thread = new QThread();
-        connect(m_thread, &QThread::started, m_sonifier, &Sonifier::Sonify);
-        connect(m_thread, &QThread::finished, this, [&]() {});
-        connect(m_sonifier, &Sonifier::sonificationDone, this, [&]() {
-            m_thread->quit();
-        });
-        m_sonifier->moveToThread(m_thread);
-    }
-
-    m_thread->start();
+    // if (!m_thread) {
+    //     m_thread = new QThread();
+    //     connect(m_thread, &QThread::started, m_sonifier, &Sonifier::Sonify);
+    //     connect(m_thread, &QThread::finished, this, [&]() {});
+    //     connect(m_sonifier, &Sonifier::sonificationDone, this, [&]() {
+    //         m_thread->quit();
+    //     });
+    //     m_sonifier->moveToThread(m_thread);
+    // }
+    //
+    // m_thread->start();
 }
 
 void
-Sonification::pause() noexcept {
+Sonification::pause() noexcept
+{
     SDL_PauseAudioStreamDevice(m_audioStream);
 }
 
 void
-Sonification::play() noexcept {
+Sonification::play() noexcept
+{
     SDL_ResumeAudioStreamDevice(m_audioStream);
 }
 
 void
-Sonification::reset() noexcept {
+Sonification::reset() noexcept
+{
     m_audioOffset = 0; // Reset the audio offset
     SDL_PauseAudioStreamDevice(m_audioStream);
 }
 
 // Save the audio data to file
 bool
-Sonification::save(const QString &filename, Format f) noexcept {
-    switch (f) {
+Sonification::save(const QString &filename, Format f) noexcept
+{
+    switch (f)
+    {
         case Format::WAV:
-            if (utils::generateWavFile(
-                    filename, m_SampleRate, duration(), m_audioData))
+            if (utils::generateWavFile(filename, m_SampleRate, duration(),
+                                       m_audioData))
                 return true;
             break;
 
@@ -129,33 +134,34 @@ Sonification::save(const QString &filename, Format f) noexcept {
 }
 
 double
-Sonification::duration() noexcept {
+Sonification::duration() noexcept
+{
     return static_cast<double>(m_audioData.size()) / m_SampleRate;
 }
 
 void SDLCALL
-Sonification::audioCallback(void *userdata,
-                            SDL_AudioStream *_stream,
-                            int additional,
-                            int /* total */) noexcept {
+Sonification::audioCallback(void *userdata, SDL_AudioStream *_stream,
+                            int additional, int /* total */) noexcept
+{
     Sonification *s = static_cast<Sonification *>(userdata);
 
-    if (s->m_audioData.empty())
-        return;
+    if (s->m_audioData.empty()) return;
 
     const int bytesPerSample = sizeof(short);
     const int totalBytes =
         static_cast<int>(s->m_audioData.size() * bytesPerSample);
     const int bytesRemaining = totalBytes - s->m_audioOffset;
 
-    if (bytesRemaining <= 0) {
+    if (bytesRemaining <= 0)
+    {
         // Audio is finished
-        QMetaObject::invokeMethod(
-            s, [s]() { emit s->audioFinishedPlaying(); }, Qt::QueuedConnection);
+        QMetaObject::invokeMethod(s, [s]() { emit s->audioFinishedPlaying(); },
+                                  Qt::QueuedConnection);
         return;
     }
 
-    if (bytesRemaining <= 0) {
+    if (bytesRemaining <= 0)
+    {
         SDL_PauseAudioStreamDevice(s->m_audioStream);
         emit s->audioFinishedPlaying();
         return;
@@ -175,17 +181,21 @@ Sonification::audioCallback(void *userdata,
 
     // Optional progress reporting
     int progress = static_cast<int>(s->m_audioOffset / bytesPerSample);
-    QMetaObject::invokeMethod(s, [s, sampleIndex, progress]() {
+    QMetaObject::invokeMethod(s, [s, sampleIndex, progress]()
+    {
         emit s->audioIndex(sampleIndex);
         emit s->audioProgress(progress);
     }, Qt::QueuedConnection);
 }
 
 void
-Sonification::stopSonification(bool state) noexcept {
+Sonification::stopSonification(bool state) noexcept
+{
     m_sonifier->stopSonifying(state);
-    if (state) {
-        if (m_thread->isRunning()) {
+    if (state)
+    {
+        if (m_thread && m_thread->isRunning())
+        {
             m_thread->quit();
             m_thread->wait();
         }
@@ -195,12 +205,14 @@ Sonification::stopSonification(bool state) noexcept {
 }
 
 void
-Sonification::setFreqMap(FreqMap f) noexcept {
+Sonification::setFreqMap(FreqMap f) noexcept
+{
     m_sonifier->setFreqMap(f);
 }
 
 void
-Sonification::clear() noexcept {
+Sonification::clear() noexcept
+{
     SDL_PauseAudioStreamDevice(m_audioStream);
     SDL_ClearAudioStream(m_audioStream);
     m_audioData.clear();
