@@ -1,20 +1,20 @@
 #pragma once
 
-#include <QDialog>
-#include <QVBoxLayout>
-#include <QVector>
-#include <QObject>
-#include <QCloseEvent>
-#include <QKeyEvent>
 #include "qcustomplot.h"
+
+#include <QCloseEvent>
+#include <QDialog>
+#include <QKeyEvent>
+#include <QObject>
+#include <QVBoxLayout>
 #include <fftw3.h>
 
-class SpectrumAnalyzer : public QDialog
-{
+class SpectrumAnalyzer : public QDialog {
     Q_OBJECT
 public:
     SpectrumAnalyzer(QWidget *parent = nullptr) noexcept;
-    void setData(const QVector<short> &data, const int &SampleRate) noexcept;
+    void setData(const std::vector<short> &data,
+                 const int &SampleRate) noexcept;
 
 signals:
     void closed();
@@ -25,6 +25,5 @@ protected:
 
 private:
     QVBoxLayout *m_layout = new QVBoxLayout();
-    QCustomPlot *m_plot = new QCustomPlot();
-
+    QCustomPlot *m_plot   = new QCustomPlot();
 };

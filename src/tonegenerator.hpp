@@ -16,32 +16,27 @@
 #include <QPushButton>
 #include <QSplitter>
 #include <QVBoxLayout>
-#include <QVector>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_audio.h>
 #include <cmath>
 #include <sndfile.h>
 
-enum class WaveType : int
-{
-    SINE = 0,
-    TRAINGULAR,
-    SAWTOOTH,
-    SQUARE
-};
+enum class WaveType : int { SINE = 0, TRAINGULAR, SAWTOOTH, SQUARE };
 
-class ToneGenerator : public QDialog
-{
+class ToneGenerator : public QDialog {
     Q_OBJECT
 public:
     ToneGenerator(QWidget *parent = nullptr) noexcept;
     ~ToneGenerator();
-    QVector<short> generateSineWave(double, double, double) noexcept;
-    QVector<short> generateSawtoothWave(double, double, double) noexcept;
-    QVector<short> generateTriangularWave(double, double, double) noexcept;
-    QVector<short> generateSquareWave(double, double, double) noexcept;
-    static void audioCallback(void *userdata, SDL_AudioStream *stream,
-                              int additional_amount, int total_amount) noexcept;
+    std::vector<short> generateSineWave(double, double, double) noexcept;
+    std::vector<short> generateSawtoothWave(double, double, double) noexcept;
+    std::vector<short> generateTriangularWave(double, double, double) noexcept;
+    std::vector<short> generateSquareWave(double, double, double) noexcept;
+
+    static void audioCallback(void *userdata,
+                              SDL_AudioStream *stream,
+                              int additional_amount,
+                              int total_amount) noexcept;
 
 signals:
     void audioFinishedPlaying();
@@ -74,7 +69,7 @@ private:
 
     QSplitter *m_splitter = new QSplitter();
 
-    QVector<short> m_audioData;
+    std::vector<short> m_audioData;
     int m_nsamples     = 1024;
     float m_sampleRate = 44100.0f;
     int m_audioOffset  = 0;
@@ -88,8 +83,8 @@ private:
     bool m_playing      = false;
     QCustomPlot *m_plot = new QCustomPlot();
 
-    QStringList m_wavetype_labels
-        = {"Sine", "Triangular", "Sawtooth", "Square"};
+    QStringList m_wavetype_labels = {
+        "Sine", "Triangular", "Sawtooth", "Square"};
 
     WaveType m_wavetype            = WaveType::SINE;
     QProgressBar *m_audio_progress = new QProgressBar();

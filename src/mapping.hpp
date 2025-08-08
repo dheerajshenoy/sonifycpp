@@ -8,88 +8,47 @@
 #pragma once
 
 #include "freqmap.hpp"
-#include "notes.hpp"
-#include "pixelColumn.hpp"
+#include "pixel.hpp"
 #include "utils.hpp"
 
 #include <QColor>
 #include <QDebug>
 #include <QRgb>
-#include <QVector>
 
-namespace
-{
-    short LinearMap(double inp_min, double inp_max, double out_min,
-                    double out_max, double val);
-
-    short ExpMap(double inp_min, double inp_max, double out_min, double out_max,
-                 double val);
-
-    short LogMap(double inp_min, double inp_max, double out_min, double out_max,
-                 double val);
-
-    QVector<short> generateSineWave(double amplitude, double frequency,
-                                    double time, float samplerate) noexcept;
-
-    void generateSineWave(QVector<short> &vector, double _amplitude,
-                          double frequency, double time,
-                          float samplerate) noexcept;
-
-    void applyEnvelope(QVector<short> &samples) noexcept;
-
-    double sineWave(double _amplitude, double frequency, double time) noexcept;
-    void applyEnvelope(QVector<short> &samples) noexcept;
-
-} // namespace
-
-class Mapping
-{
+class Mapping {
 
 public:
     Mapping() {}
     ~Mapping() {}
 
-    enum class Type
-    {
-        INTENSITY = 0,
-        HSV
-    };
-
-    inline void setSamples(int samples) noexcept
-    {
+    inline void setSamples(int samples) noexcept {
         m_nsamples = samples;
     }
 
-    inline void setFreqMap(const FreqMap &f) noexcept
-    {
+    inline void setFreqMap(const FreqMap &f) noexcept {
         m_freq_map = f;
     }
 
-    inline void setSampleRate(float samplerate) noexcept
-    {
+    inline void setSampleRate(float samplerate) noexcept {
         m_samplerate = samplerate;
     }
 
-    inline void setMinMax(int min, int max) noexcept
-    {
+    inline void setMinMax(int min, int max) noexcept {
         m_freq_min = min;
         m_freq_max = max;
     }
 
-    QVector<short> Map__Intensity(const QVector<PixelColumn> &) noexcept;
-    QVector<short> Map__HSV(const QVector<PixelColumn> &) noexcept;
-    QVector<short> Map__Orchestra(const QVector<PixelColumn> &) noexcept;
-    QVector<short> add(const QVector<PixelColumn> &pix) noexcept;
+    std::vector<short> Map__Intensity(const std::vector<Pixel> &) noexcept;
+    std::vector<short> Map__HSV(const std::vector<Pixel> &) noexcept;
+    std::vector<short> Map__Orchestra(const std::vector<Pixel> &) noexcept;
+    std::vector<short> add(const std::vector<Pixel> &pix) noexcept;
 
 private:
-    double Hue2Freq(int H) noexcept;
-
     float m_samplerate;
     int m_nsamples;
-    Notes m_notes;
 
     int m_freq_min, m_freq_max;
     FreqMap m_freq_map = FreqMap::Linear;
 
-    QVector<double> m_harmonics = {1.0, 0.8, 0.6, 0.4, 0.3, 0.2};
+    std::vector<double> m_harmonics = {1.0, 0.8, 0.6, 0.4, 0.3, 0.2};
 };

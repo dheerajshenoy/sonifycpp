@@ -8,12 +8,11 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 
-class WaveformWidget : public QWidget
-{
+class WaveformWidget : public QWidget {
     Q_OBJECT
 public:
     WaveformWidget(QWidget *parent = nullptr) noexcept;
-    void setData(const QVector<short> &data, float sampleRate) noexcept;
+    void setData(const std::vector<short> &data, float sampleRate) noexcept;
     void setVertLinePosition(const double &) noexcept;
     void resetVertLine() noexcept;
 

@@ -1,10 +1,8 @@
 #pragma once
 
-#include <QVector>
 #include <QRgb>
 
-struct PixelColumn
-{
+struct Pixel {
     QRgb pixel;
     int x, y;
 };

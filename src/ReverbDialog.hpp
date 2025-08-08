@@ -1,33 +1,31 @@
 #pragma once
 
 #include <QDialog>
-#include <QWidget>
-#include <QLabel>
 #include <QDoubleSpinBox>
-#include <QPushButton>
 #include <QGridLayout>
+#include <QLabel>
+#include <QPushButton>
+#include <QWidget>
 
-class ReverbDialog : public QDialog
-{
+class ReverbDialog : public QDialog {
     Q_OBJECT
 public:
     ReverbDialog(QWidget *parent = nullptr) noexcept;
-    void setData(const QVector<short>& audioData, const int& sampleRate) noexcept;
-    QVector<short> reverbedOutput() noexcept;
+    void setData(const std::vector<short> &audioData, int sampleRate) noexcept;
+    std::vector<short> reverbedOutput() noexcept;
 
 signals:
-    void outputReady(QVector<short>);
+    void outputReady(std::vector<short>);
 
 private:
-
     void process() noexcept;
-    QGridLayout *m_layout = new QGridLayout();
-    QDoubleSpinBox  *m_delay_sb = new QDoubleSpinBox(),
-                    *m_feedback_sb = new QDoubleSpinBox();
-    QLabel *m_delay_label = new QLabel("Delay (ms)");
-    QLabel *m_feedback_label = new QLabel("Feedback");
-    QPushButton *m_reverb_btn = new QPushButton("Apply Reverb");
+    QGridLayout *m_layout         = new QGridLayout();
+    QDoubleSpinBox *m_delay_sb    = new QDoubleSpinBox(),
+                   *m_feedback_sb = new QDoubleSpinBox();
+    QLabel *m_delay_label         = new QLabel("Delay (ms)");
+    QLabel *m_feedback_label      = new QLabel("Feedback");
+    QPushButton *m_reverb_btn     = new QPushButton("Apply Reverb");
 
-    QVector<short> m_audioData;
+    std::vector<short> m_audioData;
     int m_sampleRate;
 };

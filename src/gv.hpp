@@ -27,19 +27,16 @@
 #include <QTimer>
 #include <qevent.h>
 
-class GV : public QGraphicsView
-{
+class GV : public QGraphicsView {
     Q_OBJECT
 public:
     GV(QWidget *parent = nullptr) noexcept;
     void setPixmap(const QPixmap &img) noexcept;
-    inline QPixmap getPixmap() noexcept
-    {
+    inline QPixmap getPixmap() noexcept {
         return m_pi->pixmap();
     }
     void reset() noexcept;
-    inline void setDuration(const double &s) noexcept
-    {
+    inline void setDuration(const double &s) noexcept {
         m_duration_s = s;
     }
 
@@ -49,13 +46,11 @@ public:
     void setAudioIndex(int index) noexcept;
     void setObjColor(const QString &) noexcept;
     void clearDrawPath() noexcept;
-    inline void clearPixmap() noexcept
-    {
+    inline void clearPixmap() noexcept {
         m_pi->setPixmap(QPixmap());
     }
 
-    inline QVector<QPointF> &getPathDrawnPos() noexcept
-    {
+    inline std::vector<QPointF> &getPathDrawnPos() noexcept {
         return m_pathDrawnPixelsPos;
     }
 
@@ -88,7 +83,7 @@ private:
     bool m_draw_path_mode          = false;
     QPainterPath m_painter_path    = QPainterPath();
     QGraphicsPathItem *m_path_item = nullptr;
-    QVector<QPointF> m_pathDrawnPixelsPos;
+    std::vector<QPointF> m_pathDrawnPixelsPos;
     int m_width, m_height, m_audio_index;
     double m_sqrt;
 

@@ -15,31 +15,29 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_audio.h>
 #include <cmath>
-#include <sndfile.h>
 
-class Sonification : public QObject
-{
+class Sonification : public QObject {
     Q_OBJECT
 public:
     Sonification() noexcept;
     ~Sonification() noexcept;
-    void Sonify(const QPixmap &pix, GV *gv, const Sonifier::MapFunc &mapFunc,
-                Traverse mode = Traverse::LEFT_TO_RIGHT, int min = 20,
-                int max = 20000) noexcept;
+    void Sonify(const QPixmap &pix,
+                GV *gv,
+                const Sonifier::MapFunc &mapFunc,
+                Traverse mode = Traverse::LEFT_TO_RIGHT,
+                int min       = 20,
+                int max       = 20000) noexcept;
 
-    inline void setNumSamples(int nsamples) noexcept
-    {
+    inline void setNumSamples(int nsamples) noexcept {
         m_NumSamples = nsamples;
         m_val        = M_PI2 * m_NumSamples / m_SampleRate;
     }
 
-    inline void setAudioOffset(size_t offset) noexcept
-    {
+    inline void setAudioOffset(size_t offset) noexcept {
         m_audioOffset = offset;
     }
 
-    inline Sonifier *sonifier() noexcept
-    {
+    inline Sonifier *sonifier() noexcept {
         return m_sonifier;
     }
 
@@ -50,32 +48,27 @@ public:
     void clear() noexcept;
     bool save(const QString &filename, Format format = Format::WAV) noexcept;
 
-    inline int numSamples() noexcept
-    {
+    inline int numSamples() noexcept {
         return m_NumSamples;
     }
 
-    inline QVector<short> &audioData() noexcept
-    {
+    inline std::vector<short> &audioData() noexcept {
         return m_audioData;
     }
 
-    inline size_t audioOffset() noexcept
-    {
+    inline size_t audioOffset() noexcept {
         return m_audioOffset;
     }
 
     void stopSonification(bool state) noexcept;
 
-    inline float sampleRate() noexcept
-    {
+    inline float sampleRate() noexcept {
         return m_SampleRate;
     }
 
     void AddReverb() noexcept;
 
-    inline void setAudioData(const QVector<short> &data) noexcept
-    {
+    inline void setAudioData(const std::vector<short> &data) noexcept {
         m_audioData = data;
     }
 
@@ -91,20 +84,18 @@ signals:
 
 private:
     void m_GenerateSound() noexcept;
-    bool m_GenerateWavFile(const QString &filename) noexcept;
-    QVector<short> applyReverb(int delayTimeMs, float feedback) noexcept;
+    std::vector<short> applyReverb(int delayTimeMs, float feedback) noexcept;
 
-    template <typename T>
-    QVector<T> addVectors(QVector<T> &, QVector<T> &) noexcept;
-
-    static void audioCallback(void *userdata, SDL_AudioStream *stream,
-                              int additional_amount, int total_amount) noexcept;
+    static void audioCallback(void *userdata,
+                              SDL_AudioStream *stream,
+                              int additional_amount,
+                              int total_amount) noexcept;
 
     float m_SampleRate{44100.0f};
     int m_ChannelCount{1};
     double m_Duration;
     int m_NumSamples{1024};
-    QVector<short> m_audioData;
+    std::vector<short> m_audioData;
     double m_val;
 
     SDL_AudioSpec m_audioSpec;
