@@ -202,5 +202,5 @@ private:
     };
 
     sol::state m_lua;
-    PixelMappingManager m_pixel_mapping_manager;
+    PixelMappingManager *m_pixel_mapping_manager{ new PixelMappingManager() };
 };
