@@ -1,13 +1,17 @@
 #include "sonify.hpp"
 
 #include "ImageEditorDialog.hpp"
+#include "freqmap.hpp"
+#include "sol/sol.hpp"
+#include "utils.hpp"
 
+#include <QDir>
 #include <cstdio>
-#include <qboxlayout.h>
 
 Sonify::Sonify(QWidget *parent) : QMainWindow(parent)
 {
-    initConfigFile();
+    initLuaAPI();
+
     initWidgets();
     initStatusbar();
     initMenu();
@@ -16,6 +20,7 @@ Sonify::Sonify(QWidget *parent) : QMainWindow(parent)
 
     this->show();
     m_recorder->setGraphicsView(m_gv);
+    initConfigFile();
 }
 
 // Set the keybindings
@@ -35,15 +40,13 @@ Sonify::initKeybinds() noexcept
 void
 Sonify::initConfigFile() noexcept
 {
-    m_config_dir
-        = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+
     QDir dir = QDir(m_config_dir);
 
-    if (!dir.exists())
-        dir.mkdir(dir.path());
+    if (!dir.exists()) dir.mkdir(dir.path());
 
-    m_config_file_path
-        = QDir::cleanPath(m_config_dir + QDir::separator() + "config.toml");
+    m_config_file_path =
+        QDir::cleanPath(m_config_dir + QDir::separator() + "init.lua");
 
     // Read from configuration toml file
     if (QFile(m_config_file_path).exists())
@@ -51,15 +54,15 @@ Sonify::initConfigFile() noexcept
     else
     {
         // Initialize defaults
-        m_config = {.num_samples    = 512,
-                    .min_freq       = 0,
-                    .max_freq       = 20000,
-                    .img_height     = 100,
-                    .img_width      = 100,
-                    .freq_range     = {0, 20000},
-                    .traversal      = Traverse::LEFT_TO_RIGHT,
-                    .sample_rate    = 44100.0f,
-                    .panel_position = "top"};
+        m_config = { .num_samples    = 512,
+                     .min_freq       = 0,
+                     .max_freq       = 20000,
+                     .img_height     = 100,
+                     .img_width      = 100,
+                     .freq_range     = { 0, 20000 },
+                     .traversal      = Traverse::LEFT_TO_RIGHT,
+                     .sample_rate    = 44100.0f,
+                     .panel_position = "top" };
     }
 }
 
@@ -254,6 +257,7 @@ Sonify::initWidgets() noexcept
     m_widget->setLayout(m_layout);
     m_splitter->setStretchFactor(1, 1);
 
+    m_gv->setObjColor(QString::fromStdString(m_config.pointer_color));
     m_gv->setAlignment(Qt::AlignmentFlag::AlignCenter);
     this->setCentralWidget(m_widget);
 
@@ -402,14 +406,8 @@ Sonify::initConnections() noexcept
                 location / static_cast<double>(sonification->sampleRate()));
     });
 
-    connect(m_status_bar, &Statusbar::stopSonificationRequested, this, [this]()
-    {
-        sonification->stopSonification(true);
-        m_status_bar->sonificationDone();
-        m_num_samples_spinbox->setEnabled(true);
-        m_traverse_combo->setEnabled(true);
-        m_status_bar->setMsg("Sonification Stopped", 5);
-    });
+    connect(m_status_bar, &Statusbar::stopSonificationRequested, this,
+            &Sonify::sonificationStopped);
 
     connect(m_gv, &GV::animationFinished, this, [this]()
     {
@@ -435,9 +433,6 @@ Sonify::initConnections() noexcept
         e->open();
     });
 
-    connect(sonification, &Sonification::sonificationStopped, this,
-            [this]() { m_sonify_btn->setEnabled(true); });
-
     connect(sonification, &Sonification::sonificationDone, this,
             &Sonify::sonificationDone);
 
@@ -461,8 +456,8 @@ Sonify::initConnections() noexcept
                 m_sp = nullptr;
                 m_tools__spectrum_analyzer->setChecked(false);
             });
-            QVector<short> data = sonification->audioData();
-            float sr            = sonification->sampleRate();
+            std::vector<short> data = sonification->audioData();
+            float sr                = sonification->sampleRate();
             m_sp->setData(data, sr);
             m_sp->open();
         }
@@ -514,7 +509,7 @@ Sonify::initConnections() noexcept
         reverbDialog->setData(sonification->audioData(),
                               sonification->sampleRate());
         connect(reverbDialog, &ReverbDialog::outputReady, this,
-                [&](QVector<short> reverbedOutput)
+                [&](std::vector<short> reverbedOutput)
         { sonification->setAudioData(reverbedOutput); });
         reverbDialog->open();
     });
@@ -529,8 +524,9 @@ Sonify::initConnections() noexcept
             [this](bool state) { m_panel->setVisible(!state); });
 }
 
-// This is used to set the state of the audio playback. Call Play() if
-// we have to play the audio or call Pause() if we want to pause.
+// This is used to set the state of the audio playback. Call
+// Play() if we have to play the audio or call Pause() if we
+// want to pause.
 void
 Sonify::PlayAudio() noexcept
 {
@@ -539,20 +535,6 @@ Sonify::PlayAudio() noexcept
         Play();
     else
         Pause();
-}
-
-// Function that is similar to numpy linspace.
-QVector<double>
-linspace(double start, double stop, int num) noexcept
-{
-    QVector<double> result;
-    result.reserve(num);
-    double step = (stop - start) / (num - 1);
-    for (int i = 0; i < num; ++i)
-    {
-        result.append(start + i * step);
-    }
-    return result;
 }
 
 // Function that handles the waveform widget viewing
@@ -573,7 +555,7 @@ Sonify::viewWaveform(const bool &state) noexcept
                 m_wf_widget = nullptr;
             });
         }
-        QVector<short> data = sonification->audioData();
+        std::vector<short> data = sonification->audioData();
         m_wf_widget->setData(data, sonification->sampleRate());
         m_wf_widget->show();
     }
@@ -591,8 +573,7 @@ Sonify::Save(const QString &filename) noexcept
         QString filename = fd.getSaveFileName(this, "Save Audio", nullptr,
                                               "Audio Files (*.wav)");
 
-        if (filename.isEmpty())
-            return false;
+        if (filename.isEmpty()) return false;
 
         return sonification->save(filename);
     }
@@ -600,8 +581,9 @@ Sonify::Save(const QString &filename) noexcept
     return false;
 }
 
-// Function that handles Opening an image. If filename is specified,
-// image will be opened, otherwise a file dialog will ask for the file.
+// Function that handles Opening an image. If filename is
+// specified, image will be opened, otherwise a file dialog
+// will ask for the file.
 void
 Sonify::Open(QString filename) noexcept
 {
@@ -609,37 +591,86 @@ Sonify::Open(QString filename) noexcept
     {
         filename = QFileDialog::getOpenFileName(
             this, "Open Image", nullptr, "Image Files (*.png *.jpeg *.jpg)");
-        if (filename.isEmpty())
-            return;
+        if (filename.isEmpty()) return;
     }
 
-    if (filename.startsWith("~"))
+    if (filename.startsWith("~/"))
     {
         const QString home = QDir::homePath();
-        filename.remove(0, 1);
-        filename = QDir(home).filePath(filename);
+        filename           = home + filename.mid(1);
     }
 
     if (m_def_ask_for_resize)
     {
-        if (!AskForResize(filename))
-            return;
+        if (!AskForResize(filename)) return;
     }
     else
     {
-        m_pix = QPixmap(filename);
+        QPixmap pix(filename);
+
+        if (pix.isNull()) return;
+
         if (m_def_keep_aspect)
-        {
-            m_pix
-                = m_pix.scaled(m_def_width, m_def_height, Qt::KeepAspectRatio);
-        }
+            pix = pix.scaled(m_def_width, m_def_height, Qt::KeepAspectRatio);
         else
-        {
-            m_pix = m_pix.scaled(m_def_width, m_def_height,
-                                 Qt::IgnoreAspectRatio);
-        }
+            pix = pix.scaled(m_def_width, m_def_height, Qt::IgnoreAspectRatio);
+
+        m_pix = pix;
     }
 
+    m_gv->setPixmap(m_pix);
+    m_sonify_btn->setEnabled(true);
+    m_file__close->setEnabled(true);
+    m_play_btn->setEnabled(false);
+    m_reset_btn->setEnabled(false);
+    emit fileOpened();
+}
+
+// Non-interactive version of the Open function
+void
+Sonify::open(QString filename, int w, int h, bool keepAspectRatio) noexcept
+{
+    if (filename.startsWith("~/"))
+    {
+        const QString home = QDir::homePath();
+        filename           = home + filename.mid(1);
+    }
+
+    QPixmap pix(filename);
+
+    if (pix.isNull()) return;
+
+    if (keepAspectRatio)
+        pix = pix.scaled(w, h, Qt::KeepAspectRatio);
+    else
+        pix = pix.scaled(w, h, Qt::IgnoreAspectRatio);
+
+    m_pix = pix;
+
+    m_gv->setPixmap(m_pix);
+    m_sonify_btn->setEnabled(true);
+    m_file__close->setEnabled(true);
+    m_play_btn->setEnabled(false);
+    m_reset_btn->setEnabled(false);
+    emit fileOpened();
+}
+
+// Non-interactive version of the Open function. Opens the image as is
+// with the default size and aspect ratio kept.
+void
+Sonify::open(QString filename) noexcept
+{
+    if (filename.startsWith("~/"))
+    {
+        const QString home = QDir::homePath();
+        filename           = home + filename.mid(1);
+    }
+
+    QPixmap pix(filename);
+
+    if (pix.isNull()) return;
+
+    m_pix = pix;
     m_gv->setPixmap(m_pix);
     m_sonify_btn->setEnabled(true);
     m_file__close->setEnabled(true);
@@ -671,17 +702,11 @@ Sonify::doSonify() noexcept
     switch (m_freq_mapping_combo->currentIndex())
     {
 
-        case 0:
-            sonification->setFreqMap(FreqMap::Linear);
-            break;
+        case 0: sonification->setFreqMap(FreqMap::Linear); break;
 
-        case 1:
-            sonification->setFreqMap(FreqMap::Log);
-            break;
+        case 1: sonification->setFreqMap(FreqMap::Log); break;
 
-        case 2:
-            sonification->setFreqMap(FreqMap::Exp);
-            break;
+        case 2: sonification->setFreqMap(FreqMap::Exp); break;
     }
 
     int min_freq = m_min_freq_sb->text().toInt();
@@ -691,7 +716,7 @@ Sonify::doSonify() noexcept
     switch (m_pixel_mapping_combo->currentIndex())
     {
         case 0:
-            mapFunc = [this](const QVector<PixelColumn> &cols)
+            mapFunc = [this](const std::vector<Pixel> &cols)
             {
                 return sonification->sonifier()->mapping()->Map__Intensity(
                     cols);
@@ -699,14 +724,12 @@ Sonify::doSonify() noexcept
             break;
 
         case 1:
-            mapFunc = [this](const QVector<PixelColumn> &cols)
-            {
-                return sonification->sonifier()->mapping()->Map__HSV(cols);
-            };
+            mapFunc = [this](const std::vector<Pixel> &cols)
+            { return sonification->sonifier()->mapping()->Map__HSV(cols); };
             break;
 
         case 2:
-            mapFunc = [this](const QVector<PixelColumn> &cols)
+            mapFunc = [this](const std::vector<Pixel> &cols)
             {
                 return sonification->sonifier()->mapping()->Map__Orchestra(
                     cols);
@@ -718,70 +741,64 @@ Sonify::doSonify() noexcept
 
     QString traverseComboText = m_traverse_combo->currentText();
 
-    if (traverseComboText
-        == m_traversal_name_list[static_cast<int>(Traverse::LEFT_TO_RIGHT)])
+    if (traverseComboText ==
+        m_traversal_name_list[static_cast<int>(Traverse::LEFT_TO_RIGHT)])
     {
         m_mode = Traverse::LEFT_TO_RIGHT;
         m_status_bar->setTraversalModeText("Left to Right");
     }
 
-    else if (traverseComboText
-             == m_traversal_name_list[static_cast<int>(
-                 Traverse::RIGHT_TO_LEFT)])
+    else if (traverseComboText ==
+             m_traversal_name_list[static_cast<int>(Traverse::RIGHT_TO_LEFT)])
     {
         m_mode = Traverse::RIGHT_TO_LEFT;
         m_status_bar->setTraversalModeText("Right to Left");
     }
 
-    else if (traverseComboText
-             == m_traversal_name_list[static_cast<int>(
-                 Traverse::TOP_TO_BOTTOM)])
+    else if (traverseComboText ==
+             m_traversal_name_list[static_cast<int>(Traverse::TOP_TO_BOTTOM)])
     {
         m_mode = Traverse::TOP_TO_BOTTOM;
         m_status_bar->setTraversalModeText("Top to Bottom");
     }
 
-    else if (traverseComboText
-             == m_traversal_name_list[static_cast<int>(
-                 Traverse::BOTTOM_TO_TOP)])
+    else if (traverseComboText ==
+             m_traversal_name_list[static_cast<int>(Traverse::BOTTOM_TO_TOP)])
     {
         m_mode = Traverse::BOTTOM_TO_TOP;
         m_status_bar->setTraversalModeText("Bottom to Top");
     }
 
-    else if (traverseComboText
-             == m_traversal_name_list[static_cast<int>(
-                 Traverse::CIRCLE_OUTWARDS)])
+    else if (traverseComboText ==
+             m_traversal_name_list[static_cast<int>(Traverse::CIRCLE_OUTWARDS)])
     {
         m_mode = Traverse::CIRCLE_OUTWARDS;
         m_status_bar->setTraversalModeText("Circle Outwards");
     }
 
-    else if (traverseComboText
-             == m_traversal_name_list[static_cast<int>(
-                 Traverse::CIRCLE_INWARDS)])
+    else if (traverseComboText ==
+             m_traversal_name_list[static_cast<int>(Traverse::CIRCLE_INWARDS)])
     {
         m_mode = Traverse::CIRCLE_INWARDS;
         m_status_bar->setTraversalModeText("Circle Inwards");
     }
 
-    else if (traverseComboText
-             == m_traversal_name_list[static_cast<int>(Traverse::CLOCKWISE)])
+    else if (traverseComboText ==
+             m_traversal_name_list[static_cast<int>(Traverse::CLOCKWISE)])
     {
         m_mode = Traverse::CLOCKWISE;
         m_status_bar->setTraversalModeText("Clockwise");
     }
 
-    else if (traverseComboText
-             == m_traversal_name_list[static_cast<int>(
-                 Traverse::ANTICLOCKWISE)])
+    else if (traverseComboText ==
+             m_traversal_name_list[static_cast<int>(Traverse::ANTICLOCKWISE)])
     {
         m_mode = Traverse::ANTICLOCKWISE;
         m_status_bar->setTraversalModeText("Anti-clockwise");
     }
 
-    else if (traverseComboText
-             == m_traversal_name_list[static_cast<int>(Traverse::PATH)])
+    else if (traverseComboText ==
+             m_traversal_name_list[static_cast<int>(Traverse::PATH)])
     {
         m_gv->clearDrawPath();
         m_gv->setDrawPathMode(true);
@@ -792,8 +809,8 @@ Sonify::doSonify() noexcept
         });
     }
 
-    else if (traverseComboText
-             == m_traversal_name_list[static_cast<int>(Traverse::INSPECT)])
+    else if (traverseComboText ==
+             m_traversal_name_list[static_cast<int>(Traverse::INSPECT)])
     {
         /*gv->setPixelAnalyserMode(true);*/
         m_mode = Traverse::INSPECT;
@@ -811,11 +828,9 @@ Sonify::Reset() noexcept
     m_isAudioPlaying = false;
 
     m_gv->reset();
-    if (m_wf_widget)
-        m_wf_widget->resetVertLine();
+    if (m_wf_widget) m_wf_widget->resetVertLine();
     sonification->reset();
     m_status_bar->setAudioProgressText("");
-    m_num_samples_spinbox->setEnabled(true);
 }
 
 // TODO: Screen record
@@ -827,11 +842,13 @@ Sonify::CaptureWindow() noexcept
 bool
 Sonify::AskForResize(const QString &filename) noexcept
 {
-    // Load original pixmap early so we can restore if needed
+    // Load original pixmap early so we can restore if
+    // needed
     QPixmap original_pix = QPixmap(filename);
     if (original_pix.isNull())
     {
-        // optionally: show error message about failing to load
+        // optionally: show error message about failing to
+        // load
         return false;
     }
 
@@ -888,10 +905,10 @@ Sonify::AskForResize(const QString &filename) noexcept
     layout->addWidget(keep_aspect, 3, 0, 1, 2);
 
     // Synchronize width/height when aspect ratio is on
-    const double original_ratio
-        = original_pix.width() > 0 ? static_cast<double>(original_pix.height())
-                                         / original_pix.width()
-                                   : 1.0;
+    const double original_ratio =
+        original_pix.width() > 0
+            ? static_cast<double>(original_pix.height()) / original_pix.width()
+            : 1.0;
     auto sync_height = [&](int w)
     {
         if (keep_aspect->isChecked())
@@ -919,10 +936,10 @@ Sonify::AskForResize(const QString &filename) noexcept
                      [&](int v) { sync_width(v); });
 
     // Buttons: OK / Ignore original / Cancel
-    QDialogButtonBox *button_box
-        = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-    QPushButton *ignore_btn
-        = new QPushButton("Ignore and Keep Original Dimension");
+    QDialogButtonBox *button_box =
+        new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    QPushButton *ignore_btn =
+        new QPushButton("Ignore and Keep Original Dimension");
     ignore_btn->setToolTip("Skip resizing and use the original image as-is");
     layout->addWidget(ignore_btn, 4, 0);
     layout->addWidget(button_box, 4, 1);
@@ -938,8 +955,8 @@ Sonify::AskForResize(const QString &filename) noexcept
         }
     });
 
-    // OK button enable/disable (prevent zero dim, though ranges start
-    // at 1)
+    // OK button enable/disable (prevent zero dim, though
+    // ranges start at 1)
     QPushButton *ok_button = button_box->button(QDialogButtonBox::Ok);
     ok_button->setEnabled(true); // already safe due to spinbox ranges
 
@@ -947,8 +964,7 @@ Sonify::AskForResize(const QString &filename) noexcept
     QObject::connect(ignore_btn, &QPushButton::clicked, &dialog, [&]()
     {
         m_pix = original_pix;
-        if (m_gv)
-            m_gv->setPixmap(m_pix);
+        if (m_gv) m_gv->setPixmap(m_pix);
         dialog.accept();
     });
 
@@ -963,8 +979,7 @@ Sonify::AskForResize(const QString &filename) noexcept
             m_pix = original_pix.scaled(w, h, Qt::IgnoreAspectRatio,
                                         Qt::SmoothTransformation);
 
-        if (m_gv)
-            m_gv->setPixmap(m_pix);
+        if (m_gv) m_gv->setPixmap(m_pix);
 
         // Persist defaults for next time
         m_def_width       = w;
@@ -979,8 +994,7 @@ Sonify::AskForResize(const QString &filename) noexcept
     // Execute modally
     auto dialogResult = dialog.exec();
 
-    if (dialogResult == QDialog::Rejected)
-        return false;
+    if (dialogResult == QDialog::Rejected) return false;
 
     return true;
 }
@@ -991,14 +1005,8 @@ Sonify::Play() noexcept
 {
     sonification->play();
     m_play_btn->setText("Pause");
-    m_sonify_btn->setEnabled(false);
-    m_reset_btn->setEnabled(false);
-    m_min_freq_sb->setEnabled(false);
-    m_max_freq_sb->setEnabled(false);
-    m_pixel_mapping_combo->setEnabled(false);
-    m_num_samples_spinbox->setEnabled(false);
-    m_freq_mapping_combo->setEnabled(false);
-    m_traverse_combo->setEnabled(false);
+    enablePanelUIs(false);
+    m_play_btn->setEnabled(true);
 }
 
 // Function that handles 'pause' state
@@ -1008,80 +1016,20 @@ Sonify::Pause() noexcept
     sonification->pause();
     m_play_btn->setText("Play");
 
-    m_sonify_btn->setEnabled(true);
-    m_reset_btn->setEnabled(true);
-    m_min_freq_sb->setEnabled(true);
-    m_max_freq_sb->setEnabled(true);
-    m_pixel_mapping_combo->setEnabled(true);
-    m_num_samples_spinbox->setEnabled(true);
-    m_freq_mapping_combo->setEnabled(true);
-    m_traverse_combo->setEnabled(true);
-}
-
-// Read in a WAV file. This was used just to check if the Waveforms
-// visualizer worked
-QVector<short>
-readWAVFile(const QString &filename) noexcept
-{
-    SF_INFO sfinfo;
-
-    SNDFILE *file = sf_open(filename.toStdString().c_str(), SFM_READ, &sfinfo);
-
-    if (!file)
-    {
-        fprintf(stderr, "Could not open the file");
-        return {};
-    }
-
-    QVector<short> data;
-    data.resize(sfinfo.frames);
-
-    sf_read_short(file, data.data(), sfinfo.frames);
-    sf_close(file);
-
-    return data;
+    enablePanelUIs(true);
 }
 
 void
 Sonify::readConfigFile() noexcept
 {
-    auto toml = toml::parse_file(m_config_file_path.toStdString());
-
-    auto defaults = toml["defaults"];
-    auto ui       = toml["ui"];
-
-    int num_samples               = defaults["num_samples"].value_or(256);
-    float sample_rate             = defaults["sample_rate"].value_or(44100.0f);
-    int min_freq                  = defaults["min_freq"].value_or(0);
-    int max_freq                  = defaults["max_freq"].value_or(20000);
-    int img_height                = defaults["img_height"].value_or(-1);
-    int img_width                 = defaults["img_width"].value_or(-1);
-    toml::array *freq_range_array = defaults["freq_range"].as_array();
-
-    std::array<int, 2> freq_range;
-    if (!freq_range_array || freq_range_array->size() != 2)
-        freq_range = {0, 20000};
-
-    freq_range = {static_cast<int>((*freq_range_array)[0].value_or(0)),
-                  static_cast<int>((*freq_range_array)[1].value_or(0))};
-
-    std::string traverse = defaults["traversal"].value_or("left-to-right");
-    Traverse traversal;
-    if (m_traverse_string_map.contains(traverse))
-        traversal = m_traverse_string_map.at(traverse);
-    else
-        traversal = Traverse::LEFT_TO_RIGHT;
-    std::string panel_position = ui["panel_position"].value_or("top");
-
-    m_config = {.num_samples    = num_samples,
-                .min_freq       = min_freq,
-                .max_freq       = max_freq,
-                .img_height     = img_height,
-                .img_width      = img_width,
-                .freq_range     = freq_range,
-                .traversal      = traversal,
-                .sample_rate    = sample_rate,
-                .panel_position = panel_position};
+    try
+    {
+        m_lua.script_file(m_config_file_path.toStdString());
+    }
+    catch (const sol::error &e)
+    {
+        QMessageBox::critical(this, "Error loading config file", e.what());
+    }
 }
 
 void
@@ -1089,10 +1037,7 @@ Sonify::args(const argparse::ArgumentParser &args) noexcept
 {
     if (auto filename = args.present("-i"))
     {
-        if (filename)
-        {
-            Open(QString::fromStdString(*filename));
-        }
+        if (filename) { Open(QString::fromStdString(*filename)); }
     }
 }
 
@@ -1108,32 +1053,26 @@ Sonify::sonificationDone() noexcept
     m_gv->setDuration(sonification->duration());
     m_status_bar->setAudioDurationText(
         "Duration: " + QString::number(sonification->duration()) + " secs");
-    m_num_samples_spinbox->setEnabled(true);
-    m_sonify_btn->setEnabled(true);
+
+    m_gv->setTraverse(m_mode);
     m_play_btn->setEnabled(true);
     m_reset_btn->setEnabled(true);
-    m_max_freq_sb->setEnabled(true);
-    m_min_freq_sb->setEnabled(true);
-    m_freq_mapping_combo->setEnabled(true);
-    m_pixel_mapping_combo->setEnabled(true);
-    m_traverse_combo->setEnabled(true);
-    m_gv->setTraverse(m_mode);
+}
+
+void
+Sonify::sonificationStopped() noexcept
+{
+    sonification->stopSonification(true);
+    m_status_bar->sonificationDone();
+    m_status_bar->setMsg("Sonification Stopped", 5);
+    m_panel->setEnabled(true);
 }
 
 void
 Sonify::audioPlaybackDone() noexcept
 {
-    m_num_samples_spinbox->setEnabled(true);
-    m_reset_btn->setEnabled(true);
     emit m_gv->animationFinished();
-    m_sonify_btn->setEnabled(true);
-    m_play_btn->setEnabled(true);
-    m_reset_btn->setEnabled(true);
-    m_max_freq_sb->setEnabled(true);
-    m_min_freq_sb->setEnabled(true);
-    m_freq_mapping_combo->setEnabled(true);
-    m_pixel_mapping_combo->setEnabled(true);
-    m_traverse_combo->setEnabled(true);
+    enablePanelUIs(true);
 }
 
 void
@@ -1141,20 +1080,112 @@ Sonify::applyImageEdits(const ImageEditorDialog::ImageOptions &options) noexcept
 {
     QImage img = m_pix.toImage();
 
-    img = Utils::changeBrightness(img, options.Brightness);
-    img = Utils::changeSaturation(img, options.Saturation);
-    img = Utils::changeContrast(img, options.Contrast);
-    img = Utils::changeGamma(img, options.Gamma);
+    img = utils::changeBrightness(img, options.Brightness);
+    img = utils::changeSaturation(img, options.Saturation);
+    img = utils::changeContrast(img, options.Contrast);
+    img = utils::changeGamma(img, options.Gamma);
 
     QTransform t;
     img = img.transformed(t.rotate(options.rotate));
 
-    if (options.Grayscale)
-        img = Utils::convertToGrayscale(img);
+    if (options.Grayscale) img = utils::convertToGrayscale(img);
 
-    if (options.Invert)
-        img = Utils::invertColor(img);
+    if (options.Invert) img = utils::invertColor(img);
 
     m_pix = QPixmap::fromImage(img);
     m_gv->setPixmap(m_pix);
+}
+
+void
+Sonify::initLuaAPI() noexcept
+{
+
+    m_config_dir =
+        QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+    m_lua.open_libraries(sol::lib::base, sol::lib::jit, sol::lib::package);
+
+    m_lua.new_usertype<Config>(
+        "__Config", "num_samples", &Config::num_samples, "min_freq",
+        &Config::min_freq, "max_freq", &Config::max_freq, "img_height",
+        &Config::img_height, "img_width", &Config::img_width, "freq_range",
+        &Config::freq_range, "traversal", &Config::traversal, "sample_rate",
+        &Config::sample_rate, "panel_position", &Config::panel_position);
+
+    // Sonifycpp Table
+    m_lua["sonifycpp"] = sol::new_table();
+
+    // Functions table
+    m_lua["sonifycpp"]["functions"] = sol::new_table();
+    auto functions_table            = m_lua["sonifycpp"]["functions"];
+
+    functions_table["open"] =
+        [this](const std::string &filename, int w, int h, bool keepAspectRatio)
+    { open(QString::fromStdString(filename), w, h, keepAspectRatio); };
+
+    functions_table["open"] = [this](const std::string &filename)
+    { open(QString::fromStdString(filename)); };
+
+    functions_table["close"]   = [this]() { Close(); };
+    functions_table["version"] = [this]() { return lua__version(); };
+    functions_table["exit"]    = [this]() { QApplication::exit(); };
+    functions_table["sonify"]  = [this]() { doSonify(); };
+    functions_table["play"]    = [this]() { Play(); };
+    functions_table["pause"]   = [this]() { Pause(); };
+    functions_table["reset"]   = [this]() { Reset(); };
+
+    // Enums Table
+    m_lua["sonifycpp"]["enums"] = sol::new_table();
+
+    m_lua["sonifycpp"]["enums"]["freq_map"] = m_lua.create_table_with(
+        "Linear", FreqMap::Linear, "Exp", FreqMap::Exp, "Log", FreqMap::Log);
+
+    m_lua["sonifycpp"]["enums"]["traverse"] = m_lua.create_table_with(
+        "LEFT_TO_RIGHT", Traverse::LEFT_TO_RIGHT, "RIGHT_TO_LEFT",
+        Traverse::RIGHT_TO_LEFT, "TOP_TO_BOTTOM", Traverse::TOP_TO_BOTTOM,
+        "BOTTOM_TO_TOP", Traverse::BOTTOM_TO_TOP, "CIRCLE_OUTWARDS",
+        Traverse::CIRCLE_OUTWARDS, "CIRCLE_INWARDS", Traverse::CIRCLE_INWARDS,
+        "CLOCKWISE", Traverse::CLOCKWISE, "ANTICLOCKWISE",
+        Traverse::ANTICLOCKWISE, "PATH", Traverse::PATH, "REGION",
+        Traverse::REGION, "INSPECT", Traverse::INSPECT);
+
+    // Image Table
+    m_lua["sonifycpp"]["image"] = m_lua.create_table_with(
+        "height", &Sonify::lua__imageHeight, "width", &Sonify::lua__imageWidth);
+
+    // Config Table
+    m_lua["sonifycpp"]["config"] = &m_config;
+
+    // Mappings manager Table
+    m_lua.new_usertype<PixelMappingManager>(
+        "__PixelMappingManager", "register",
+        &PixelMappingManager::registerPixelMapping, "list",
+        &PixelMappingManager::availablePixelMappings);
+
+    m_lua["sonifycpp"]["pixel_maps"] = &m_pixel_mapping_manager;
+
+    // Controls table
+    m_lua["sonifycpp"]["controls"]             = sol::new_table();
+    m_lua["sonifycpp"]["controls"]["freq_map"] = [this]()
+    { return m_freq_mapping_combo->currentText().toStdString(); };
+
+    m_lua["sonifycpp"]["controls"]["pixel_map"] = [this]()
+    { return m_pixel_mapping_combo->currentText().toStdString(); };
+
+    // utils table
+
+    // m_lua["sonifycpp"]["utils"] =
+}
+
+void
+Sonify::enablePanelUIs(bool state) noexcept
+{
+    m_num_samples_spinbox->setEnabled(state);
+    m_sonify_btn->setEnabled(state);
+    m_play_btn->setEnabled(state);
+    m_reset_btn->setEnabled(state);
+    m_max_freq_sb->setEnabled(state);
+    m_min_freq_sb->setEnabled(state);
+    m_freq_mapping_combo->setEnabled(state);
+    m_pixel_mapping_combo->setEnabled(state);
+    m_traverse_combo->setEnabled(state);
 }

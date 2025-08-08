@@ -6,6 +6,7 @@ sonification process and audio playback. This represents the main window
 #pragma once
 
 #include "ImageEditorDialog.hpp"
+#include "PixelMappingManager.hpp"
 #include "ReverbDialog.hpp"
 #include "SpectrumAnalyzer.hpp"
 #include "aboutdialog.hpp"
@@ -13,9 +14,9 @@ sonification process and audio playback. This represents the main window
 #include "config.hpp"
 #include "gv.hpp"
 #include "screenRecorder.hpp"
+#include "sol/sol.hpp"
 #include "sonification.hpp"
 #include "statusbar.hpp"
-#include "toml.hpp"
 #include "tonegenerator.hpp"
 #include "traverse.hpp"
 #include "waveform_savedialog.hpp"
@@ -51,14 +52,27 @@ sonification process and audio playback. This represents the main window
 #include <QtMultimedia/QWindowCapture>
 #include <unordered_map>
 
+#define SONIFYCPP_VERSION "0.1.1"
+
 class Sonify : public QMainWindow
 {
     Q_OBJECT
 public:
+
     Sonify(QWidget *parent = nullptr);
     void Open(QString filename = "") noexcept;
     void args(const argparse::ArgumentParser &args) noexcept;
     void Close() noexcept;
+
+    // Lua API
+    inline int lua__imageWidth() noexcept { return m_gv->getPixmap().width(); }
+
+    inline int lua__imageHeight() noexcept
+    {
+        return m_gv->getPixmap().height();
+    }
+
+    inline std::string lua__version() noexcept { return SONIFYCPP_VERSION; }
 
     enum class Location
     {
@@ -72,6 +86,9 @@ signals:
     void fileOpened();
 
 private:
+
+    void open(QString filename, int w, int h, bool keepAspectRatio) noexcept;
+    void open(QString filename) noexcept;
     void applyImageEdits(const ImageEditorDialog::ImageOptions &) noexcept;
     void Play() noexcept;
     void ConvertToVideo() noexcept;
@@ -80,6 +97,7 @@ private:
     void Reset() noexcept;
     bool Save(const QString &filename = "") noexcept;
     void doSonify() noexcept;
+    void initLuaAPI() noexcept;
     void initConfigFile() noexcept;
     void initConnections() noexcept;
     void initMenu() noexcept;
@@ -96,7 +114,9 @@ private:
     void viewWaveform(const bool &state = false) noexcept;
     void readConfigFile() noexcept;
     void sonificationDone() noexcept;
+    void sonificationStopped() noexcept;
     void audioPlaybackDone() noexcept;
+    void enablePanelUIs(bool state) noexcept;
 
     QWidget *m_widget     = new QWidget();
     QSplitter *m_splitter = new QSplitter();
@@ -167,16 +187,20 @@ private:
     Config m_config;
 
     const std::unordered_map<std::string, Traverse> m_traverse_string_map{
-        {"Left to Right", Traverse::LEFT_TO_RIGHT},
-        {"Right to Left", Traverse::RIGHT_TO_LEFT},
-        {"Top to Bottom", Traverse::TOP_TO_BOTTOM},
-        {"Bottom to Top", Traverse::BOTTOM_TO_TOP},
-        {"Circle Outwards", Traverse::CIRCLE_OUTWARDS},
-        {"Circle Inwards", Traverse::CIRCLE_INWARDS},
-        {"Clockwise", Traverse::CLOCKWISE},
-        {"Anti-Clockwise", Traverse::ANTICLOCKWISE},
-        {"Draw Path", Traverse::PATH},
-        {"Inspect", Traverse::INSPECT},
+        { "Left to Right", Traverse::LEFT_TO_RIGHT },
+        { "Right to Left", Traverse::RIGHT_TO_LEFT },
+        { "Top to Bottom", Traverse::TOP_TO_BOTTOM },
+        { "Bottom to Top", Traverse::BOTTOM_TO_TOP },
+        { "Circle Outwards", Traverse::CIRCLE_OUTWARDS },
+        { "Circle Inwards", Traverse::CIRCLE_INWARDS },
+        { "Clockwise", Traverse::CLOCKWISE },
+        { "Anti-Clockwise", Traverse::ANTICLOCKWISE },
+        { "Draw Path", Traverse::PATH },
+        { "Inspect", Traverse::INSPECT },
         // Optional: include REGION if it's still used somewhere else
-        {"Region", Traverse::REGION}};
+        { "Region", Traverse::REGION }
+    };
+
+    sol::state m_lua;
+    PixelMappingManager m_pixel_mapping_manager;
 };
