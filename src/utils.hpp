@@ -1,131 +1,92 @@
 #pragma once
 
-#include <QColor>
 #include <QImage>
-#include <QtMath>
+#include <QString>
+#include <QStringView>
+#include <vector>
 
-namespace Utils
-{
-    inline QImage changeGamma(const QImage &input, int gammaValue)
-    {
-        QImage image = input.convertToFormat(QImage::Format_RGB32);
-        double gamma = gammaValue / 100.0;
+namespace utils {
 
-        for (int y = 0; y < image.height(); ++y)
-        {
-            QRgb *line = reinterpret_cast<QRgb *>(image.scanLine(y));
-            for (int x = 0; x < image.width(); ++x)
-            {
-                QColor c(line[x]);
-                int r = qBound(0, int(qPow(c.red() / 255.0, gamma) * 255), 255);
-                int g
-                    = qBound(0, int(qPow(c.green() / 255.0, gamma) * 255), 255);
-                int b
-                    = qBound(0, int(qPow(c.blue() / 255.0, gamma) * 255), 255);
-                line[x] = qRgb(r, g, b);
-            }
-        }
+    // ------- Image processing -------
+    QImage changeGamma(const QImage &image, int gamma) noexcept;
+    QImage changeBrightness(const QImage &image, int delta) noexcept;
+    QImage changeSaturation(const QImage &image, int delta) noexcept;
+    QImage invertColor(const QImage &image) noexcept;
+    QImage convertToGrayscale(const QImage &image) noexcept;
+    QImage changeContrast(const QImage &image, int delta) noexcept;
 
-        return image;
+    // ------- Math and mapping -------
+    short LinearMap(double value,
+                    double in_min,
+                    double in_max,
+                    double out_min,
+                    double out_max) noexcept;
+
+    short ExpMap(double value,
+                 double in_min,
+                 double in_max,
+                 double out_min,
+                 double out_max) noexcept;
+
+    short LogMap(double value,
+                 double in_min,
+                 double in_max,
+                 double out_min,
+                 double out_max) noexcept;
+
+    // ------- Signal generation -------
+    void generateSineWave(std::vector<short> &buffer,
+                          double amplitude,
+                          double frequency,
+                          double time,
+                          float samplerate) noexcept;
+
+    std::vector<short> sineWave(double _amplitude,
+                                double frequency,
+                                double time,
+                                float samplerate) noexcept;
+
+    void applyEnvelope(std::vector<short> &samples) noexcept;
+
+    void normalizeWave(std::vector<short> &wave) noexcept;
+
+    void applyFadeInOut(std::vector<short> &wave, int fade = 10) noexcept;
+
+    // ------- Utility -------
+    double Hue2Freq(double hue) noexcept;
+
+    std::vector<double> linspace(double start, double end, int num) noexcept;
+
+    std::vector<short> readWAVFile(const QString &path) noexcept;
+
+    // ------- Vector math (templates) -------
+    template <typename T>
+    std::vector<T> addTwoVectors(const std::vector<T> &first,
+                                 const std::vector<T> &second) noexcept {
+        std::vector<T> result;
+        result.reserve(first.size());
+        for (size_t i = 0; i < first.size(); ++i)
+            result.push_back(first[i] + second[i]);
+        return result;
     }
 
-    inline QImage changeBrightness(const QImage &input, int delta)
-    {
-        QImage image = input.convertToFormat(QImage::Format_RGB32);
-
-        for (int y = 0; y < image.height(); ++y)
-        {
-            QRgb *line = reinterpret_cast<QRgb *>(image.scanLine(y));
-            for (int x = 0; x < image.width(); ++x)
-            {
-                QColor c(line[x]);
-                int r   = qBound(0, c.red() + delta, 255);
-                int g   = qBound(0, c.green() + delta, 255);
-                int b   = qBound(0, c.blue() + delta, 255);
-                line[x] = qRgb(r, g, b);
-            }
-        }
-
-        return image;
+    // Base case: just return one vector
+    template <typename T>
+    std::vector<T> addVectors(const std::vector<T> &v) noexcept {
+        return v;
     }
 
-    inline QImage changeSaturation(const QImage &input, int delta)
-    {
-        QImage image = input.convertToFormat(QImage::Format_RGB32);
-
-        for (int y = 0; y < image.height(); ++y)
-        {
-            QRgb *line = reinterpret_cast<QRgb *>(image.scanLine(y));
-            for (int x = 0; x < image.width(); ++x)
-            {
-                QColor c(line[x]);
-                int h, s, v;
-                c.getHsv(&h, &s, &v);
-                s = qBound(0, s + delta, 255);
-                c.setHsv(h, s, v);
-                line[x] = c.rgb();
-            }
-        }
-
-        return image;
+    template <typename T, typename... Args>
+    std::vector<T> addVectors(const std::vector<T> &first,
+                              const std::vector<T> &second,
+                              const Args &...args) noexcept {
+        return addVectors(addTwoVectors(first, second), args...);
     }
 
-    inline QImage invertColor(const QImage &input)
-    {
-        QImage image = input.convertToFormat(QImage::Format_RGB32);
+    // Helper function to generate WAV file
+    bool generateWavFile(const QString &filename,
+                         int sampleRate,
+                         int duration,
+                         const std::vector<short> &data) noexcept;
 
-        for (int y = 0; y < image.height(); ++y)
-        {
-            QRgb *line = reinterpret_cast<QRgb *>(image.scanLine(y));
-            for (int x = 0; x < image.width(); ++x)
-            {
-                QColor c(line[x]);
-                line[x] = qRgb(255 - c.red(), 255 - c.green(), 255 - c.blue());
-            }
-        }
-
-        return image;
-    }
-
-    inline QImage convertToGrayscale(const QImage &input)
-    {
-        QImage image = input.convertToFormat(QImage::Format_RGB32);
-
-        for (int y = 0; y < image.height(); ++y)
-        {
-            QRgb *line = reinterpret_cast<QRgb *>(image.scanLine(y));
-            for (int x = 0; x < image.width(); ++x)
-            {
-                QColor c(line[x]);
-                int gray = qGray(c.rgb());
-                line[x]  = qRgb(gray, gray, gray);
-            }
-        }
-
-        return image;
-    }
-
-    inline QImage changeContrast(const QImage &input, int contrastValue)
-    {
-        QImage image = input.convertToFormat(QImage::Format_RGB32);
-
-        double factor = (259.0 * (contrastValue + 255.0))
-                        / (255.0 * (259.0 - contrastValue));
-
-        for (int y = 0; y < image.height(); ++y)
-        {
-            QRgb *line = reinterpret_cast<QRgb *>(image.scanLine(y));
-            for (int x = 0; x < image.width(); ++x)
-            {
-                QColor c(line[x]);
-                int r   = qBound(0, int(factor * (c.red() - 128) + 128), 255);
-                int g   = qBound(0, int(factor * (c.green() - 128) + 128), 255);
-                int b   = qBound(0, int(factor * (c.blue() - 128) + 128), 255);
-                line[x] = qRgb(r, g, b);
-            }
-        }
-
-        return image;
-    }
-
-} // namespace Utils
+} // namespace utils
