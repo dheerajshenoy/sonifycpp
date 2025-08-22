@@ -89,10 +89,10 @@ set(HEADERS
   src/SpectrumAnalyzer.hpp
   src/ReverbDialog.hpp
   src/ImageEditorDialog.hpp
-  src/defaultMaps/IntensityMap.hpp
-  src/defaultMaps/HSVMap.hpp
+  include/${PROJECT_NAME}/DefaultPixelMappings/IntensityMap.hpp
+  include/${PROJECT_NAME}/DefaultPixelMappings/HSVMap.hpp
 
-  include/${LIB_NAME}/pixel.hpp
+  include/${PROJECT_NAME}/pixel.hpp
 )
 
 # Create the executable
