@@ -30,18 +30,14 @@ Statusbar::Statusbar(QWidget *parent) : QWidget(parent)
 void
 Statusbar::setMsg(const QString &msg, const int &s) noexcept
 {
-    if (msg.isEmpty())
-        return;
+    if (msg.isEmpty()) return;
 
     if (s > 0)
     {
         m_msg_label->setText(msg);
         QTimer::singleShot(s * 1000, [&]() { m_msg_label->clear(); });
     }
-    else
-    {
-        m_msg_label->setText(msg);
-    }
+    else { m_msg_label->setText(msg); }
 }
 
 void
@@ -57,4 +53,13 @@ Statusbar::sonificationStart() noexcept
     m_progress_bar->setVisible(true);
     m_progress_bar->reset();
     m_stop_sonif_btn->setVisible(true);
+}
+
+void
+Statusbar::reset() noexcept
+{
+    m_progress_label->clear();
+    m_traversal_label->clear();
+    m_duration_label->clear();
+    m_msg_label->clear();
 }
