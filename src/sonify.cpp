@@ -745,10 +745,16 @@ Sonify::doSonify() noexcept
     //         break;
     // }
 
-    mapFunc = [&](const std::vector<Pixel> &cols)
+    MapTemplate *t = m_sonification->pixelMappingClass(
+        m_pixel_mapping_combo->currentText().toStdString().c_str());
+
+    if (!t)
     {
-        MapTemplate *t = m_sonification->mappingClass(
-            m_pixel_mapping_combo->currentText().toStdString().c_str());
+        QMessageBox::critical(
+            this, "Error Sonifying",
+            "Could not sonify because the mapping function is null!");
+        return;
+    }
 
         const QString &freqMapStr = m_freq_mapping_combo->currentText();
         if (freqMapStr == "Linear")
