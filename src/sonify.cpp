@@ -10,6 +10,7 @@
 #include <QStandardPaths>
 #include <QtConcurrent/qtconcurrentrun.h>
 #include <dlfcn.h>
+#include <qnamespace.h>
 
 Sonify::Sonify(QWidget *parent) : QMainWindow(parent)
 {
@@ -414,6 +415,27 @@ Sonify::initConnections() noexcept
         if (m_wf_widget)
             m_wf_widget->setVertLinePosition(
                 location / static_cast<double>(m_sonification->sampleRate()));
+        if (m_sp)
+        {
+            const auto &audio  = m_sonification->audioData();
+            int currentSample  = static_cast<int>(location);
+            const int FFT_SIZE = 2048;
+            if (currentSample + FFT_SIZE <= audio.size())
+            {
+                std::vector<short> window(FFT_SIZE);
+                for (int i = 0; i < FFT_SIZE; i++)
+                {
+                    // Optionally apply Hanning/Hamming window
+                    window[i] =
+                        audio[currentSample + i] *
+                        (0.5 - 0.5 * cos(2 * M_PI * i / (FFT_SIZE - 1)));
+                }
+
+                // Pass to SpectrumAnalyzer
+                QMetaObject::invokeMethod(m_sp, [this, window]()
+                { m_sp->setData(window, 44100); }, Qt::QueuedConnection);
+            }
+        }
     });
 
     connect(m_status_bar, &Statusbar::stopSonificationRequested, this,
@@ -472,7 +494,7 @@ Sonify::initConnections() noexcept
             std::vector<short> data = m_sonification->audioData();
             float sr                = m_sonification->sampleRate();
             m_sp->setData(data, sr);
-            m_sp->open();
+            m_sp->show();
         }
     });
 
@@ -639,6 +661,8 @@ Sonify::Open(QString filename) noexcept
         m_pix = pix;
     }
 
+    m_status_bar->reset();
+    m_gv->reset();
     m_gv->setPixmap(m_pix);
     m_sonify_btn->setEnabled(true);
     m_file__close->setEnabled(true);
