@@ -9,7 +9,8 @@
 
 #include "mapping.hpp"
 
-#include "utils.hpp"
+#include "sonifycpp/utils.hpp"
+#include "utils_internal.hpp"
 
 std::vector<short>
 Mapping::Map__HSV(const std::vector<Pixel> &pixelCol) noexcept
@@ -17,7 +18,6 @@ Mapping::Map__HSV(const std::vector<Pixel> &pixelCol) noexcept
     std::vector<short> fs;
     int N = static_cast<int>(pixelCol.size());
     fs.resize(N);
-    Pixel p;
     std::vector<short> wave;
     double f = 0;
 
@@ -26,20 +26,15 @@ Mapping::Map__HSV(const std::vector<Pixel> &pixelCol) noexcept
     MapFunc mapper = nullptr;
     switch (m_freq_map)
     {
-        case FreqMap::Linear:
-            mapper = utils::LinearMap;
-            break;
-        case FreqMap::Exp:
-            mapper = utils::ExpMap;
-            break;
-        case FreqMap::Log:
-            mapper = utils::LogMap;
-            break;
+        case FreqMap::Linear: mapper = utils::LinearMap; break;
+        case FreqMap::Exp: mapper = utils::ExpMap; break;
+        case FreqMap::Log: mapper = utils::LogMap; break;
     }
 
     for (int i = 0; i < N; i++)
     {
-        auto hsv = QColor(pixelCol[i].pixel).toHsv();
+        QRgb rgb = utils_internal::toQRgb(pixelCol[i]);
+        auto hsv = QColor(rgb).toHsv();
         f += mapper(0, 360, m_freq_min, m_freq_max, hsv.hue()) /
              static_cast<double>(N);
     }
@@ -53,26 +48,18 @@ std::vector<short>
 Mapping::Map__Intensity(const std::vector<Pixel> &pixelCol) noexcept
 {
     const int N = static_cast<int>(pixelCol.size());
-    if (N == 0)
-        return {};
+    if (N == 0) return {};
 
     using MapFunc  = short (*)(double, double, double, double, double);
     MapFunc mapper = nullptr;
     switch (m_freq_map)
     {
-        case FreqMap::Linear:
-            mapper = utils::LinearMap;
-            break;
-        case FreqMap::Exp:
-            mapper = utils::ExpMap;
-            break;
-        case FreqMap::Log:
-            mapper = utils::LogMap;
-            break;
+        case FreqMap::Linear: mapper = utils::LinearMap; break;
+        case FreqMap::Exp: mapper = utils::ExpMap; break;
+        case FreqMap::Log: mapper = utils::LogMap; break;
     }
 
-    if (!mapper)
-        return {};
+    if (!mapper) return {};
 
     const double amplitude     = 0.5;
     const double duration      = 0.05; // seconds
@@ -84,7 +71,7 @@ Mapping::Map__Intensity(const std::vector<Pixel> &pixelCol) noexcept
 
     for (const auto &px : pixelCol)
     {
-        float intensity = static_cast<float>(qGray(px.pixel));
+        float intensity = static_cast<float>(qGray(utils_internal::toQRgb(px)));
         double freq     = mapper(0, 255, m_freq_min, m_freq_max, intensity);
 
         wave.clear();
@@ -115,20 +102,15 @@ Mapping::Map__Orchestra(const std::vector<Pixel> &pixelCol) noexcept
 
     switch (m_freq_map)
     {
-        case FreqMap::Linear:
-            mapper = utils::LinearMap;
-            break;
-        case FreqMap::Exp:
-            mapper = utils::ExpMap;
-            break;
-        case FreqMap::Log:
-            mapper = utils::LogMap;
-            break;
+        case FreqMap::Linear: mapper = utils::LinearMap; break;
+        case FreqMap::Exp: mapper = utils::ExpMap; break;
+        case FreqMap::Log: mapper = utils::LogMap; break;
     }
 
     for (int i = 0; i < N; ++i)
     {
-        const float intensity = static_cast<float>(qGray(pixelCol[i].pixel));
+        const QRgb rgb        = utils_internal::toQRgb(pixelCol[i]);
+        const float intensity = static_cast<float>(qGray(rgb));
         const double target_freq =
             mapper(0.0, 255.0, m_freq_min, m_freq_max, intensity);
         const double target_amp = intensity / 255.0;
