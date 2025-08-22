@@ -2,7 +2,7 @@
 
 This guide explains how to create custom mapping plugins for SonifyCPP using the `MapTemplate` interface.
 
-> ![INFO]
+> [!NOTE]
 > This section assumes that you have some knowledge of C++
 
 1. Overview
