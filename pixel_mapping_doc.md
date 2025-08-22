@@ -118,3 +118,41 @@ g++ -fPIC -shared MyMapper.cpp -o MyMapper.so
 `-fPIC` – required for shared objects
 
 `-shared` – build as a .so file
+
+## Convenience Functions (utils namespace)
+
+SonifyCPP provides a `utils` namespace (defined in <sonifycpp/utils.hpp>) with helpful functions to simplify plugin development:
+
+### Math / Mapping Functions
+
+`LinearMap(value, in_min, in_max, out_min, out_max)` – linear scaling
+
+`ExpMap(value, in_min, in_max, out_min, out_max)` – exponential scaling
+
+`LogMap(value, in_min, in_max, out_min, out_max)` – logarithmic scaling
+
+### Signal Generation
+
+`sineWave(amplitude, frequency, time, samplerate)` – generate a sine wave
+
+`generateSineWave(buffer, amplitude, frequency, time, samplerate)` – fill an existing buffer
+
+`applyEnvelope(samples)` – apply amplitude envelope
+
+`normalizeWave(wave)` – normalize wave to max amplitude
+
+`applyFadeInOut(wave, fade)` – smooth fade in/out
+
+### Utility Functions
+
+`Hue2Freq(hue)` – convert hue (0–360) to frequency
+
+`linspace(start, end, num)` – generate linearly spaced numbers
+
+`RGBtoHSV(rgba)` – convert RGBA color to HSV
+
+### Vector Utilities
+
+`addTwoVectors(first, second)` – element-wise addition of two vectors
+
+`addVectors(v1, v2, v3, ...)` – element-wise addition of multiple vectors (variadic template)
