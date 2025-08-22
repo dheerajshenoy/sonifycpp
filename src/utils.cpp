@@ -193,6 +193,11 @@ namespace utils
             v = static_cast<short>(v * scale);
     }
 
+    float intensity(const RGBA &rgba) noexcept
+    {
+        return (rgba.r + rgba.g + rgba.b) / 3.0f;
+    }
+
     HSV RGBtoHSV(const RGBA &rgb) noexcept
     {
         double r = rgb.r / 255.0;

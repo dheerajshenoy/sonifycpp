@@ -30,6 +30,7 @@ namespace utils
     double Hue2Freq(double hue) noexcept;
     std::vector<double> linspace(double start, double end, int num) noexcept;
     HSV RGBtoHSV(const RGBA &) noexcept;
+    float intensity(const RGBA &) noexcept;
 
     // Vector utils
 

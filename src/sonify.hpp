@@ -11,6 +11,8 @@ sonification process and audio playback. This represents the main window
 #include "aboutdialog.hpp"
 #include "argparse.hpp"
 #include "config.hpp"
+#include "defaultMaps/HSVMap.hpp"
+#include "defaultMaps/IntensityMap.hpp"
 #include "gv.hpp"
 #include "screenRecorder.hpp"
 #include "sonification.hpp"
@@ -107,6 +109,7 @@ private:
     void sonificationStopped() noexcept;
     void audioPlaybackDone() noexcept;
     void enablePanelUIs(bool state) noexcept;
+    void initDefaultPixelMappings() noexcept;
 
     QWidget *m_widget{ new QWidget() };
     QSplitter *m_splitter{ new QSplitter() };

@@ -236,7 +236,7 @@ Sonification::clearCustomPixelMappings() noexcept
         for (const auto &m : m_custom_mappings)
         {
             if (m.ptr) delete m.ptr;
-            dlclose(m.handle);
+            if (m.handle) dlclose(m.handle);
         }
         m_custom_mappings.clear();
     }

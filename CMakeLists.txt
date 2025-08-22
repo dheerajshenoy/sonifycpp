@@ -54,7 +54,6 @@ set(SOURCES
   src/sonification.cpp
   src/waveform_savedialog.cpp
   src/sonify.cpp
-  src/mapping.cpp
   src/sonifier.cpp
   src/notes.cpp
   src/qcustomplot.cpp
@@ -80,7 +79,6 @@ set(HEADERS
   src/traverse.hpp
   src/circle.hpp
   src/path.hpp
-  src/mapping.hpp
   src/sonifier.hpp
   src/notes.hpp
   src/qcustomplot.h
@@ -91,6 +89,9 @@ set(HEADERS
   src/SpectrumAnalyzer.hpp
   src/ReverbDialog.hpp
   src/ImageEditorDialog.hpp
+  src/defaultMaps/IntensityMap.hpp
+  src/defaultMaps/HSVMap.hpp
+
   include/${LIB_NAME}/pixel.hpp
 )
 

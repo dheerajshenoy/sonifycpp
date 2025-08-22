@@ -231,10 +231,6 @@ Sonify::initWidgets() noexcept
     m_freq_mapping_combo->addItem("Logarithmic");
     m_freq_mapping_combo->addItem("Exponential");
 
-    m_pixel_mapping_combo->addItem("Intensity");
-    m_pixel_mapping_combo->addItem("HSV");
-    m_pixel_mapping_combo->addItem("Orchestra");
-
     m_sonify_btn->setToolTip("Sonify");
     m_reset_btn->setToolTip("Reset");
     m_play_btn->setToolTip("Play");
@@ -1120,6 +1116,7 @@ Sonify::enablePanelUIs(bool state) noexcept
 void
 Sonify::loadMappingSharedObjects() noexcept
 {
+    // remove existing user defined mapping names from QComboBox
     QStringList customMappings = m_sonification->getPixelMappingNames();
 
     for (const auto &m : customMappings)
@@ -1129,6 +1126,8 @@ Sonify::loadMappingSharedObjects() noexcept
     }
 
     m_sonification->clearCustomPixelMappings();
+
+    initDefaultPixelMappings();
 
     const QDir dir(m_mappings_dir);
     if (!dir.exists()) { return; }
@@ -1176,8 +1175,36 @@ Sonify::loadSharedObject(const QString &filename) noexcept
     MapTemplate *ptr = create();
 
     if (!ptr) return false;
+
+    const std::string name(ptr->name());
+    if (name == "Intensity" || name == "HSV")
+    {
+        QMessageBox::warning(
+            this, "Mapping Name Conflict",
+            "The name of the map seems to be conflicting with the built-in "
+            "mapping name. This results in shadowing of the built-in mappings "
+            "`Intensity` and/or `HSV`. Please rename the mappings to something "
+            "different so as to not have this problem");
+    }
+
     m_pixel_mapping_combo->addItem(ptr->name());
 
     m_sonification->addCustomPixelMapping({ handle, ptr });
     return true;
+}
+
+// Initialize default pixel mappings
+void
+Sonify::initDefaultPixelMappings() noexcept
+{
+    HSVMap *map1       = new HSVMap;
+    IntensityMap *map2 = new IntensityMap;
+
+    MapTemplate *maps[] = { map1, map2 };
+
+    for (auto *m : maps)
+    {
+        m_sonification->addCustomPixelMapping({ nullptr, m });
+        m_pixel_mapping_combo->addItem(m->name());
+    }
 }
