@@ -5,47 +5,47 @@
 #include <concepts>
 #include <qnamespace.h>
 
-Sonifier::Sonifier(QObject *parent) : QObject(parent) {
-    m_mapFunc = [this](const std::vector<Pixel> &cols) {
-        return m_mapping->Map__Intensity(cols);
-    };
+Sonifier::Sonifier(QObject *parent) : QObject(parent)
+{
+    m_mapFunc = [this](const std::vector<Pixel> &cols)
+    { return m_mapping->Map__Intensity(cols); };
 }
 
 void
-Sonifier::setSamples(int nsamples) noexcept {
-    if (nsamples <= 0)
-        return;
+Sonifier::setSamples(int nsamples) noexcept
+{
+    if (nsamples <= 0) return;
 
     m_nsamples = nsamples;
     m_mapping->setSamples(nsamples);
 }
 
 void
-Sonifier::setSampleRate(float SR) noexcept {
-    if (SR <= 0.0f)
-        return;
+Sonifier::setSampleRate(float SR) noexcept
+{
+    if (SR <= 0.0f) return;
 
     m_SampleRate = SR;
     m_mapping->setSampleRate(SR);
 }
 
 void
-Sonifier::setFreqMap(FreqMap m) noexcept {
+Sonifier::setFreqMap(FreqMap m) noexcept
+{
     m_mapping->setFreqMap(m);
 }
 
 void
-Sonifier::setMinMax(int min, int max) noexcept {
+Sonifier::setMinMax(int min, int max) noexcept
+{
     m_mapping->setMinMax(min, max);
 }
 
 void
-Sonifier::processImageChunk__LeftToRight(int startX,
-                                         int endX,
-                                         void *s) noexcept {
+Sonifier::processImageChunk__LeftToRight(int startX, int endX, void *s) noexcept
+{
     Sonifier *son = reinterpret_cast<Sonifier *>(s);
-    if (!son || son->m_stop_sonifying)
-        return;
+    if (!son || son->m_stop_sonifying) return;
 
     const int nsamples     = son->m_nsamples;
     const int imgHeight    = son->m_img.height();
@@ -57,9 +57,18 @@ Sonifier::processImageChunk__LeftToRight(int startX,
     std::vector<Pixel> pixcols;
     pixcols.resize(imgHeight);
 
-    for (int x = startX; x < endX && !son->m_stop_sonifying; ++x) {
+    for (int x = startX; x < endX && !son->m_stop_sonifying; ++x)
+    {
         for (int y = 0; y < imgHeight; y++)
-            pixcols[y] = Pixel{son->m_img.pixel(x, y), x, y};
+        {
+            QRgb pixel = son->m_img.pixel(x, y);
+            pixcols[y] = Pixel{ static_cast<std::uint8_t>(qRed(pixel)),
+                                static_cast<std::uint8_t>(qGreen(pixel)),
+                                static_cast<std::uint8_t>(qBlue(pixel)),
+                                static_cast<std::uint8_t>(qAlpha(pixel)),
+                                x,
+                                y };
+        }
 
         temp = son->m_mapFunc(pixcols);
 
@@ -77,12 +86,10 @@ Sonifier::processImageChunk__LeftToRight(int startX,
 }
 
 void
-Sonifier::processImageChunk__RightToLeft(int startX,
-                                         int endX,
-                                         void *s) noexcept {
+Sonifier::processImageChunk__RightToLeft(int startX, int endX, void *s) noexcept
+{
     Sonifier *son = reinterpret_cast<Sonifier *>(s);
-    if (!son || son->m_stop_sonifying)
-        return;
+    if (!son || son->m_stop_sonifying) return;
 
     const int nsamples     = son->m_nsamples;
     const int imgHeight    = son->m_img.height();
@@ -94,9 +101,10 @@ Sonifier::processImageChunk__RightToLeft(int startX,
     std::vector<Pixel> pixcols;
     pixcols.resize(imgHeight);
 
-    for (int x = startX; x < endX && !son->m_stop_sonifying; x++) {
+    for (int x = startX; x < endX && !son->m_stop_sonifying; x++)
+    {
         for (int y = 0; y < son->m_img.height(); y++)
-            pixcols[y] = Pixel{son->m_img.pixel(x, y), x, y};
+            pixcols[y] = Pixel{ son->m_img.pixel(x, y), x, y };
 
         temp = son->m_mapFunc(pixcols);
 
@@ -114,12 +122,10 @@ Sonifier::processImageChunk__RightToLeft(int startX,
 }
 
 void
-Sonifier::processImageChunk__TopToBottom(int startY,
-                                         int endY,
-                                         void *s) noexcept {
+Sonifier::processImageChunk__TopToBottom(int startY, int endY, void *s) noexcept
+{
     Sonifier *son = reinterpret_cast<Sonifier *>(s);
-    if (!son || son->m_stop_sonifying)
-        return;
+    if (!son || son->m_stop_sonifying) return;
 
     const int nsamples     = son->m_nsamples;
     const int totalsamples = son->m_img.height();
@@ -130,9 +136,10 @@ Sonifier::processImageChunk__TopToBottom(int startY,
     std::vector<Pixel> pixcols;
     pixcols.resize(totalsamples);
 
-    for (int y = startY; y < endY && !son->m_stop_sonifying; y++) {
+    for (int y = startY; y < endY && !son->m_stop_sonifying; y++)
+    {
         for (int x = 0; x < son->m_img.width(); x++)
-            pixcols[x] = Pixel{son->m_img.pixel(x, y), x, y};
+            pixcols[x] = Pixel{ son->m_img.pixel(x, y), x, y };
 
         temp = son->m_mapping->Map__HSV(pixcols);
 
@@ -150,12 +157,10 @@ Sonifier::processImageChunk__TopToBottom(int startY,
 }
 
 void
-Sonifier::processImageChunk__BottomToTop(int startY,
-                                         int endY,
-                                         void *s) noexcept {
+Sonifier::processImageChunk__BottomToTop(int startY, int endY, void *s) noexcept
+{
     Sonifier *son = reinterpret_cast<Sonifier *>(s);
-    if (!son || son->m_stop_sonifying)
-        return;
+    if (!son || son->m_stop_sonifying) return;
 
     const int nsamples     = son->m_nsamples;
     const int totalsamples = son->m_img.height();
@@ -166,9 +171,10 @@ Sonifier::processImageChunk__BottomToTop(int startY,
     std::vector<Pixel> pixcols;
     pixcols.resize(totalsamples);
 
-    for (int y = startY; y < endY && !son->m_stop_sonifying; y++) {
+    for (int y = startY; y < endY && !son->m_stop_sonifying; y++)
+    {
         for (int x = 0; x < son->m_img.width(); x++)
-            pixcols[x] = Pixel{son->m_img.pixel(x, y), x, y};
+            pixcols[x] = Pixel{ son->m_img.pixel(x, y), x, y };
 
         temp = son->m_mapFunc(pixcols);
 
@@ -186,13 +192,11 @@ Sonifier::processImageChunk__BottomToTop(int startY,
 }
 
 void
-Sonifier::processImageChunk__CircleOutwards(int startRadius,
-                                            int endRadius,
-                                            int &lastRadius,
-                                            void *s) noexcept {
+Sonifier::processImageChunk__CircleOutwards(int startRadius, int endRadius,
+                                            int &lastRadius, void *s) noexcept
+{
     Sonifier *son = reinterpret_cast<Sonifier *>(s);
-    if (!son || son->m_stop_sonifying)
-        return;
+    if (!son || son->m_stop_sonifying) return;
 
     const int nsamples     = son->m_nsamples;
     const int totalsamples = lastRadius;
@@ -207,14 +211,17 @@ Sonifier::processImageChunk__CircleOutwards(int startRadius,
     std::vector<Pixel> pixcols;
     pixcols.resize(360);
 
-    for (int r = startRadius; r < endRadius && !son->m_stop_sonifying; r++) {
-        for (int angle = 0; angle < 360; angle++) {
+    for (int r = startRadius; r < endRadius && !son->m_stop_sonifying; r++)
+    {
+        for (int angle = 0; angle < 360; angle++)
+        {
             qreal rad = qDegreesToRadians(static_cast<qreal>(angle));
             int x     = static_cast<int>(centerX + r * qCos(rad));
             int y     = static_cast<int>(centerY + r * qSin(rad));
 
-            if (x >= 0 && x < width && y >= 0 && y < height) {
-                pixcols[angle] = Pixel{son->m_img.pixel(x, y), x, y};
+            if (x >= 0 && x < width && y >= 0 && y < height)
+            {
+                pixcols[angle] = Pixel{ son->m_img.pixel(x, y), x, y };
             }
         }
 
@@ -233,13 +240,11 @@ Sonifier::processImageChunk__CircleOutwards(int startRadius,
 }
 
 void
-Sonifier::processImageChunk__CircleInwards(int startRadius,
-                                           int endRadius,
-                                           int &lastRadius,
-                                           void *s) noexcept {
+Sonifier::processImageChunk__CircleInwards(int startRadius, int endRadius,
+                                           int &lastRadius, void *s) noexcept
+{
     Sonifier *son = reinterpret_cast<Sonifier *>(s);
-    if (!son || son->m_stop_sonifying)
-        return;
+    if (!son || son->m_stop_sonifying) return;
 
     const int nsamples     = son->m_nsamples;
     const int width        = son->m_img.width();
@@ -254,14 +259,17 @@ Sonifier::processImageChunk__CircleInwards(int startRadius,
     std::vector<Pixel> pixcols;
     pixcols.resize(360);
 
-    for (int r = startRadius; r < endRadius && !son->m_stop_sonifying; r++) {
-        for (int angle = 0; angle < 360; angle++) {
+    for (int r = startRadius; r < endRadius && !son->m_stop_sonifying; r++)
+    {
+        for (int angle = 0; angle < 360; angle++)
+        {
             qreal rad = qDegreesToRadians(static_cast<qreal>(angle));
             int x     = static_cast<int>(centerX + r * qCos(rad));
             int y     = static_cast<int>(centerY + r * qSin(rad));
 
-            if (x >= 0 && x < width && y >= 0 && y < height) {
-                pixcols[angle] = Pixel{son->m_img.pixel(x, y), x, y};
+            if (x >= 0 && x < width && y >= 0 && y < height)
+            {
+                pixcols[angle] = Pixel{ son->m_img.pixel(x, y), x, y };
             }
         }
 
@@ -280,12 +288,11 @@ Sonifier::processImageChunk__CircleInwards(int startRadius,
 }
 
 void
-Sonifier::processImageChunk__Clockwise(int startAngle,
-                                       int endAngle,
-                                       void *s) noexcept {
+Sonifier::processImageChunk__Clockwise(int startAngle, int endAngle,
+                                       void *s) noexcept
+{
     Sonifier *son = reinterpret_cast<Sonifier *>(s);
-    if (!son || son->m_stop_sonifying)
-        return;
+    if (!son || son->m_stop_sonifying) return;
 
     const int nsamples     = son->m_nsamples;
     const int width        = son->m_img.width();
@@ -303,14 +310,17 @@ Sonifier::processImageChunk__Clockwise(int startAngle,
     pixcols.resize(360);
 
     for (int angle = startAngle; angle < endAngle && !son->m_stop_sonifying;
-         angle++) {
-        for (int r = 0; r < length; r++) {
+         angle++)
+    {
+        for (int r = 0; r < length; r++)
+        {
             qreal rad = qDegreesToRadians(static_cast<qreal>(angle));
             int x     = centerX + r * qCos(rad);
             int y     = centerY + r * qSin(rad);
 
-            if (x >= 0 && x < width && y >= 0 && y < height) {
-                pixcols[r] = Pixel{son->m_img.pixel(x, y), x, y};
+            if (x >= 0 && x < width && y >= 0 && y < height)
+            {
+                pixcols[r] = Pixel{ son->m_img.pixel(x, y), x, y };
             }
         }
 
@@ -329,12 +339,11 @@ Sonifier::processImageChunk__Clockwise(int startAngle,
 }
 
 void
-Sonifier::processImageChunk__AntiClockwise(int startAngle,
-                                           int endAngle,
-                                           void *s) noexcept {
+Sonifier::processImageChunk__AntiClockwise(int startAngle, int endAngle,
+                                           void *s) noexcept
+{
     Sonifier *son = reinterpret_cast<Sonifier *>(s);
-    if (!son || son->m_stop_sonifying)
-        return;
+    if (!son || son->m_stop_sonifying) return;
 
     const int nsamples     = son->m_nsamples;
     const int width        = son->m_img.width();
@@ -352,14 +361,17 @@ Sonifier::processImageChunk__AntiClockwise(int startAngle,
     pixcols.resize(360);
 
     for (int angle = startAngle; angle < endAngle && !son->m_stop_sonifying;
-         angle++) {
-        for (int r = 0; r < length; r++) {
+         angle++)
+    {
+        for (int r = 0; r < length; r++)
+        {
             qreal rad = qDegreesToRadians(static_cast<qreal>(angle));
             int x     = static_cast<int>(centerX + r * qCos(rad));
             int y     = static_cast<int>(centerY + r * qSin(rad));
 
-            if (x >= 0 && x < width && y >= 0 && y < height) {
-                pixcols[r] = Pixel{son->m_img.pixel(x, y), x, y};
+            if (x >= 0 && x < width && y >= 0 && y < height)
+            {
+                pixcols[r] = Pixel{ son->m_img.pixel(x, y), x, y };
             }
         }
 
@@ -378,7 +390,8 @@ Sonifier::processImageChunk__AntiClockwise(int startAngle,
 }
 
 void
-Sonifier::LeftToRight() noexcept {
+Sonifier::LeftToRight() noexcept
+{
     m_audioData.clear();
     m_audioData.resize(m_nsamples * m_img.width());
     m_progressCounter = 0;
@@ -390,18 +403,22 @@ Sonifier::LeftToRight() noexcept {
 
     auto completed = std::make_shared<std::atomic<int>>(0);
 
-    for (int i = 0; i < numThreads; i++) {
+    for (int i = 0; i < numThreads; i++)
+    {
         int startX = i * chunkWidth;
         int endX   = (i == numThreads - 1) ? totalsamples : startX + chunkWidth;
 
-        (void)QtConcurrent::run([this, startX, endX, completed, numThreads]() {
+        (void)QtConcurrent::run([this, startX, endX, completed, numThreads]()
+        {
             processImageChunk__LeftToRight(startX, endX, this);
 
-            if (completed->fetch_add(1) + 1 == numThreads) {
-                if (!m_stop_sonifying) {
-                    QMetaObject::invokeMethod(this, [this]() {
-                        emit sonificationDone(m_audioData);
-                    }, Qt::QueuedConnection);
+            if (completed->fetch_add(1) + 1 == numThreads)
+            {
+                if (!m_stop_sonifying)
+                {
+                    QMetaObject::invokeMethod(this, [this]()
+                    { emit sonificationDone(m_audioData); },
+                                              Qt::QueuedConnection);
                 }
             }
         });
@@ -409,7 +426,8 @@ Sonifier::LeftToRight() noexcept {
 }
 
 void
-Sonifier::RightToLeft() noexcept {
+Sonifier::RightToLeft() noexcept
+{
     m_audioData.clear();
     m_audioData.resize(m_nsamples * m_img.width());
 
@@ -420,24 +438,25 @@ Sonifier::RightToLeft() noexcept {
     std::vector<QFuture<void>> futures;
     std::vector<short> temp;
 
-    for (int i = 0; i < numThreads; i++) {
+    for (int i = 0; i < numThreads; i++)
+    {
         int startX = i * chunkWidth;
         int endX   = (i == numThreads - 1) ? totalsamples : startX + chunkWidth;
 
-        auto future = QtConcurrent::run(
-            processImageChunk__RightToLeft, startX, endX, this);
+        auto future = QtConcurrent::run(processImageChunk__RightToLeft, startX,
+                                        endX, this);
         futures.push_back(future);
     }
 
     for (auto &future : futures)
         future.waitForFinished();
 
-    if (!m_stop_sonifying)
-        emit sonificationDone(m_audioData);
+    if (!m_stop_sonifying) emit sonificationDone(m_audioData);
 }
 
 void
-Sonifier::TopToBottom() noexcept {
+Sonifier::TopToBottom() noexcept
+{
     m_audioData.clear();
     m_audioData.resize(m_nsamples * m_img.height());
 
@@ -447,24 +466,25 @@ Sonifier::TopToBottom() noexcept {
 
     std::vector<QFuture<void>> futures;
 
-    for (int i = 0; i < numThreads; i++) {
+    for (int i = 0; i < numThreads; i++)
+    {
         int startY = i * chunkHeight;
         int endY = (i == numThreads - 1) ? totalsamples : startY + chunkHeight;
 
-        auto future = QtConcurrent::run(
-            processImageChunk__TopToBottom, startY, endY, this);
+        auto future = QtConcurrent::run(processImageChunk__TopToBottom, startY,
+                                        endY, this);
         futures.push_back(future);
     }
 
     for (auto &future : futures)
         future.waitForFinished();
 
-    if (!m_stop_sonifying)
-        emit sonificationDone(m_audioData);
+    if (!m_stop_sonifying) emit sonificationDone(m_audioData);
 }
 
 void
-Sonifier::BottomToTop() noexcept {
+Sonifier::BottomToTop() noexcept
+{
     m_audioData.clear();
     m_audioData.resize(m_nsamples * m_img.height());
 
@@ -474,24 +494,25 @@ Sonifier::BottomToTop() noexcept {
 
     std::vector<QFuture<void>> futures;
 
-    for (int i = 0; i < numThreads; i++) {
+    for (int i = 0; i < numThreads; i++)
+    {
         int startY = i * chunkHeight;
         int endY = (i == numThreads - 1) ? totalsamples : startY + chunkHeight;
 
-        auto future = QtConcurrent::run(
-            processImageChunk__BottomToTop, startY, endY, this);
+        auto future = QtConcurrent::run(processImageChunk__BottomToTop, startY,
+                                        endY, this);
         futures.push_back(future);
     }
 
     for (auto &future : futures)
         future.waitForFinished();
 
-    if (!m_stop_sonifying)
-        emit sonificationDone(m_audioData);
+    if (!m_stop_sonifying) emit sonificationDone(m_audioData);
 }
 
 void
-Sonifier::CircleOutwards() noexcept {
+Sonifier::CircleOutwards() noexcept
+{
     int width  = m_img.width();
     int height = m_img.height();
 
@@ -509,28 +530,27 @@ Sonifier::CircleOutwards() noexcept {
 
     std::vector<QFuture<void>> futures;
 
-    for (int i = 0; i < numThreads; i++) {
+    for (int i = 0; i < numThreads; i++)
+    {
         int startRadius = i * chunkRadius;
         int endRadius =
             (i == numThreads - 1) ? totalsamples : startRadius + chunkRadius;
 
-        auto future = QtConcurrent::run(processImageChunk__CircleOutwards,
-                                        startRadius,
-                                        endRadius,
-                                        std::ref(radius),
-                                        this);
+        auto future =
+            QtConcurrent::run(processImageChunk__CircleOutwards, startRadius,
+                              endRadius, std::ref(radius), this);
         futures.push_back(future);
     }
 
     for (auto &future : futures)
         future.waitForFinished();
 
-    if (!m_stop_sonifying)
-        emit sonificationDone(m_audioData);
+    if (!m_stop_sonifying) emit sonificationDone(m_audioData);
 }
 
 void
-Sonifier::CircleInwards() noexcept {
+Sonifier::CircleInwards() noexcept
+{
     int width  = m_img.width();
     int height = m_img.height();
 
@@ -548,28 +568,27 @@ Sonifier::CircleInwards() noexcept {
 
     std::vector<QFuture<void>> futures;
 
-    for (int i = 0; i < numThreads; i++) {
+    for (int i = 0; i < numThreads; i++)
+    {
         int startRadius = i * chunkRadius;
         int endRadius =
             (i == numThreads - 1) ? totalsamples : startRadius + chunkRadius;
 
-        auto future = QtConcurrent::run(processImageChunk__CircleInwards,
-                                        startRadius,
-                                        endRadius,
-                                        std::ref(radius),
-                                        this);
+        auto future =
+            QtConcurrent::run(processImageChunk__CircleInwards, startRadius,
+                              endRadius, std::ref(radius), this);
         futures.push_back(future);
     }
 
     for (auto &future : futures)
         future.waitForFinished();
 
-    if (!m_stop_sonifying)
-        emit sonificationDone(m_audioData);
+    if (!m_stop_sonifying) emit sonificationDone(m_audioData);
 }
 
 void
-Sonifier::Clockwise() noexcept {
+Sonifier::Clockwise() noexcept
+{
     std::vector<short> temp;
     std::vector<short> audioData;
 
@@ -583,25 +602,26 @@ Sonifier::Clockwise() noexcept {
 
     std::vector<QFuture<void>> futures;
 
-    for (int i = 0; i < numThreads; i++) {
+    for (int i = 0; i < numThreads; i++)
+    {
         int startAngle = i * chunkAngle;
         int endAngle =
             (i == numThreads - 1) ? totalsamples : startAngle + chunkAngle;
 
-        auto future = QtConcurrent::run(
-            processImageChunk__Clockwise, startAngle, endAngle, this);
+        auto future = QtConcurrent::run(processImageChunk__Clockwise,
+                                        startAngle, endAngle, this);
         futures.push_back(future);
     }
 
     for (auto &future : futures)
         future.waitForFinished();
 
-    if (!m_stop_sonifying)
-        emit sonificationDone(m_audioData);
+    if (!m_stop_sonifying) emit sonificationDone(m_audioData);
 }
 
 void
-Sonifier::AntiClockwise() noexcept {
+Sonifier::AntiClockwise() noexcept
+{
     m_audioData.clear();
     m_audioData.resize(m_nsamples * 360);
 
@@ -611,25 +631,26 @@ Sonifier::AntiClockwise() noexcept {
 
     std::vector<QFuture<void>> futures;
 
-    for (int i = 0; i < numThreads; i++) {
+    for (int i = 0; i < numThreads; i++)
+    {
         int startAngle = i * chunkAngle;
         int endAngle =
             (i == numThreads - 1) ? totalsamples : startAngle + chunkAngle;
 
-        auto future = QtConcurrent::run(
-            processImageChunk__AntiClockwise, startAngle, endAngle, this);
+        auto future = QtConcurrent::run(processImageChunk__AntiClockwise,
+                                        startAngle, endAngle, this);
         futures.push_back(future);
     }
 
     for (auto &future : futures)
         future.waitForFinished();
 
-    if (!m_stop_sonifying)
-        emit sonificationDone(m_audioData);
+    if (!m_stop_sonifying) emit sonificationDone(m_audioData);
 }
 
 void
-Sonifier::PathDrawn() noexcept {
+Sonifier::PathDrawn() noexcept
+{
     // m_audioData.clear();
     // std::vector<Pixel> pixcols;
     // pixcols.resize(m_pixpos.size());
@@ -665,9 +686,9 @@ Sonifier::PathDrawn() noexcept {
 
 // If path drawn mode is selected, pass the pixels drawn.
 void
-Sonifier::setParameters(const QPixmap &pix,
-                        Traverse t,
-                        const std::vector<QPointF> &pixels) noexcept {
+Sonifier::setParameters(const QPixmap &pix, Traverse t,
+                        const std::vector<QPointF> &pixels) noexcept
+{
     m_traverse = t;
     m_pix      = pix;
     m_img      = m_pix.toImage();
@@ -676,7 +697,8 @@ Sonifier::setParameters(const QPixmap &pix,
 
 // For other methods, no pixel pos is required
 void
-Sonifier::setParameters(const QPixmap &pix, Traverse t) noexcept {
+Sonifier::setParameters(const QPixmap &pix, Traverse t) noexcept
+{
     m_traverse = t;
     m_pix      = pix;
     m_img      = m_pix.toImage();
@@ -684,54 +706,37 @@ Sonifier::setParameters(const QPixmap &pix, Traverse t) noexcept {
 
 // Function that handles which traversal method to call
 void
-Sonifier::Sonify() noexcept {
-    switch (m_traverse) {
-        case Traverse::LEFT_TO_RIGHT:
-            LeftToRight();
-            break;
+Sonifier::Sonify() noexcept
+{
+    switch (m_traverse)
+    {
+        case Traverse::LEFT_TO_RIGHT: LeftToRight(); break;
 
-        case Traverse::RIGHT_TO_LEFT:
-            RightToLeft();
-            break;
+        case Traverse::RIGHT_TO_LEFT: RightToLeft(); break;
 
-        case Traverse::TOP_TO_BOTTOM:
-            TopToBottom();
-            break;
+        case Traverse::TOP_TO_BOTTOM: TopToBottom(); break;
 
-        case Traverse::BOTTOM_TO_TOP:
-            BottomToTop();
-            break;
+        case Traverse::BOTTOM_TO_TOP: BottomToTop(); break;
 
-        case Traverse::CLOCKWISE:
-            Clockwise();
-            break;
+        case Traverse::CLOCKWISE: Clockwise(); break;
 
-        case Traverse::ANTICLOCKWISE:
-            AntiClockwise();
-            break;
+        case Traverse::ANTICLOCKWISE: AntiClockwise(); break;
 
-        case Traverse::CIRCLE_INWARDS:
-            CircleInwards();
-            break;
+        case Traverse::CIRCLE_INWARDS: CircleInwards(); break;
 
-        case Traverse::CIRCLE_OUTWARDS:
-            CircleOutwards();
-            break;
+        case Traverse::CIRCLE_OUTWARDS: CircleOutwards(); break;
 
-        case Traverse::PATH:
-            PathDrawn();
-            break;
+        case Traverse::PATH: PathDrawn(); break;
 
-        case Traverse::REGION:
-            break;
+        case Traverse::REGION: break;
 
-        case Traverse::INSPECT:
-            break;
+        case Traverse::INSPECT: break;
     }
 }
 
 // Stop the sonification process
 void
-Sonifier::stopSonifying(bool state) noexcept {
+Sonifier::stopSonifying(bool state) noexcept
+{
     m_stop_sonifying = state;
 }
