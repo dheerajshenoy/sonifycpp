@@ -61,6 +61,10 @@ extern "C"
 
 - `_min_freq`, `_max_freq`, `_sample_rate` – parameters from the UI
 
+> [!NOTE]
+> Do not change `_min_freq`, `_max_freq`, `_sample_rate`, or `freq_map`.
+
+
 ## Creating a Custom Plugin
 
 1. Derive from `MapTemplate` (defined in <sonifycpp/MapTemplate.hpp>)
@@ -111,8 +115,3 @@ g++ -fPIC -shared MyMapper.cpp -o MyMapper.so
 `-fPIC` – required for shared objects
 
 `-shared` – build as a .so file
-
-# Notes for Plugin Authors
-
-> [!NOTE]
-> Do not change `_min_freq`, `_max_freq`, `_sample_rate`, or `freq_map`.
