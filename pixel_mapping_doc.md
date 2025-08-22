@@ -58,17 +58,15 @@ extern "C"
 ### Key Points
 
 - `freq_map` – a function pointer used to map values to frequencies
+
 - `_min_freq`, `_max_freq`, `_sample_rate` – parameters from the UI
 
 ## Creating a Custom Plugin
 
-Derive from `MapTemplate` (defined in <sonifycpp/MapTemplate.hpp>)
-
-Implement `name()` - descriptive name for your mapping
-
-Implement `mapping()` - convert std::vector<Pixel> into std::vector<short> audio data
-
-Export factory function: `create()`
+1. Derive from `MapTemplate` (defined in <sonifycpp/MapTemplate.hpp>)
+2. Implement `name()` - descriptive name for your mapping
+3. Implement `mapping()` - convert std::vector<Pixel> into std::vector<short> audio data
+4. Export factory function: `create()`
 
 Example:
 
@@ -111,6 +109,7 @@ g++ -fPIC -shared MyMapper.cpp -I/path/to/sonifycpp/include -o MyMapper.so
 ```
 
 `-fPIC` – required for shared objects
+
 `-shared` – build as a .so file
 
 # Notes for Plugin Authors
