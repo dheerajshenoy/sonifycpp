@@ -13,7 +13,9 @@ SonifyCPP allows users to create audio mappings from pixel data by writing share
 
 `mapping()` – the core function that converts a vector of Pixel into audio frequencies
 
-Plugins are loaded dynamically at runtime using `dlopen` and `dlsym` functions from `<dlfcn.h>` C standard library.
+> [!NOTE]
+> The mappings file should be named `<name>.so`
+> Mappings should be inside `~/.config/sonifycpp/mappings/`
 
 ## Base Class `MapTemplate`
 
