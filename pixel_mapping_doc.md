@@ -5,7 +5,7 @@ This guide explains how to create custom mapping plugins for SonifyCPP using the
 > [!NOTE]
 > This section assumes that you have some knowledge of C++
 
-1. Overview
+## Overview
 
 SonifyCPP allows users to create audio mappings from pixel data by writing shared library plugins (.so). Each plugin must implement the abstract MapTemplate interface, which defines:
 
@@ -15,7 +15,7 @@ SonifyCPP allows users to create audio mappings from pixel data by writing share
 
 Plugins are loaded dynamically at runtime using `dlopen` and `dlsym` functions from `<dlfcn.h>` C standard library.
 
-2. Base Class `MapTemplate`
+## Base Class `MapTemplate`
 
 ```cpp
 // File for creating custom mappings using shared objects
@@ -55,12 +55,12 @@ extern "C"
 }
 ```
 
-## Key Points
+### Key Points
 
 - `freq_map` – a function pointer used to map values to frequencies
 - `_min_freq`, `_max_freq`, `_sample_rate` – parameters from the UI
 
-3. Creating a Custom Plugin
+## Creating a Custom Plugin
 
 Derive from `MapTemplate` (defined in <sonifycpp/MapTemplate.hpp>)
 
@@ -102,7 +102,7 @@ public:
 extern "C" MapTemplate* create() { return new MyMapper(); }
 ```
 
-4. Compiling the Plugin
+## Compiling the Plugin
 
 Compile your plugin as a shared object (`.so`):
 
