@@ -7,7 +7,9 @@ This guide explains how to create custom mapping plugins for SonifyCPP using the
 > If not, you can check the below resources/topics:
 >
 > Class Inheritance
+>
 > Shared object file generation
+>
 > [Microsoft C++ class Inheritance](https://learn.microsoft.com/en-us/cpp/cpp/inheritance-cpp?view=msvc-170)
 
 ## Overview
