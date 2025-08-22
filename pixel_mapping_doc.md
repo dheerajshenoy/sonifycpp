@@ -15,6 +15,7 @@ SonifyCPP allows users to create audio mappings from pixel data by writing share
 
 > [!NOTE]
 > The mappings file should be named `<name>.so`
+>
 > Mappings should be inside `~/.config/sonifycpp/mappings/`
 
 ## Base Class `MapTemplate`
