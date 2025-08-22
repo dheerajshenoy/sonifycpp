@@ -2,6 +2,8 @@
 
 SonifyCPP is a powerful program for transforming image data into sound. It provides a flexible framework to sonify visual information — enabling new ways to interpret, analyze, or experience images through audio.
 
+**Current development version: 0.1.2**
+
 > [!WARNING]
 > This is still a work in progress
 
@@ -129,11 +131,13 @@ SonifyCPP is currently able to traverse images in the following manner:
 
 ### Pixel mapping
 
-Currently, two kinds of pixel to sound mapping is supported:
+By default, there are two kinds of pixel to sound mapping:
 
-1. **grayscale** of the input image, mapping the pixel position (x, y) to (t, frequency) and pixel intensity to amplitude.
+1. **intensity** of the input image, mapping the pixel position (x, y) to (t, frequency) and pixel intensity to amplitude.
 
 2. **hsv**, map the hue to amplitude.
+
+You can write your own pixel sound mapping through C++ code, check out [PIXEL_MAPPING_DOC.md](./pixel_mapping_doc.md)
 
 ### Reference
 
@@ -152,8 +156,8 @@ Credit: [Link](https://www.seeingwithsound.com/im2sound.htm)
 * [x] Color Mapping: Map different colors to different sounds or musical notes.
 * [x] Frequency Analyzer
 * [x] Implement multi-threading
-* [ ] Option for mapping selection
-* [ ] Support for custom mapping user functions (add scripting support ?)
+* [x] Option for mapping selection
+* [x] Support for custom mapping user functions (add scripting support ?)
 * [ ] Pixel audio visualiser (inpsecting each column or row of pixel from the image and producing the audio instantly).
 * [ ] Video Export: Create a video file that combines the image and the sonification, showing the progression over time.
 * [ ] **Reverse audio to produce image**
