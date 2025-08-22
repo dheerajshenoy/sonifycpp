@@ -1,37 +1,43 @@
 # Chanegelogs and Bug fixes
 
-- 21 Aug 2024
+## 0.1.2 - 22 Aug 2025
 
-    - Change build system from qmake to CMake.
-    - Remove #ifndef statments and replace with #pragma once
-    - Add `const` keyword to constant references to functions
-    - Add `noexcept` keyword to functions
+- Add ability to load user mappings through shared objects
 
-- 4 Aug 2024
 
-    - New Feature
 
-        - *Image Editor*. Change Brightness, Saturation, Contrast, Gamma, Invert colors, Grayscale.
+## 21 Aug 2024
+
+- Change build system from qmake to CMake.
+- Remove #ifndef statments and replace with #pragma once
+- Add `const` keyword to constant references to functions
+- Add `noexcept` keyword to functions
+
+## 4 Aug 2024
+
+- New Feature
+
+- *Image Editor*. Change Brightness, Saturation, Contrast, Gamma, Invert colors, Grayscale.
 
 - 1 Aug 2024
 
-    - Visual overhaul
+- Visual overhaul
 
-        - *Added icon support for menu items*
+- *Added icon support for menu items*
 
         - *Support for four different panel positions* - Left, Right, Top or Bottom
 
-    - Shortcuts
+- Shortcuts
 
-    - New options exposed to the lua script to toggle icons, default keybindings, menubar, statusbar, panel position.
+- New options exposed to the lua script to toggle icons, default keybindings, menubar, statusbar, panel position.
 
 - 31 July 2024
 
-    - Bug fix
+- Bug fix
 
-        The multi-threading support has been added for the rest of the traversals which were previously mentioned as not working. (*NOTE TO THE PROGRAMMER*: Never pass anything by reference to thread calls)
+The multi-threading support has been added for the rest of the traversals which were previously mentioned as not working. (*NOTE TO THE PROGRAMMER*: Never pass anything by reference to thread calls)
 
-    - New Feature
+- New Feature
 
         1. *Multi-threading support*. The image traversal algorithm performance has been boosted through multithreading support. *NOTE* : Not all traversal support multi-threading for now. Only the following supports multi-threading
             - Left to Right
@@ -50,37 +56,37 @@
         4. Audio Effects in the works
             - *Reverb*. This works perfectly. More effects are to be added like phaser, wah-wah, compressor etc.
 
-- 29 July 2024
+## 29 July 2024
 
-    - New feature
+- New feature
 
-        - *View frequency Spectrum*. Plot frequency vs amplitude of the produced sonified sound
+- *View frequency Spectrum*. Plot frequency vs amplitude of the produced sonified sound
 
         - *Added lua scripting support*. For now, the defaults for sample rate, asking for resizing everytime you open an image, resolution when loading an image, object color can be set through lua which will be accessed at startup if the lua file exists.
 
-    - Bug fix
+- Bug fix
 
-        - Handle waveform, spectrum analyser button when no sonified audio was found.
+- Handle waveform, spectrum analyser button when no sonified audio was found.
 
 - 27 July 2024
 
-    - New feature
+- New feature
 
-        - Drag and Drop to open Image
+- Drag and Drop to open Image
 
         - Waveform visualization
 
-      ![Waveform](https://github.com/user-attachments/assets/77632937-f965-4782-a547-1770e57b17fc)
+![Waveform](https://github.com/user-attachments/assets/77632937-f965-4782-a547-1770e57b17fc)
 
         - Ask for resizing image when opening
 
-    - Bug fix
+- Bug fix
 
         - Back to back change in different traversal methods
         - Buffer size effect on the animation
 
-- 26 July 2024
+## 26 July 2024
 
-    - Bug fix
+- Bug fix
 
-        - Fix delay between animation and audio playback
+- Fix delay between animation and audio playback
