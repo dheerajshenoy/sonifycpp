@@ -2,10 +2,11 @@
 
 #include "sonification.hpp"
 
-#include "utils.hpp"
+#include "utils_internal.hpp"
 
 #include <SDL3/SDL_audio.h>
-#include <cmath>
+#include <algorithm>
+#include <dlfcn.h>
 #include <immintrin.h>
 
 // Constructor
@@ -35,6 +36,7 @@ Sonification::Sonification() noexcept
 // Destructor
 Sonification::~Sonification() noexcept
 {
+
     SDL_PauseAudioStreamDevice(m_audioStream);
     SDL_DestroyAudioStream(m_audioStream);
     SDL_Quit();
@@ -44,6 +46,15 @@ Sonification::~Sonification() noexcept
         m_sonifier->stopSonifying(true);
         m_thread->quit();
         m_thread->wait();
+    }
+
+    if (!m_custom_mappings.empty())
+    {
+        for (const auto &m : m_custom_mappings)
+        {
+            delete m.ptr;
+            dlclose(m.handle);
+        }
     }
 }
 
@@ -81,17 +92,17 @@ Sonification::Sonify(const QPixmap &pix, GV *gv,
     else
         m_sonifier->setParameters(pix, mode);
 
-    // if (!m_thread) {
-    //     m_thread = new QThread();
-    //     connect(m_thread, &QThread::started, m_sonifier, &Sonifier::Sonify);
-    //     connect(m_thread, &QThread::finished, this, [&]() {});
-    //     connect(m_sonifier, &Sonifier::sonificationDone, this, [&]() {
-    //         m_thread->quit();
-    //     });
-    //     m_sonifier->moveToThread(m_thread);
-    // }
-    //
-    // m_thread->start();
+    if (!m_thread)
+    {
+        m_thread = new QThread();
+        connect(m_thread, &QThread::started, m_sonifier, &Sonifier::Sonify);
+        connect(m_thread, &QThread::finished, this, [&]() {});
+        connect(m_sonifier, &Sonifier::sonificationDone, this,
+                [&]() { m_thread->quit(); });
+        m_sonifier->moveToThread(m_thread);
+    }
+
+    m_thread->start();
 }
 
 void
@@ -120,8 +131,8 @@ Sonification::save(const QString &filename, Format f) noexcept
     switch (f)
     {
         case Format::WAV:
-            if (utils::generateWavFile(filename, m_SampleRate, duration(),
-                                       m_audioData))
+            if (utils_internal::generateWavFile(filename, m_SampleRate,
+                                                duration(), m_audioData))
                 return true;
             break;
 
@@ -217,4 +228,17 @@ Sonification::clear() noexcept
     SDL_ClearAudioStream(m_audioStream);
     m_audioData.clear();
     m_audioOffset = 0;
+}
+
+// Return the MapFunc class associated with map `mapName`
+MapTemplate *
+Sonification::mappingClass(const QString &mapName) const noexcept
+{
+    auto it = std::find_if(m_custom_mappings.cbegin(), m_custom_mappings.cend(),
+                           [&mapName](const PluginInstance &p)
+    { return p.ptr->name() == mapName; });
+
+    if (it != m_custom_mappings.end()) { return it->ptr; }
+
+    return nullptr;
 }
