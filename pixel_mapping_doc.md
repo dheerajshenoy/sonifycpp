@@ -105,7 +105,7 @@ extern "C" MapTemplate* create() { return new MyMapper(); }
 Compile your plugin as a shared object (`.so`):
 
 ```bash
-g++ -fPIC -shared MyMapper.cpp -I/path/to/sonifycpp/include -o MyMapper.so
+g++ -fPIC -shared MyMapper.cpp -o MyMapper.so
 ```
 
 `-fPIC` – required for shared objects
@@ -115,9 +115,4 @@ g++ -fPIC -shared MyMapper.cpp -I/path/to/sonifycpp/include -o MyMapper.so
 # Notes for Plugin Authors
 
 > [!NOTE]
->
-> Do not change _min_freq, _max_freq, _sample_rate, or freq_map.
->
-> Focus on the mapping logic in mapping().
->
-> The host ensures consistent frequency ranges and mapping functions.
+> Do not change `_min_freq`, `_max_freq`, `_sample_rate`, or `freq_map`.
