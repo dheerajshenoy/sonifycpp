@@ -2,8 +2,13 @@
 
 This guide explains how to create custom mapping plugins for SonifyCPP using the `MapTemplate` interface.
 
-> [!NOTE]
-> This section assumes that you have some knowledge of C++
+> [!WARNING]
+> This section assumes that you have good knowledge of C++
+> If not, you can check the below resources/topics:
+>
+> Class Inheritance
+> Shared object file generation
+> [Microsoft C++ class Inheritance](https://learn.microsoft.com/en-us/cpp/cpp/inheritance-cpp?view=msvc-170)
 
 ## Overview
 
@@ -112,7 +117,7 @@ extern "C" MapTemplate* create() { return new MyMapper(); }
 Compile your plugin as a shared object (`.so`):
 
 ```bash
-g++ -fPIC -shared MyMapper.cpp -o MyMapper.so
+g++ -fPIC -shared mapper.cpp -o mapper.so
 ```
 
 `-fPIC` – required for shared objects
