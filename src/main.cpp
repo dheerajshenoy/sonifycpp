@@ -1,5 +1,4 @@
 #include "argparse.hpp"
-#include "sol/sol.hpp"
 #include "sonify.hpp"
 
 namespace
