@@ -35,6 +35,7 @@ public:
     void reset() noexcept;
 
     void setMsg(const QString &msg, const int &s) noexcept;
+    void setLoop(bool state) noexcept;
     void sonificationDone() noexcept;
     void sonificationStart() noexcept;
 
@@ -49,4 +50,5 @@ private:
     QLabel *m_progress_label{ new QLabel() };
     QLabel *m_duration_label{ new QLabel() };
     QLabel *m_traversal_label{ new QLabel() };
+    QLabel *m_loop_label{ new QLabel() };
 };

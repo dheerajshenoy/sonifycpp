@@ -11,6 +11,7 @@ Statusbar::Statusbar(QWidget *parent) : QWidget(parent)
     layout->addStretch(1);
 
     m_progress_label->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    layout->addWidget(m_loop_label);
     layout->addWidget(m_traversal_label);
     layout->addWidget(m_stop_sonif_btn);
     layout->addWidget(m_progress_label);
@@ -62,4 +63,13 @@ Statusbar::reset() noexcept
     m_traversal_label->clear();
     m_duration_label->clear();
     m_msg_label->clear();
+}
+
+void
+Statusbar::setLoop(bool state) noexcept
+{
+    if (state)
+        m_loop_label->setText("Loop");
+    else
+        m_loop_label->clear();
 }

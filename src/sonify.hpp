@@ -86,6 +86,7 @@ private:
     void Pause() noexcept;
     void PlayAudio() noexcept;
     void Reset() noexcept;
+    void Loop(bool state) noexcept;
     bool Save(const QString &filename = "") noexcept;
     void doSonify() noexcept;
     void initConfigFile() noexcept;
@@ -119,7 +120,7 @@ private:
     QVBoxLayout *m_layout{ new QVBoxLayout() };
     Sonification *m_sonification{ new Sonification() };
     QPushButton *m_play_btn{ nullptr }, *m_sonify_btn{ nullptr },
-        *m_reset_btn{ nullptr };
+        *m_reset_btn{ nullptr }, *m_loop_btn{ nullptr };
 
     GV *m_gv{ new GV() };
     bool m_isAudioPlaying{ false };
@@ -172,7 +173,8 @@ private:
 
     QStringList m_traversal_name_list;
 
-    bool m_def_keep_aspect{ false }, m_def_ask_for_resize{ true };
+    bool m_def_keep_aspect{ false }, m_def_ask_for_resize{ true },
+        m_looping{ false };
 
     int m_def_height{ -1 };
     int m_def_width{ -1 };

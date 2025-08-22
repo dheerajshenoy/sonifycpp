@@ -79,21 +79,22 @@ Sonify::initLeftPanel() noexcept
     QGridLayout *layout = new QGridLayout();
     m_panel->setFixedWidth(300);
     m_panel->setLayout(layout);
-    layout->addWidget(m_sonify_btn, 0, 0, 1, 2);
+    layout->addWidget(m_sonify_btn, 0, 0, 1, 3);
     layout->addWidget(m_play_btn, 1, 0);
     layout->addWidget(m_reset_btn, 1, 1);
+    layout->addWidget(m_loop_btn, 1, 2);
     layout->addWidget(new QLabel("Traverse"), 2, 0);
-    layout->addWidget(m_traverse_combo, 2, 1);
+    layout->addWidget(m_traverse_combo, 2, 1, 1, 3);
     layout->addWidget(new QLabel("Samples"), 3, 0);
-    layout->addWidget(m_num_samples_spinbox, 3, 1);
+    layout->addWidget(m_num_samples_spinbox, 3, 1, 1, 3);
     layout->addWidget(new QLabel("Min Freq"), 4, 0);
-    layout->addWidget(m_min_freq_sb, 4, 1);
+    layout->addWidget(m_min_freq_sb, 4, 1, 1, 3);
     layout->addWidget(new QLabel("Max Freq"), 5, 0);
-    layout->addWidget(m_max_freq_sb, 5, 1);
+    layout->addWidget(m_max_freq_sb, 5, 1, 1, 3);
     layout->addWidget(new QLabel("Mapping"), 6, 0);
-    layout->addWidget(m_freq_mapping_combo, 6, 1);
+    layout->addWidget(m_freq_mapping_combo, 6, 1, 1, 3);
     layout->addWidget(new QLabel("Pixel Mapping"), 7, 0);
-    layout->addWidget(m_pixel_mapping_combo, 7, 1);
+    layout->addWidget(m_pixel_mapping_combo, 7, 1, 1, 3);
 
     m_splitter->addWidget(m_panel);
     m_splitter->addWidget(m_gv);
@@ -137,6 +138,7 @@ Sonify::initIcons() noexcept
     m_sonify_btn->setText("Sonify");
     m_play_btn->setText("Play");
     m_reset_btn->setText("Reset");
+    m_loop_btn->setText("Loop");
     m_file__open->setIcon(QIcon(":/icons/open-file.svg"));
     m_file__close->setIcon(QIcon(":/icons/close-file.svg"));
     m_file__exit->setIcon(QIcon(":/icons/exit.svg"));
@@ -224,6 +226,8 @@ Sonify::initWidgets() noexcept
     m_sonify_btn = new QPushButton("Sonify");
     m_play_btn   = new QPushButton("Play");
     m_reset_btn  = new QPushButton("Reset");
+    m_loop_btn   = new QPushButton("Loop");
+    m_loop_btn->setCheckable(true);
     m_num_samples_spinbox->setMinimum(1);
     m_num_samples_spinbox->setMaximum(4000);
     m_num_samples_spinbox->setValue(m_config.num_samples);
@@ -389,6 +393,7 @@ Sonify::initConnections() noexcept
     connect(m_sonify_btn, &QPushButton::clicked, this, &Sonify::doSonify);
     connect(m_play_btn, &QPushButton::clicked, this, &Sonify::PlayAudio);
     connect(m_reset_btn, &QPushButton::clicked, this, &Sonify::Reset);
+    connect(m_loop_btn, &QPushButton::clicked, this, &Sonify::Loop);
     connect(m_file__exit, &QAction::triggered, this,
             []() { QApplication::exit(); });
 
@@ -1097,8 +1102,12 @@ Sonify::sonificationStopped() noexcept
 void
 Sonify::audioPlaybackDone() noexcept
 {
-    emit m_gv->animationFinished();
-    enablePanelUIs(true);
+    if (m_looping) { m_sonification->setAudioOffset(0); }
+    else
+    {
+        emit m_gv->animationFinished();
+        enablePanelUIs(true);
+    }
 }
 
 void
@@ -1231,4 +1240,11 @@ Sonify::initDefaultPixelMappings() noexcept
         m_sonification->addCustomPixelMapping({ nullptr, m });
         m_pixel_mapping_combo->addItem(m->name());
     }
+}
+
+void
+Sonify::Loop(bool state) noexcept
+{
+    m_looping = state;
+    m_status_bar->setLoop(state);
 }
