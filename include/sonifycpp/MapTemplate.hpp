@@ -19,10 +19,11 @@ public:
     inline void setMinFreq(int f) noexcept { _min_freq = f; }
     inline void setMaxFreq(int f) noexcept { _max_freq = f; }
     inline void setSampleRate(int f) noexcept { _sample_rate = f; }
-    FreqMapFunc freq_map;
+    inline void setFreqMap(FreqMapFunc f) noexcept { freq_map = f; }
 
 protected:
 
+    FreqMapFunc freq_map{ utils::LinearMap };
     int _min_freq{ 0 }, _max_freq{ 20000 }, _sample_rate{ 44100 };
 };
 

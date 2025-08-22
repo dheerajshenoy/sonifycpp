@@ -2,44 +2,12 @@
 
 #include "sonifier.hpp"
 
+#include "utils_internal.hpp"
+
 #include <concepts>
 #include <qnamespace.h>
 
-Sonifier::Sonifier(QObject *parent) : QObject(parent)
-{
-    m_mapFunc = [this](const std::vector<Pixel> &cols)
-    { return m_mapping->Map__Intensity(cols); };
-}
-
-void
-Sonifier::setSamples(int nsamples) noexcept
-{
-    if (nsamples <= 0) return;
-
-    m_nsamples = nsamples;
-    m_mapping->setSamples(nsamples);
-}
-
-void
-Sonifier::setSampleRate(float SR) noexcept
-{
-    if (SR <= 0.0f) return;
-
-    m_SampleRate = SR;
-    m_mapping->setSampleRate(SR);
-}
-
-void
-Sonifier::setFreqMap(FreqMap m) noexcept
-{
-    m_mapping->setFreqMap(m);
-}
-
-void
-Sonifier::setMinMax(int min, int max) noexcept
-{
-    m_mapping->setMinMax(min, max);
-}
+Sonifier::Sonifier(QObject *parent) : QObject(parent) {}
 
 void
 Sonifier::processImageChunk__LeftToRight(int startX, int endX, void *s) noexcept
@@ -60,15 +28,7 @@ Sonifier::processImageChunk__LeftToRight(int startX, int endX, void *s) noexcept
     for (int x = startX; x < endX && !son->m_stop_sonifying; ++x)
     {
         for (int y = 0; y < imgHeight; y++)
-        {
-            QRgb pixel = son->m_img.pixel(x, y);
-            pixcols[y] = Pixel{ static_cast<std::uint8_t>(qRed(pixel)),
-                                static_cast<std::uint8_t>(qGreen(pixel)),
-                                static_cast<std::uint8_t>(qBlue(pixel)),
-                                static_cast<std::uint8_t>(qAlpha(pixel)),
-                                x,
-                                y };
-        }
+            pixcols[y] = utils_internal::fromQRgb(son->m_img.pixel(x, y), x, y);
 
         temp = son->m_mapFunc(pixcols);
 
@@ -104,7 +64,7 @@ Sonifier::processImageChunk__RightToLeft(int startX, int endX, void *s) noexcept
     for (int x = startX; x < endX && !son->m_stop_sonifying; x++)
     {
         for (int y = 0; y < son->m_img.height(); y++)
-            pixcols[y] = Pixel{ son->m_img.pixel(x, y), x, y };
+            pixcols[y] = utils_internal::fromQRgb(son->m_img.pixel(x, y), x, y);
 
         temp = son->m_mapFunc(pixcols);
 
@@ -139,9 +99,9 @@ Sonifier::processImageChunk__TopToBottom(int startY, int endY, void *s) noexcept
     for (int y = startY; y < endY && !son->m_stop_sonifying; y++)
     {
         for (int x = 0; x < son->m_img.width(); x++)
-            pixcols[x] = Pixel{ son->m_img.pixel(x, y), x, y };
+            pixcols[x] = utils_internal::fromQRgb(son->m_img.pixel(x, y), x, y);
 
-        temp = son->m_mapping->Map__HSV(pixcols);
+        temp = son->m_mapFunc(pixcols);
 
         const int index = startY + y * nsamples;
 
@@ -173,8 +133,9 @@ Sonifier::processImageChunk__BottomToTop(int startY, int endY, void *s) noexcept
 
     for (int y = startY; y < endY && !son->m_stop_sonifying; y++)
     {
+
         for (int x = 0; x < son->m_img.width(); x++)
-            pixcols[x] = Pixel{ son->m_img.pixel(x, y), x, y };
+            pixcols[x] = utils_internal::fromQRgb(son->m_img.pixel(x, y), x, y);
 
         temp = son->m_mapFunc(pixcols);
 
@@ -221,7 +182,8 @@ Sonifier::processImageChunk__CircleOutwards(int startRadius, int endRadius,
 
             if (x >= 0 && x < width && y >= 0 && y < height)
             {
-                pixcols[angle] = Pixel{ son->m_img.pixel(x, y), x, y };
+                pixcols[angle] =
+                    utils_internal::fromQRgb(son->m_img.pixel(x, y), x, y);
             }
         }
 
@@ -263,13 +225,14 @@ Sonifier::processImageChunk__CircleInwards(int startRadius, int endRadius,
     {
         for (int angle = 0; angle < 360; angle++)
         {
-            qreal rad = qDegreesToRadians(static_cast<qreal>(angle));
-            int x     = static_cast<int>(centerX + r * qCos(rad));
-            int y     = static_cast<int>(centerY + r * qSin(rad));
+            const qreal rad = qDegreesToRadians(static_cast<qreal>(angle));
+            const int x     = static_cast<int>(centerX + r * qCos(rad));
+            const int y     = static_cast<int>(centerY + r * qSin(rad));
 
             if (x >= 0 && x < width && y >= 0 && y < height)
             {
-                pixcols[angle] = Pixel{ son->m_img.pixel(x, y), x, y };
+                pixcols[angle] =
+                    utils_internal::fromQRgb(son->m_img.pixel(x, y), x, y);
             }
         }
 
@@ -320,7 +283,8 @@ Sonifier::processImageChunk__Clockwise(int startAngle, int endAngle,
 
             if (x >= 0 && x < width && y >= 0 && y < height)
             {
-                pixcols[r] = Pixel{ son->m_img.pixel(x, y), x, y };
+                pixcols[r] =
+                    utils_internal::fromQRgb(son->m_img.pixel(x, y), x, y);
             }
         }
 
@@ -371,7 +335,8 @@ Sonifier::processImageChunk__AntiClockwise(int startAngle, int endAngle,
 
             if (x >= 0 && x < width && y >= 0 && y < height)
             {
-                pixcols[r] = Pixel{ son->m_img.pixel(x, y), x, y };
+                pixcols[r] =
+                    utils_internal::fromQRgb(son->m_img.pixel(x, y), x, y);
             }
         }
 

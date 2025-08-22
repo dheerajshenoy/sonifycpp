@@ -48,7 +48,7 @@ Sonification::~Sonification() noexcept
         m_thread->wait();
     }
 
-    deleteCustomMappings();
+    clearCustomPixelMappings();
 }
 
 // Function to sonify an `image` provided by QImage and in mode `mode`
@@ -69,9 +69,7 @@ Sonification::Sonify(const QPixmap &pix, GV *gv,
     m_audioSpec.channels = m_ChannelCount;
 
     m_sonifier->setMapFunc(mapFunc);
-    m_sonifier->setSampleRate(m_SampleRate);
-    m_sonifier->setSamples(m_NumSamples);
-    m_sonifier->setMinMax(min, max);
+    m_sonifier->setNumSamples(m_NumSamples);
 
     m_audioStream = SDL_OpenAudioDeviceStream(
         SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &m_audioSpec, audioCallback, this);
@@ -193,7 +191,7 @@ Sonification::audioCallback(void *userdata, SDL_AudioStream *_stream,
 }
 
 void
-Sonification::stopSonification(bool state) noexcept
+Sonification::setStopSonification(bool state) noexcept
 {
     m_sonifier->stopSonifying(state);
     if (state)
@@ -209,12 +207,6 @@ Sonification::stopSonification(bool state) noexcept
 }
 
 void
-Sonification::setFreqMap(FreqMap f) noexcept
-{
-    m_sonifier->setFreqMap(f);
-}
-
-void
 Sonification::clear() noexcept
 {
     SDL_PauseAudioStreamDevice(m_audioStream);
@@ -225,11 +217,11 @@ Sonification::clear() noexcept
 
 // Return the MapFunc class associated with map `mapName`
 MapTemplate *
-Sonification::mappingClass(const char *mapName) const noexcept
+Sonification::pixelMappingClass(const QString &mapName) const noexcept
 {
     auto it = std::find_if(m_custom_mappings.cbegin(), m_custom_mappings.cend(),
-                           [&mapName](const PluginInstance &p)
-    { return p.ptr->name() == mapName; });
+                           [&mapName](const CustomPixelMappingInstance &p)
+    { return p.ptr && p.ptr->name() == mapName; });
 
     if (it != m_custom_mappings.end()) { return it->ptr; }
 
@@ -237,14 +229,26 @@ Sonification::mappingClass(const char *mapName) const noexcept
 }
 
 void
-Sonification::deleteCustomMappings() noexcept
+Sonification::clearCustomPixelMappings() noexcept
 {
     if (!m_custom_mappings.empty())
     {
         for (const auto &m : m_custom_mappings)
         {
-            delete m.ptr;
+            if (m.ptr) delete m.ptr;
             dlclose(m.handle);
         }
+        m_custom_mappings.clear();
     }
+}
+
+QStringList
+Sonification::getPixelMappingNames() const noexcept
+{
+    QStringList result;
+
+    for (const auto &m : m_custom_mappings)
+        result.push_back(m.ptr->name());
+
+    return result;
 }

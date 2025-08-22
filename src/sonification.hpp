@@ -38,7 +38,7 @@ public:
         m_audioOffset = offset;
     }
 
-    struct PluginInstance
+    struct CustomPixelMappingInstance
     {
         void *handle;
         MapTemplate *ptr;
@@ -59,7 +59,7 @@ public:
 
     inline size_t audioOffset() const noexcept { return m_audioOffset; }
 
-    void stopSonification(bool state) noexcept;
+    void setStopSonification(bool state) noexcept;
 
     inline float sampleRate() const noexcept { return m_SampleRate; }
 
@@ -71,16 +71,18 @@ public:
     }
 
     // Adds custom mapping
-    inline void addPluginInstance(const PluginInstance &p) noexcept
+    inline void addCustomPixelMapping(CustomPixelMappingInstance p) noexcept
     {
-        m_custom_mappings.push_back(p);
+        m_custom_mappings.push_back(std::move(p));
     }
 
-    inline void clearPluginInstance() noexcept { m_custom_mappings.clear(); }
+    void clearCustomPixelMappings() noexcept;
 
     void setFreqMap(FreqMap f) noexcept;
 
-    MapTemplate *mappingClass(const char *mapName) const noexcept;
+    MapTemplate *pixelMappingClass(const QString &mapName) const noexcept;
+
+    QStringList getPixelMappingNames() const noexcept;
 
 signals:
     void audioProgress(double);
@@ -92,7 +94,6 @@ signals:
 
 private:
 
-    void deleteCustomMappings() noexcept;
     void m_GenerateSound() noexcept;
     std::vector<short> applyReverb(int delayTimeMs, float feedback) noexcept;
 
@@ -112,8 +113,7 @@ private:
     size_t m_audioOffset{ 0 };
     Traverse m_traverse{ Traverse::LEFT_TO_RIGHT };
     const double M_PI2{ 6.28318530718 };
-    Mapping *mapping{ new Mapping() };
     Sonifier *m_sonifier{ nullptr };
     QThread *m_thread{ nullptr };
-    std::vector<PluginInstance> m_custom_mappings;
+    std::vector<CustomPixelMappingInstance> m_custom_mappings;
 };

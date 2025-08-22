@@ -103,7 +103,6 @@ private:
     void readConfigFile() noexcept;
     void loadMappingSharedObjects() noexcept;
     bool loadSharedObject(const QString &filename) noexcept;
-    void reloadMappingSharedObjects() noexcept;
     void sonificationDone() noexcept;
     void sonificationStopped() noexcept;
     void audioPlaybackDone() noexcept;
@@ -125,7 +124,10 @@ private:
     QMenuBar *m_menu_bar{ new QMenuBar() };
     QMenu *m_file_menu{ nullptr }, *m_audio_menu{ nullptr },
         *m_tools_menu{ nullptr }, *m_view_menu{ nullptr },
-        *m_effects_menu{ nullptr }, *m_help_menu{ nullptr };
+        *m_effects_menu{ nullptr }, *m_help_menu{ nullptr },
+        *m_mappings_menu{ nullptr };
+
+    QAction *m_mappings__reload{ nullptr }, *m_mappings__list_pmaps{ nullptr };
 
     QAction *m_file__open{ nullptr }, *m_file__close{ nullptr },
         *m_file__exit{ nullptr };
@@ -144,7 +146,7 @@ private:
     QAction *m_help__about{ nullptr };
 
     QAction *m_view__panel{ nullptr }, *m_view__statusbar{ nullptr },
-        *m_view__menubar{ nullptr }, *m_view__mappings{ nullptr };
+        *m_view__menubar{ nullptr };
 
     QComboBox *m_traverse_combo{ new QComboBox() },
         *m_freq_mapping_combo{ new QComboBox() },

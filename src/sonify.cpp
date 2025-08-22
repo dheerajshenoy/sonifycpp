@@ -6,7 +6,9 @@
 #include "utils_internal.hpp"
 
 #include <QDir>
+#include <QProgressDialog>
 #include <QStandardPaths>
+#include <QtConcurrent/qtconcurrentrun.h>
 #include <dlfcn.h>
 
 Sonify::Sonify(QWidget *parent) : QMainWindow(parent)
@@ -44,8 +46,10 @@ Sonify::initConfigFile() noexcept
         QDir::separator() + "sonifycpp";
 
     QDir dir = QDir(m_config_dir);
-
     if (!dir.exists()) dir.mkdir(dir.path());
+
+    m_mappings_dir =
+        QDir::cleanPath(m_config_dir + QDir::separator() + "mappings");
 
     m_config_file_path =
         QDir::cleanPath(m_config_dir + QDir::separator() + "config.toml");
@@ -284,17 +288,24 @@ Sonify::initWidgets() noexcept
 void
 Sonify::initMenu() noexcept
 {
-    m_file_menu  = new QMenu("File");
-    m_audio_menu = new QMenu("Audio");
-    m_tools_menu = new QMenu("Tools");
-    m_view_menu  = new QMenu("View");
-    m_help_menu  = new QMenu("Help");
+    m_file_menu     = new QMenu("File");
+    m_audio_menu    = new QMenu("Audio");
+    m_tools_menu    = new QMenu("Tools");
+    m_view_menu     = new QMenu("View");
+    m_mappings_menu = new QMenu("Mappings");
+    m_help_menu     = new QMenu("Help");
 
     m_menu_bar->addMenu(m_file_menu);
     m_menu_bar->addMenu(m_tools_menu);
     m_menu_bar->addMenu(m_view_menu);
     m_menu_bar->addMenu(m_audio_menu);
+    m_menu_bar->addMenu(m_mappings_menu);
     m_menu_bar->addMenu(m_help_menu);
+
+    m_mappings__reload     = new QAction("Reload Custom Mappings");
+    m_mappings__list_pmaps = new QAction("List Pixel Mappings");
+
+    m_mappings_menu->addActions({ m_mappings__reload, m_mappings__list_pmaps });
 
     m_file__open  = new QAction("Open");
     m_file__close = new QAction("Close");
@@ -436,6 +447,9 @@ Sonify::initConnections() noexcept
         e->open();
     });
 
+    connect(m_mappings__reload, &QAction::triggered, this,
+            &Sonify::loadMappingSharedObjects);
+
     connect(m_sonification, &Sonification::sonificationDone, this,
             &Sonify::sonificationDone);
 
@@ -533,11 +547,6 @@ Sonify::initConnections() noexcept
 
     connect(m_view__panel, &QAction::triggered, this,
             [this](bool state) { m_panel->setVisible(!state); });
-
-    connect(m_view__mappings, &QAction::triggered, this, [this](bool state)
-    {
-        // TODO: Mappings Dialog
-    });
 }
 
 // This is used to set the state of the audio playback. Call
@@ -711,67 +720,35 @@ Sonify::Close() noexcept
 void
 Sonify::doSonify() noexcept
 {
-    m_sonification->stopSonification(false);
-    m_sonification->setNumSamples(m_num_samples_spinbox->value());
+    m_sonification->setStopSonification(false);
 
-    switch (m_freq_mapping_combo->currentIndex())
-    {
-        case 0: m_sonification->setFreqMap(FreqMap::Linear); break;
-        case 1: m_sonification->setFreqMap(FreqMap::Log); break;
-        case 2: m_sonification->setFreqMap(FreqMap::Exp); break;
-    }
-
-    const int min_freq = m_min_freq_sb->text().toInt();
-    const int max_freq = m_max_freq_sb->text().toInt();
-
-    Sonifier::MapFunc mapFunc;
-    Mapping *mapping = m_sonification->sonifier()->mapping();
-
-    // switch (m_pixel_mapping_combo->currentIndex())
-    // {
-    //     case 0:
-    //         mapFunc = [mapping](const pixelColumn &cols)
-    //         { return mapping->Map__Intensity(cols); };
-    //         break;
-    //
-    //     case 1:
-    //         mapFunc = [mapping](const pixelColumn &cols)
-    //         { return mapping->Map__HSV(cols); };
-    //         break;
-    //
-    //     case 2:
-    //         mapFunc = [mapping](const pixelColumn &cols)
-    //         { return mapping->Map__Orchestra(cols); };
-    //         break;
-    // }
-
-    MapTemplate *t = m_sonification->pixelMappingClass(
-        m_pixel_mapping_combo->currentText().toStdString().c_str());
+    MapTemplate *t =
+        m_sonification->pixelMappingClass(m_pixel_mapping_combo->currentText());
 
     if (!t)
     {
         QMessageBox::critical(
             this, "Error Sonifying",
-            "Could not sonify because the mapping function is null!");
+            "Could not sonify because the mapping template is null!");
         return;
     }
 
-        const QString &freqMapStr = m_freq_mapping_combo->currentText();
-        if (freqMapStr == "Linear")
-            t->freq_map = utils::LinearMap;
-        else if (freqMapStr == "Exponential")
-            t->freq_map = utils::ExpMap;
-        else if (freqMapStr == "Logarithmic")
-            t->freq_map = utils::LogMap;
+    Sonifier::MapFunc mapFunc;
+    const int min_freq = m_min_freq_sb->text().toInt();
+    const int max_freq = m_max_freq_sb->text().toInt();
+    m_sonification->setNumSamples(m_num_samples_spinbox->value());
 
-        t->setMaxFreq(m_max_freq_sb->value());
-        t->setMinFreq(m_min_freq_sb->value());
-        // t->setSampleRate(44100);
+    switch (m_freq_mapping_combo->currentIndex())
+    {
+        case 0: t->setFreqMap(utils::LinearMap); break;
+        case 1: t->setFreqMap(utils::LogMap); break;
+        case 2: t->setFreqMap(utils::ExpMap); break;
+    }
 
-        return t->mapping(cols);
-    };
+    t->setMaxFreq(max_freq);
+    t->setMinFreq(min_freq);
 
-    const QString pixel_mapping = m_pixel_mapping_combo->currentText();
+    mapFunc = [t](const std::vector<Pixel> &cols) { return t->mapping(cols); };
 
     m_status_bar->sonificationStart();
 
@@ -1091,7 +1068,7 @@ Sonify::sonificationDone() noexcept
 void
 Sonify::sonificationStopped() noexcept
 {
-    m_sonification->stopSonification(true);
+    m_sonification->setStopSonification(true);
     m_status_bar->sonificationDone();
     m_status_bar->setMsg("Sonification Stopped", 5);
     m_panel->setEnabled(true);
@@ -1143,16 +1120,38 @@ Sonify::enablePanelUIs(bool state) noexcept
 void
 Sonify::loadMappingSharedObjects() noexcept
 {
-    m_mappings_dir =
-        QDir::cleanPath(m_config_dir + QDir::separator() + "mappings");
+    QStringList customMappings = m_sonification->getPixelMappingNames();
 
-    QDir dir = QDir(m_mappings_dir);
+    for (const auto &m : customMappings)
+    {
+        int index = m_pixel_mapping_combo->findText(m);
+        if (index != -1) { m_pixel_mapping_combo->removeItem(index); }
+    }
 
-    if (!dir.exists()) dir.mkdir(dir.path());
+    m_sonification->clearCustomPixelMappings();
 
-    QStringList sofiles = dir.entryList({ "*.so" }, QDir::Files);
-    for (const auto &file : sofiles)
-        loadSharedObject(dir.filePath(file));
+    const QDir dir(m_mappings_dir);
+    if (!dir.exists()) { return; }
+    const QStringList &sofiles = dir.entryList({ "*.so" }, QDir::Files);
+
+    if (sofiles.empty()) return;
+
+    const int numFiles = sofiles.size();
+    QProgressDialog progress("Loading Mapping Shared Objects...", "Cancel", 0,
+                             numFiles, this);
+    progress.setMinimumDuration(0);
+    progress.setWindowModality(Qt::WindowModal);
+    progress.show();
+
+    for (int i = 0; i < numFiles; i++)
+    {
+        progress.setValue(i);
+        if (progress.wasCanceled()) break;
+        QCoreApplication::processEvents();
+        loadSharedObject(dir.filePath(sofiles.at(i)));
+    }
+
+    progress.setValue(numFiles);
 }
 
 bool
@@ -1179,12 +1178,6 @@ Sonify::loadSharedObject(const QString &filename) noexcept
     if (!ptr) return false;
     m_pixel_mapping_combo->addItem(ptr->name());
 
-    m_sonification->addPluginInstance({ handle, ptr });
+    m_sonification->addCustomPixelMapping({ handle, ptr });
     return true;
-}
-
-// Reload all the shared objects mapping files
-void
-Sonify::reloadMappingSharedObjects() noexcept
-{
 }

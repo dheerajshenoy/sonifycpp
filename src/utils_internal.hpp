@@ -34,4 +34,15 @@ namespace utils_internal
         return qRgba(p.rgba.r, p.rgba.g, p.rgba.b, p.rgba.a);
     }
 
+    inline Pixel fromQRgb(const QRgb &qrgb, int x, int y) noexcept
+    {
+        return { RGBA{
+                     static_cast<std::uint8_t>(qRed(qrgb)),
+                     static_cast<std::uint8_t>(qGreen(qrgb)),
+                     static_cast<std::uint8_t>(qBlue(qrgb)),
+                     static_cast<std::uint8_t>(qAlpha(qrgb)),
+                 },
+                 x, y };
+    }
+
 } // namespace utils_internal

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "freqmap.hpp"
-#include "mapping.hpp"
 #include "sonifycpp/MapTemplate.hpp"
 #include "sonifycpp/pixel.hpp"
 #include "traverse.hpp"
@@ -27,8 +26,6 @@ public:
     void setParameters(const QPixmap &pix, Traverse t) noexcept;
     void setParameters(const QPixmap &pix, Traverse t,
                        const std::vector<QPointF> &) noexcept;
-    void setSampleRate(float SR) noexcept;
-    void setSamples(int nsamples) noexcept;
     void LeftToRight() noexcept;
     void RightToLeft() noexcept;
     void TopToBottom() noexcept;
@@ -41,13 +38,8 @@ public:
     void Sonify() noexcept;
     void stopSonifying(bool state) noexcept;
     inline bool hasStopped() { return m_stop_sonifying; }
-    void setMinMax(int min, int max) noexcept;
-    void setFreqMap(FreqMap f) noexcept;
-    inline void setMapFunc(const MapFunc &mapFunc) noexcept
-    {
-        m_mapFunc = mapFunc;
-    }
-    inline Mapping *mapping() noexcept { return m_mapping; }
+    inline void setMapFunc(MapFunc mapFunc) noexcept { m_mapFunc = mapFunc; }
+    inline void setNumSamples(int n) noexcept { m_nsamples = n; }
 
 signals:
     void sonificationDone(std::vector<short>);
@@ -55,9 +47,7 @@ signals:
 
 private:
 
-    float m_SampleRate;
     int m_nsamples;
-    Mapping *m_mapping = new Mapping();
 
     Traverse m_traverse;
     QPixmap m_pix;
