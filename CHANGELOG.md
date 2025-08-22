@@ -3,6 +3,7 @@
 ## 0.1.2 - 22 Aug 2025
 
 - Add ability to load user mappings through shared objects
+- Loop
 
 
 
