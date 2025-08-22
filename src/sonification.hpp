@@ -76,9 +76,11 @@ public:
         m_custom_mappings.push_back(p);
     }
 
+    inline void clearPluginInstance() noexcept { m_custom_mappings.clear(); }
+
     void setFreqMap(FreqMap f) noexcept;
 
-    MapTemplate *mappingClass(const QString &mapName) const noexcept;
+    MapTemplate *mappingClass(const char *mapName) const noexcept;
 
 signals:
     void audioProgress(double);
@@ -90,6 +92,7 @@ signals:
 
 private:
 
+    void deleteCustomMappings() noexcept;
     void m_GenerateSound() noexcept;
     std::vector<short> applyReverb(int delayTimeMs, float feedback) noexcept;
 

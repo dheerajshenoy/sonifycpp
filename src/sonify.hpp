@@ -103,6 +103,7 @@ private:
     void readConfigFile() noexcept;
     void loadMappingSharedObjects() noexcept;
     bool loadSharedObject(const QString &filename) noexcept;
+    void reloadMappingSharedObjects() noexcept;
     void sonificationDone() noexcept;
     void sonificationStopped() noexcept;
     void audioPlaybackDone() noexcept;

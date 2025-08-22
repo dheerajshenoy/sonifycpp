@@ -536,8 +536,7 @@ Sonify::initConnections() noexcept
 
     connect(m_view__mappings, &QAction::triggered, this, [this](bool state)
     {
-        MappingsDialog m;
-        m_sonification->setMappings();
+        // TODO: Mappings Dialog
     });
 }
 
@@ -748,8 +747,8 @@ Sonify::doSonify() noexcept
 
     mapFunc = [&](const std::vector<Pixel> &cols)
     {
-        MapTemplate *t =
-            m_sonification->mappingClass(m_pixel_mapping_combo->currentText());
+        MapTemplate *t = m_sonification->mappingClass(
+            m_pixel_mapping_combo->currentText().toStdString().c_str());
 
         const QString &freqMapStr = m_freq_mapping_combo->currentText();
         if (freqMapStr == "Linear")
@@ -1176,4 +1175,10 @@ Sonify::loadSharedObject(const QString &filename) noexcept
 
     m_sonification->addPluginInstance({ handle, ptr });
     return true;
+}
+
+// Reload all the shared objects mapping files
+void
+Sonify::reloadMappingSharedObjects() noexcept
+{
 }

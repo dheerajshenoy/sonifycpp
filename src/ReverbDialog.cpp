@@ -1,6 +1,7 @@
 #include "ReverbDialog.hpp"
 
-ReverbDialog::ReverbDialog(QWidget *parent) noexcept : QDialog(parent) {
+ReverbDialog::ReverbDialog(QWidget *parent) noexcept : QDialog(parent)
+{
 
     this->setWindowModality(Qt::WindowModality::ApplicationModal);
     m_delay_sb->setRange(0, 10000);
@@ -17,20 +18,20 @@ ReverbDialog::ReverbDialog(QWidget *parent) noexcept : QDialog(parent) {
 
 void
 ReverbDialog::setData(const std::vector<short> &audioData,
-                      int sampleRate) noexcept {
+                      int sampleRate) noexcept
+{
     m_audioData  = audioData;
     m_sampleRate = sampleRate;
 }
 
 void
-ReverbDialog::process() noexcept {
+ReverbDialog::process() noexcept
+{
     auto delay    = m_delay_sb->text().toDouble();
     auto feedback = m_feedback_sb->text().toDouble();
 
-    if (delay == 0.0f && feedback == 0.0f)
-        return;
-    if (m_audioData.size() == 0 || m_sampleRate == 0)
-        return;
+    if (delay == 0.0f && feedback == 0.0f) return;
+    if (m_audioData.size() == 0 || m_sampleRate == 0) return;
 
     // Calculate delay size in samples
     int delaySize = (m_sampleRate * delay) / 1000;
@@ -42,9 +43,10 @@ ReverbDialog::process() noexcept {
     // Variables for delay line management
     int index = 0;
 
-    for (int i = 0; i < m_audioData.size(); ++i) {
-        float inSample      = static_cast<float>(m_audioData[i]);
-        float delayedSample = delayLine[index];
+    for (int i = 0; i < m_audioData.size(); ++i)
+    {
+        float inSample      = static_cast<float>(m_audioData.at(i));
+        float delayedSample = delayLine.at(index);
         float outSample     = inSample + delayedSample * feedback;
 
         // Clip output to the range of short

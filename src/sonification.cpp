@@ -48,14 +48,7 @@ Sonification::~Sonification() noexcept
         m_thread->wait();
     }
 
-    if (!m_custom_mappings.empty())
-    {
-        for (const auto &m : m_custom_mappings)
-        {
-            delete m.ptr;
-            dlclose(m.handle);
-        }
-    }
+    deleteCustomMappings();
 }
 
 // Function to sonify an `image` provided by QImage and in mode `mode`
@@ -232,7 +225,7 @@ Sonification::clear() noexcept
 
 // Return the MapFunc class associated with map `mapName`
 MapTemplate *
-Sonification::mappingClass(const QString &mapName) const noexcept
+Sonification::mappingClass(const char *mapName) const noexcept
 {
     auto it = std::find_if(m_custom_mappings.cbegin(), m_custom_mappings.cend(),
                            [&mapName](const PluginInstance &p)
@@ -241,4 +234,17 @@ Sonification::mappingClass(const QString &mapName) const noexcept
     if (it != m_custom_mappings.end()) { return it->ptr; }
 
     return nullptr;
+}
+
+void
+Sonification::deleteCustomMappings() noexcept
+{
+    if (!m_custom_mappings.empty())
+    {
+        for (const auto &m : m_custom_mappings)
+        {
+            delete m.ptr;
+            dlclose(m.handle);
+        }
+    }
 }
