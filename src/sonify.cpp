@@ -2,16 +2,15 @@
 
 #include "ImageEditorDialog.hpp"
 #include "freqmap.hpp"
-#include "sol/sol.hpp"
-#include "utils.hpp"
+#include "sonifycpp/utils.hpp"
+#include "utils_internal.hpp"
 
 #include <QDir>
-#include <cstdio>
+#include <QStandardPaths>
+#include <dlfcn.h>
 
 Sonify::Sonify(QWidget *parent) : QMainWindow(parent)
 {
-    initLuaAPI();
-
     initWidgets();
     initStatusbar();
     initMenu();
@@ -19,8 +18,8 @@ Sonify::Sonify(QWidget *parent) : QMainWindow(parent)
     initIcons();
 
     this->show();
-    m_recorder->setGraphicsView(m_gv);
     initConfigFile();
+    loadMappingSharedObjects();
 }
 
 // Set the keybindings
@@ -40,13 +39,16 @@ Sonify::initKeybinds() noexcept
 void
 Sonify::initConfigFile() noexcept
 {
+    m_config_dir =
+        QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) +
+        QDir::separator() + "sonifycpp";
 
     QDir dir = QDir(m_config_dir);
 
     if (!dir.exists()) dir.mkdir(dir.path());
 
     m_config_file_path =
-        QDir::cleanPath(m_config_dir + QDir::separator() + "init.lua");
+        QDir::cleanPath(m_config_dir + QDir::separator() + "config.toml");
 
     // Read from configuration toml file
     if (QFile(m_config_file_path).exists())
@@ -376,18 +378,6 @@ Sonify::initMenu() noexcept
 void
 Sonify::initConnections() noexcept
 {
-    connect(m_pixel_mapping_manager, &PixelMappingManager::pixelMappingAdded,
-            this, [&](const std::string &name)
-    { m_pixel_mapping_combo->addItem(QString::fromStdString(name)); });
-
-    connect(m_pixel_mapping_manager, &PixelMappingManager::pixelMappingRemoved,
-            this, [&](const std::string &name)
-        { // TODO
-        });
-
-    connect(m_pixel_mapping_manager, &PixelMappingManager::pixelMappingApplied,
-            this, [&](const std::string &name) {}); // TODO
-
     connect(m_sonify_btn, &QPushButton::clicked, this, &Sonify::doSonify);
     connect(m_play_btn, &QPushButton::clicked, this, &Sonify::PlayAudio);
     connect(m_reset_btn, &QPushButton::clicked, this, &Sonify::Reset);
@@ -403,19 +393,20 @@ Sonify::initConnections() noexcept
     connect(m_file__close, &QAction::triggered, this, &Sonify::Close);
     connect(m_file__open, &QAction::triggered, this, [&]() { Open(); });
     connect(m_audio__save, &QAction::triggered, this, [&]() { Save(); });
-    connect(sonification, &Sonification::audioIndex, m_gv, &GV::setAudioIndex);
+    connect(m_sonification, &Sonification::audioIndex, m_gv,
+            &GV::setAudioIndex);
 
-    connect(sonification, &Sonification::audioFinishedPlaying, this,
+    connect(m_sonification, &Sonification::audioFinishedPlaying, this,
             &Sonify::audioPlaybackDone);
 
-    connect(sonification, &Sonification::audioProgress, m_gv,
+    connect(m_sonification, &Sonification::audioProgress, m_gv,
             [this](double location)
     {
         m_status_bar->setAudioProgressText(QString::number(
-            location / static_cast<double>(sonification->sampleRate())));
+            location / static_cast<double>(m_sonification->sampleRate())));
         if (m_wf_widget)
             m_wf_widget->setVertLinePosition(
-                location / static_cast<double>(sonification->sampleRate()));
+                location / static_cast<double>(m_sonification->sampleRate()));
     });
 
     connect(m_status_bar, &Statusbar::stopSonificationRequested, this,
@@ -425,7 +416,7 @@ Sonify::initConnections() noexcept
     {
         m_play_btn->setText("Play");
         m_isAudioPlaying = false;
-        sonification->reset();
+        m_sonification->reset();
         m_traverse_combo->setEnabled(true);
     });
 
@@ -445,10 +436,10 @@ Sonify::initConnections() noexcept
         e->open();
     });
 
-    connect(sonification, &Sonification::sonificationDone, this,
+    connect(m_sonification, &Sonification::sonificationDone, this,
             &Sonify::sonificationDone);
 
-    connect(sonification, &Sonification::sonificationProgress, this,
+    connect(m_sonification, &Sonification::sonificationProgress, this,
             [this](int progress)
     { m_status_bar->setSonificationProgress(progress); });
 
@@ -468,8 +459,8 @@ Sonify::initConnections() noexcept
                 m_sp = nullptr;
                 m_tools__spectrum_analyzer->setChecked(false);
             });
-            std::vector<short> data = sonification->audioData();
-            float sr                = sonification->sampleRate();
+            std::vector<short> data = m_sonification->audioData();
+            float sr                = m_sonification->sampleRate();
             m_sp->setData(data, sr);
             m_sp->open();
         }
@@ -501,12 +492,20 @@ Sonify::initConnections() noexcept
     {
         if (state)
         {
+            if (!m_recorder)
+            {
+                m_recorder = new ScreenRecorder();
+                m_recorder->setGraphicsView(m_gv);
+            }
+
             connect(m_recorder, &ScreenRecorder::finished, this,
-                    [this]() { qDebug() << "Screen recording finished"; });
+                    []() { qDebug() << "Screen recording finished"; });
             m_recorder->Start();
         }
         else
-            m_recorder->Stop();
+        {
+            if (m_recorder) m_recorder->Stop();
+        }
     });
 
     connect(m_help__about, &QAction::triggered, this, [this]()
@@ -518,11 +517,11 @@ Sonify::initConnections() noexcept
     connect(m_effects__reverb, &QAction::triggered, this, [this]()
     {
         ReverbDialog *reverbDialog = new ReverbDialog(this);
-        reverbDialog->setData(sonification->audioData(),
-                              sonification->sampleRate());
+        reverbDialog->setData(m_sonification->audioData(),
+                              m_sonification->sampleRate());
         connect(reverbDialog, &ReverbDialog::outputReady, this,
                 [&](std::vector<short> reverbedOutput)
-        { sonification->setAudioData(reverbedOutput); });
+        { m_sonification->setAudioData(reverbedOutput); });
         reverbDialog->open();
     });
 
@@ -534,6 +533,12 @@ Sonify::initConnections() noexcept
 
     connect(m_view__panel, &QAction::triggered, this,
             [this](bool state) { m_panel->setVisible(!state); });
+
+    connect(m_view__mappings, &QAction::triggered, this, [this](bool state)
+    {
+        MappingsDialog m;
+        m_sonification->setMappings();
+    });
 }
 
 // This is used to set the state of the audio playback. Call
@@ -567,8 +572,8 @@ Sonify::viewWaveform(const bool &state) noexcept
                 m_wf_widget = nullptr;
             });
         }
-        std::vector<short> data = sonification->audioData();
-        m_wf_widget->setData(data, sonification->sampleRate());
+        std::vector<short> data = m_sonification->audioData();
+        m_wf_widget->setData(data, m_sonification->sampleRate());
         m_wf_widget->show();
     }
     else
@@ -587,7 +592,7 @@ Sonify::Save(const QString &filename) noexcept
 
         if (filename.isEmpty()) return false;
 
-        return sonification->save(filename);
+        return m_sonification->save(filename);
     }
 
     return false;
@@ -707,56 +712,61 @@ Sonify::Close() noexcept
 void
 Sonify::doSonify() noexcept
 {
-    sonification->stopSonification(false);
-    sonification->setNumSamples(m_num_samples_spinbox->value());
+    m_sonification->stopSonification(false);
+    m_sonification->setNumSamples(m_num_samples_spinbox->value());
 
     switch (m_freq_mapping_combo->currentIndex())
     {
-        case 0: sonification->setFreqMap(FreqMap::Linear); break;
-        case 1: sonification->setFreqMap(FreqMap::Log); break;
-        case 2: sonification->setFreqMap(FreqMap::Exp); break;
+        case 0: m_sonification->setFreqMap(FreqMap::Linear); break;
+        case 1: m_sonification->setFreqMap(FreqMap::Log); break;
+        case 2: m_sonification->setFreqMap(FreqMap::Exp); break;
     }
 
     const int min_freq = m_min_freq_sb->text().toInt();
     const int max_freq = m_max_freq_sb->text().toInt();
 
     Sonifier::MapFunc mapFunc;
-    Mapping *mapping = sonification->sonifier()->mapping();
+    Mapping *mapping = m_sonification->sonifier()->mapping();
 
-    switch (m_pixel_mapping_combo->currentIndex())
+    // switch (m_pixel_mapping_combo->currentIndex())
+    // {
+    //     case 0:
+    //         mapFunc = [mapping](const pixelColumn &cols)
+    //         { return mapping->Map__Intensity(cols); };
+    //         break;
+    //
+    //     case 1:
+    //         mapFunc = [mapping](const pixelColumn &cols)
+    //         { return mapping->Map__HSV(cols); };
+    //         break;
+    //
+    //     case 2:
+    //         mapFunc = [mapping](const pixelColumn &cols)
+    //         { return mapping->Map__Orchestra(cols); };
+    //         break;
+    // }
+
+    mapFunc = [&](const std::vector<Pixel> &cols)
     {
-        case 0:
-            mapFunc = [mapping](const std::vector<Pixel> &cols)
-            { return mapping->Map__Intensity(cols); };
-            break;
+        MapTemplate *t =
+            m_sonification->mappingClass(m_pixel_mapping_combo->currentText());
 
-        case 1:
-            mapFunc = [mapping](const std::vector<Pixel> &cols)
-            { return mapping->Map__HSV(cols); };
-            break;
+        const QString &freqMapStr = m_freq_mapping_combo->currentText();
+        if (freqMapStr == "Linear")
+            t->freq_map = utils::LinearMap;
+        else if (freqMapStr == "Exponential")
+            t->freq_map = utils::ExpMap;
+        else if (freqMapStr == "Logarithmic")
+            t->freq_map = utils::LogMap;
 
-        case 2:
-            mapFunc = [mapping](const std::vector<Pixel> &cols)
-            { return mapping->Map__Orchestra(cols); };
-            break;
-    }
+        t->setMaxFreq(m_max_freq_sb->value());
+        t->setMinFreq(m_min_freq_sb->value());
+        // t->setSampleRate(44100);
+
+        return t->mapping(cols);
+    };
 
     const QString pixel_mapping = m_pixel_mapping_combo->currentText();
-
-    auto result =
-        m_pixel_mapping_manager->getPixelMapping(pixel_mapping.toStdString());
-
-    if (result)
-        mapFunc = result.value();
-    else
-    {
-        QMessageBox::critical(
-            this, "Pixel Mapping Error",
-            "The pixel mapping function seems to be invalid. The function "
-            "should take in one argument and return a std::vector<short>");
-        m_panel->setEnabled(true);
-        return;
-    }
 
     m_status_bar->sonificationStart();
 
@@ -838,7 +848,7 @@ Sonify::doSonify() noexcept
         m_status_bar->setTraversalModeText("Inspect");
     }
 
-    sonification->Sonify(m_pix, m_gv, mapFunc, m_mode, min_freq, max_freq);
+    m_sonification->Sonify(m_pix, m_gv, mapFunc, m_mode, min_freq, max_freq);
     m_panel->setEnabled(false);
 }
 
@@ -851,14 +861,14 @@ Sonify::Reset() noexcept
 
     m_gv->reset();
     if (m_wf_widget) m_wf_widget->resetVertLine();
-    sonification->reset();
+    m_sonification->reset();
     m_status_bar->setAudioProgressText("");
 }
 
-// TODO: Screen record
 void
 Sonify::CaptureWindow() noexcept
 {
+    // TODO: Screen record
 }
 
 bool
@@ -1025,7 +1035,7 @@ Sonify::AskForResize(const QString &filename) noexcept
 void
 Sonify::Play() noexcept
 {
-    sonification->play();
+    m_sonification->play();
     m_play_btn->setText("Pause");
     enablePanelUIs(false);
     m_play_btn->setEnabled(true);
@@ -1035,7 +1045,7 @@ Sonify::Play() noexcept
 void
 Sonify::Pause() noexcept
 {
-    sonification->pause();
+    m_sonification->pause();
     m_play_btn->setText("Play");
 
     enablePanelUIs(true);
@@ -1044,14 +1054,6 @@ Sonify::Pause() noexcept
 void
 Sonify::readConfigFile() noexcept
 {
-    try
-    {
-        m_lua.script_file(m_config_file_path.toStdString());
-    }
-    catch (const sol::error &e)
-    {
-        QMessageBox::critical(this, "Error loading config file", e.what());
-    }
 }
 
 void
@@ -1072,9 +1074,9 @@ Sonify::sonificationDone() noexcept
     m_tools__waveform->setEnabled(true);
     m_tools__spectrum_analyzer->setEnabled(true);
     m_status_bar->sonificationDone();
-    m_gv->setDuration(sonification->duration());
+    m_gv->setDuration(m_sonification->duration());
     m_status_bar->setAudioDurationText(
-        "Duration: " + QString::number(sonification->duration()) + " secs");
+        "Duration: " + QString::number(m_sonification->duration()) + " secs");
 
     m_gv->setTraverse(m_mode);
     m_play_btn->setEnabled(true);
@@ -1084,7 +1086,7 @@ Sonify::sonificationDone() noexcept
 void
 Sonify::sonificationStopped() noexcept
 {
-    sonification->stopSonification(true);
+    m_sonification->stopSonification(true);
     m_status_bar->sonificationDone();
     m_status_bar->setMsg("Sonification Stopped", 5);
     m_panel->setEnabled(true);
@@ -1102,107 +1104,20 @@ Sonify::applyImageEdits(const ImageEditorDialog::ImageOptions &options) noexcept
 {
     QImage img = m_pix.toImage();
 
-    img = utils::changeBrightness(img, options.Brightness);
-    img = utils::changeSaturation(img, options.Saturation);
-    img = utils::changeContrast(img, options.Contrast);
-    img = utils::changeGamma(img, options.Gamma);
+    img = utils_internal::changeBrightness(img, options.Brightness);
+    img = utils_internal::changeSaturation(img, options.Saturation);
+    img = utils_internal::changeContrast(img, options.Contrast);
+    img = utils_internal::changeGamma(img, options.Gamma);
 
     QTransform t;
     img = img.transformed(t.rotate(options.rotate));
 
-    if (options.Grayscale) img = utils::convertToGrayscale(img);
+    if (options.Grayscale) img = utils_internal::convertToGrayscale(img);
 
-    if (options.Invert) img = utils::invertColor(img);
+    if (options.Invert) img = utils_internal::invertColor(img);
 
     m_pix = QPixmap::fromImage(img);
     m_gv->setPixmap(m_pix);
-}
-
-void
-Sonify::initLuaAPI() noexcept
-{
-    m_config_dir =
-        QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
-    m_lua.open_libraries(sol::lib::base, sol::lib::jit, sol::lib::package,
-                         sol::lib::math);
-
-    m_lua.new_usertype<Config>(
-        "__Config", "num_samples", &Config::num_samples, "min_freq",
-        &Config::min_freq, "max_freq", &Config::max_freq, "img_height",
-        &Config::img_height, "img_width", &Config::img_width, "freq_range",
-        &Config::freq_range, "traversal", &Config::traversal, "sample_rate",
-        &Config::sample_rate, "panel_position", &Config::panel_position);
-
-    m_lua.new_usertype<Pixel>("__Pixel", "pixel", &Pixel::pixel, "x", &Pixel::x,
-                              "y", &Pixel::y);
-
-    // Sonifycpp Table
-    m_lua["sonifycpp"] = sol::new_table();
-
-    // Functions table
-    m_lua["sonifycpp"]["functions"] = sol::new_table();
-    auto functions_table            = m_lua["sonifycpp"]["functions"];
-
-    functions_table["open"] =
-        [this](const std::string &filename, int w, int h, bool keepAspectRatio)
-    { open(QString::fromStdString(filename), w, h, keepAspectRatio); };
-
-    functions_table["open"] = [this](const std::string &filename)
-    { open(QString::fromStdString(filename)); };
-
-    functions_table["close"]   = [this]() { Close(); };
-    functions_table["version"] = [this]() { return lua__version(); };
-    functions_table["exit"]    = [this]() { QApplication::exit(); };
-    functions_table["sonify"]  = [this]() { doSonify(); };
-    functions_table["play"]    = [this]() { Play(); };
-    functions_table["pause"]   = [this]() { Pause(); };
-    functions_table["reset"]   = [this]() { Reset(); };
-
-    // Enums Table
-    m_lua["sonifycpp"]["enums"] = sol::new_table();
-
-    m_lua["sonifycpp"]["enums"]["freq_map"] = m_lua.create_table_with(
-        "Linear", FreqMap::Linear, "Exp", FreqMap::Exp, "Log", FreqMap::Log);
-
-    m_lua["sonifycpp"]["enums"]["traverse"] = m_lua.create_table_with(
-        "LEFT_TO_RIGHT", Traverse::LEFT_TO_RIGHT, "RIGHT_TO_LEFT",
-        Traverse::RIGHT_TO_LEFT, "TOP_TO_BOTTOM", Traverse::TOP_TO_BOTTOM,
-        "BOTTOM_TO_TOP", Traverse::BOTTOM_TO_TOP, "CIRCLE_OUTWARDS",
-        Traverse::CIRCLE_OUTWARDS, "CIRCLE_INWARDS", Traverse::CIRCLE_INWARDS,
-        "CLOCKWISE", Traverse::CLOCKWISE, "ANTICLOCKWISE",
-        Traverse::ANTICLOCKWISE, "PATH", Traverse::PATH, "REGION",
-        Traverse::REGION, "INSPECT", Traverse::INSPECT);
-
-    // Image Table
-    m_lua["sonifycpp"]["image"] = m_lua.create_table_with(
-        "height", &Sonify::lua__imageHeight, "width", &Sonify::lua__imageWidth);
-
-    // Config Table
-    m_lua["sonifycpp"]["config"] = &m_config;
-
-    // Mappings manager Table
-    m_lua.new_usertype<PixelMappingManager>(
-        "__PixelMappingManager", "register",
-        &PixelMappingManager::registerPixelMapping, "list",
-        &PixelMappingManager::availablePixelMappings);
-
-    m_lua["sonifycpp"]["pixel_maps"] = m_pixel_mapping_manager;
-
-    // Controls table
-    m_lua["sonifycpp"]["controls"]             = sol::new_table();
-    m_lua["sonifycpp"]["controls"]["freq_map"] = [this]()
-    { return m_freq_mapping_combo->currentText().toStdString(); };
-
-    m_lua["sonifycpp"]["controls"]["pixel_map"] = [this]()
-    { return m_pixel_mapping_combo->currentText().toStdString(); };
-
-    // utils table
-
-    m_lua["sonifycpp"]["utils"] = m_lua.create_table_with(
-        "LinearMap", &utils::LinearMap, "ExpMap", &utils::ExpMap, "LogMap",
-        &utils::LogMap, "generateSineWave", &utils::generateSineWave,
-        "applyFadeInOut", &utils::applyFadeInOut, "normalizeWave",
-        &utils::normalizeWave, "intensity", &utils::intensity);
 }
 
 void
@@ -1217,4 +1132,48 @@ Sonify::enablePanelUIs(bool state) noexcept
     m_freq_mapping_combo->setEnabled(state);
     m_pixel_mapping_combo->setEnabled(state);
     m_traverse_combo->setEnabled(state);
+}
+
+// Loads all the shared objects from the `mappings` directory
+void
+Sonify::loadMappingSharedObjects() noexcept
+{
+    m_mappings_dir =
+        QDir::cleanPath(m_config_dir + QDir::separator() + "mappings");
+
+    QDir dir = QDir(m_mappings_dir);
+
+    if (!dir.exists()) dir.mkdir(dir.path());
+
+    QStringList sofiles = dir.entryList({ "*.so" }, QDir::Files);
+    for (const auto &file : sofiles)
+        loadSharedObject(dir.filePath(file));
+}
+
+bool
+Sonify::loadSharedObject(const QString &filename) noexcept
+{
+    void *handle = dlopen(filename.toStdString().c_str(), RTLD_LAZY);
+
+    if (!handle)
+    {
+        qWarning() << dlerror() << "\n";
+        return false;
+    }
+
+    auto create = reinterpret_cast<MapTemplate *(*)()>(dlsym(handle, "create"));
+    if (!create)
+    {
+        qWarning() << dlerror() << "\n";
+        dlclose(handle);
+        return false;
+    }
+
+    MapTemplate *ptr = create();
+
+    if (!ptr) return false;
+    m_pixel_mapping_combo->addItem(ptr->name());
+
+    m_sonification->addPluginInstance({ handle, ptr });
+    return true;
 }
